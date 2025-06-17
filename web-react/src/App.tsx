@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
-// import Explorer from "./pages/Explorer";
+import Explorer from "./pages/Explorer";
 // import UserProfile from "./pages/UserProfile";
 // import NotFound from "./pages/NotFound";
 
@@ -22,7 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
-          {/* <Route path="/explorer" element={<Explorer />} /> */}
+          <Route path="/explorer" element={<Explorer />} />
           {/* <Route path="/:username" element={<UserProfile />} /> */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           {/* <Route path="*" element={<NotFound />} /> */}
