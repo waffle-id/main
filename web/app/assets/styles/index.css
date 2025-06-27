@@ -137,4 +137,15 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+  ::-moz-selection {
+    /* Code for Firefox */
+    color: #fff;
+    background: var(--color-background);
+  }
+
+  ::selection {
+    color: #fff;
+    background: var(--color-waffle-teal);
+  }
 }
