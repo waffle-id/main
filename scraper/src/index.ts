@@ -6,9 +6,8 @@ const port = parseInt(process.env.PORT || '3001');
 
 async function startServer() {
   try {
-    // Initialize database
     initializeDatabase();
-    
+
     console.log('🚀 Starting Waffle Scraper Service...');
     console.log(`📍 Server running on http://localhost:${port}`);
     console.log('📚 Available endpoints:');
@@ -17,12 +16,12 @@ async function startServer() {
     console.log('  GET  /avatar/:username           - Get Twitter avatar only');
     console.log('  POST /profile/:username/refresh  - Force refresh profile');
     console.log('  GET  /profiles                   - Get all cached profiles');
-    
+
     serve({
       fetch: app.fetch,
       port: port,
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

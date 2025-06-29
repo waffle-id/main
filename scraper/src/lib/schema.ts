@@ -1,4 +1,3 @@
-// TypeScript interfaces for Twitter profile data
 export interface TwitterProfile {
   fullName: string | null;
   username: string;

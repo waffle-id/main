@@ -1,12 +1,9 @@
-import { Database } from 'bun:sqlite';
-import type { TwitterProfile, ScrapedProfileRow } from './schema';
+import { Database } from "bun:sqlite";
+import type { TwitterProfile, ScrapedProfileRow } from "./schema";
 
-// Create SQLite database instance
-const sqlite = new Database('./database.sqlite');
+const sqlite = new Database("./database.sqlite");
 
-// Database operations using raw SQL with proper TypeScript types
 export const db = {
-  // Get profile by username
   getProfile: (username: string): ScrapedProfileRow | null => {
     const query = sqlite.query(`
       SELECT * FROM scraped_profiles 
@@ -17,7 +14,6 @@ export const db = {
     return result as ScrapedProfileRow | null;
   },
 
-  // Insert new profile
   insertProfile: (profile: TwitterProfile): void => {
     const query = sqlite.query(`
       INSERT INTO scraped_profiles 
@@ -38,7 +34,6 @@ export const db = {
     );
   },
 
-  // Update existing profile
   updateProfile: (username: string, profile: TwitterProfile): void => {
     const query = sqlite.query(`
       UPDATE scraped_profiles 
@@ -59,21 +54,17 @@ export const db = {
     );
   },
 
-  // Get all profiles
   getAllProfiles: (): ScrapedProfileRow[] => {
-    const query = sqlite.query('SELECT * FROM scraped_profiles ORDER BY updated_at DESC');
+    const query = sqlite.query("SELECT * FROM scraped_profiles ORDER BY updated_at DESC");
     const results = query.all();
     return results as ScrapedProfileRow[];
-  }
+  },
 };
 
-// Initialize database
 export function initializeDatabase() {
   try {
-    // Enable WAL mode for better concurrent access
-    sqlite.exec('PRAGMA journal_mode = WAL;');
+    sqlite.exec("PRAGMA journal_mode = WAL;");
 
-    // Create table if not exists
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS scraped_profiles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,9 +80,9 @@ export function initializeDatabase() {
       );
     `);
 
-    console.log('✅ Database initialized successfully');
+    console.log("✅ Database initialized successfully");
   } catch (error) {
-    console.error('❌ Failed to initialize database:', error);
+    console.error("❌ Failed to initialize database:", error);
     throw error;
   }
 }

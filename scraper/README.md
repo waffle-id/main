@@ -1,11 +1,11 @@
 # Waffle Scraper Service
 
-A standalone Twitter/X profile scraper service built with Bun, Hono, and Drizzle ORM.
+A standalone Twitter/X profile scraper service built with Bun, Hono, and SQLite.
 
 ## Features
 
 - 🚀 Fast and lightweight API built with Hono
-- 🗄️ SQLite database with Drizzle ORM for caching
+- 🗄️ SQLite database with Bun's built-in SQLite for caching
 - 🔄 Intelligent caching (24-hour TTL)
 - 🎯 TypeScript with full type safety
 - 🌐 CORS enabled for frontend integration
@@ -15,60 +15,64 @@ A standalone Twitter/X profile scraper service built with Bun, Hono, and Drizzle
 ## API Endpoints
 
 ### Health Check
-```
+
+```text
 GET /health
 ```
 
 ### Get Twitter Profile
-```
+
+```text
 GET /profile/:username
 ```
+
 Returns cached data if available and fresh (within 24 hours), otherwise scrapes fresh data.
 
 ### Get Avatar Only
-```
+
+```text
 GET /avatar/:username
 ```
+
 Quick endpoint to get just the avatar URL.
 
 ### Force Refresh Profile
-```
+
+```text
 POST /profile/:username/refresh
 ```
+
 Bypasses cache and scrapes fresh data.
 
 ### Get All Cached Profiles
-```
+
+```text
 GET /profiles
 ```
+
 Returns all profiles stored in the database.
 
 ## Installation
 
 1. Install dependencies:
+
 ```bash
-cd scraper-service
+cd scraper
 bun install
 ```
 
-2. Set up environment variables:
+1. Set up environment variables (optional):
+
 ```bash
 cp .env.example .env
 ```
 
-3. Generate database schema:
-```bash
-bun run db:generate
-```
-
-4. Run database migrations:
-```bash
-bun run db:migrate
-```
+1. The database will be automatically initialized on first run.
 
 ## Development
 
 Start the development server:
+
 ```bash
 bun run dev
 ```
@@ -78,17 +82,17 @@ The service will be available at `http://localhost:3001`
 ## Production
 
 Build and start:
+
 ```bash
 bun run build
 bun run start
 ```
 
-## Database Management
+## Database
 
-- Generate new migrations: `bun run db:generate`
-- Apply migrations: `bun run db:migrate`
-- Push schema changes: `bun run db:push`
-- Open Drizzle Studio: `bun run db:studio`
+The service uses Bun's built-in SQLite database which is automatically initialized on startup. No additional database setup or migrations are required.
+
+Database file location: `./database.sqlite`
 
 ## Example Usage
 
@@ -110,7 +114,7 @@ console.log(data);
 // }
 ```
 
-### Get Avatar Only
+### Avatar Endpoint Example
 
 ```typescript
 const response = await fetch('http://localhost:3001/avatar/elonmusk');
@@ -131,6 +135,7 @@ The API returns consistent error responses:
 ```
 
 Common HTTP status codes:
+
 - `200`: Success
 - `400`: Bad request (missing username)
 - `404`: Profile not found or private
@@ -146,7 +151,7 @@ Common HTTP status codes:
 ## Technologies Used
 
 - **Runtime**: Bun
-- **Web Framework**: Hono
-- **Database**: SQLite with Drizzle ORM
+- **Web Framework**: Hono  
+- **Database**: SQLite (Bun built-in)
 - **Scraping**: Puppeteer
 - **Language**: TypeScript
