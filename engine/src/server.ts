@@ -6,6 +6,7 @@ import CONFIG from "./config";
 import { GlobalRouter } from "./routes";
 import expressWs from "express-ws";
 import { alertsHandler, mediashareHandler } from "./services/websocket";
+import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 const wsInstance = expressWs(app);
@@ -29,6 +30,7 @@ wsInstance.app.ws("/mediashare", (ws, req) => {
 });
 
 app.use(GlobalRouter);
+app.use(errorHandler);
 /* -------------------------- end of custom routes -------------------------- */
 
 app.get("/", (req, res) => {

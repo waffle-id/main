@@ -28,8 +28,25 @@ export async function add(body: Record<string, unknown>) {
     return newItem._id;
   } else {
     // if user updated
-    await UserModel.findOneAndUpdate({ address: body.address }, { username: body.username });
+    await UserModel.findOneAndUpdate(
+      { address: body.address },
+      { username: body.username }
+    );
 
     return addressed._id;
   }
+}
+
+export async function update(user: any) {
+  return user.save();
+}
+
+export async function create(data: {
+  username: string;
+  address: string;
+  has_invitation_authority: boolean;
+  reputation_score: number;
+}) {
+  const user = new UserModel(data);
+  return user.save();
 }
