@@ -3,8 +3,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { scrapeTwitterProfile, scrapeTwitterAvatar, type TwitterProfile } from '../lib/scraper';
 import { db } from '../lib/database';
-import { scrapedProfiles } from '../lib/schema';
-import { eq } from 'drizzle-orm';
+import type { ScrapedProfileRow } from '../lib/schema';
 
 const app = new Hono();
 
@@ -24,70 +23,53 @@ app.get('/health', (c) => {
 // Get profile (check cache first, then scrape if needed)
 app.get('/profile/:username', async (c) => {
   const username = c.req.param('username');
-  
+
   if (!username) {
     return c.json({ error: 'Username is required' }, 400);
   }
 
   try {
     // Check if we have recent data (within last 24 hours)
-    const existingProfile = await db.select()
-      .from(scrapedProfiles)
-      .where(eq(scrapedProfiles.username, username))
-      .limit(1);
+    const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
 
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    if (existingProfile.length > 0) {
-      const profile = existingProfile[0];
-      const lastScraped = new Date(profile.lastScraped || 0);
-      
+    if (existingProfile) {
+      const lastScraped = new Date(existingProfile.last_scraped * 1000);
+
       if (lastScraped > oneDayAgo) {
         // Return cached data
         return c.json({
           success: true,
           data: {
-            fullName: profile.fullName,
-            username: profile.username,
-            bio: profile.bio,
-            avatarUrl: profile.avatarUrl,
-            followers: profile.followers,
-            url: profile.url,
+            fullName: existingProfile.full_name,
+            username: existingProfile.username,
+            bio: existingProfile.bio,
+            avatarUrl: existingProfile.avatar_url,
+            followers: existingProfile.followers,
+            url: existingProfile.url,
           },
           cached: true,
-          lastScraped: profile.lastScraped
+          lastScraped: existingProfile.last_scraped
         });
       }
     }
 
     // Scrape fresh data
     const scrapedData = await scrapeTwitterProfile(username);
-    
+
     if (!scrapedData) {
       return c.json({ error: 'Failed to scrape profile. Profile may not exist or be private.' }, 404);
     }
 
     // Save to database
-    const profileData = {
-      username: scrapedData.username,
-      fullName: scrapedData.fullName,
-      bio: scrapedData.bio,
-      avatarUrl: scrapedData.avatarUrl,
-      followers: scrapedData.followers,
-      url: scrapedData.url,
-      lastScraped: new Date(),
-      updatedAt: new Date()
-    };
-
-    if (existingProfile.length > 0) {
+    if (existingProfile) {
       // Update existing record
-      await db.update(scrapedProfiles)
-        .set(profileData)
-        .where(eq(scrapedProfiles.username, username));
+      db.updateProfile(username, scrapedData);
     } else {
       // Insert new record
-      await db.insert(scrapedProfiles).values(profileData);
+      db.insertProfile(scrapedData);
     }
 
     return c.json({
@@ -106,14 +88,14 @@ app.get('/profile/:username', async (c) => {
 // Get avatar only (faster endpoint)
 app.get('/avatar/:username', async (c) => {
   const username = c.req.param('username');
-  
+
   if (!username) {
     return c.json({ error: 'Username is required' }, 400);
   }
 
   try {
     const avatarUrl = await scrapeTwitterAvatar(username);
-    
+
     if (!avatarUrl) {
       return c.json({ error: 'Failed to scrape avatar' }, 404);
     }
@@ -133,41 +115,25 @@ app.get('/avatar/:username', async (c) => {
 // Force refresh profile (bypass cache)
 app.post('/profile/:username/refresh', async (c) => {
   const username = c.req.param('username');
-  
+
   if (!username) {
     return c.json({ error: 'Username is required' }, 400);
   }
 
   try {
     const scrapedData = await scrapeTwitterProfile(username);
-    
+
     if (!scrapedData) {
       return c.json({ error: 'Failed to scrape profile' }, 404);
     }
 
     // Save to database
-    const profileData = {
-      username: scrapedData.username,
-      fullName: scrapedData.fullName,
-      bio: scrapedData.bio,
-      avatarUrl: scrapedData.avatarUrl,
-      followers: scrapedData.followers,
-      url: scrapedData.url,
-      lastScraped: new Date(),
-      updatedAt: new Date()
-    };
+    const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
 
-    const existingProfile = await db.select()
-      .from(scrapedProfiles)
-      .where(eq(scrapedProfiles.username, username))
-      .limit(1);
-
-    if (existingProfile.length > 0) {
-      await db.update(scrapedProfiles)
-        .set(profileData)
-        .where(eq(scrapedProfiles.username, username));
+    if (existingProfile) {
+      db.updateProfile(username, scrapedData);
     } else {
-      await db.insert(scrapedProfiles).values(profileData);
+      db.insertProfile(scrapedData);
     }
 
     return c.json({
@@ -186,18 +152,18 @@ app.post('/profile/:username/refresh', async (c) => {
 // Get all cached profiles
 app.get('/profiles', async (c) => {
   try {
-    const profiles = await db.select().from(scrapedProfiles);
-    
+    const profiles: ScrapedProfileRow[] = db.getAllProfiles();
+
     return c.json({
       success: true,
-      data: profiles.map(profile => ({
-        fullName: profile.fullName,
+      data: profiles.map((profile: ScrapedProfileRow) => ({
+        fullName: profile.full_name,
         username: profile.username,
         bio: profile.bio,
-        avatarUrl: profile.avatarUrl,
+        avatarUrl: profile.avatar_url,
         followers: profile.followers,
         url: profile.url,
-        lastScraped: profile.lastScraped
+        lastScraped: profile.last_scraped
       })),
       count: profiles.length
     });
