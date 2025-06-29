@@ -1,0 +1,86 @@
+name: Reusable Deployment
+
+on:
+  workflow_call:
+    inputs:
+      nomad-directory:
+        description: "Nomad directory of the job."
+        required: true
+        type: string
+      nomad-job:
+        description: "Nomad Job HCL file"
+        required: true
+        type: string
+      nomad-addr:
+        description: "Nomad Address"
+        required: true
+        type: string
+      image-tag:
+        description: "The docker image tag"
+        required: true
+        type: string
+      environment:
+        description: "The deployment environment."
+        required: true
+        type: string
+      environment-url:
+        description: "The URL of the deployment environment."
+        required: true
+        type: string
+      module:
+        description: "Which module"
+        required: true
+        type: string
+      semver-type:
+        description: "Semantic versioning type (major/minor/patch). Defaults to 'patch'."
+        default: "patch"
+        required: false
+        type: string
+jobs:
+  deploy:
+    name: Deploy to Nomad
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.module }}
+      cancel-in-progress: true
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GH_TOKEN }}
+
+    - name: Show GitHub contexts
+      env:
+        GITHUB_CONTEXT_JSON: ${{ toJson(github) }}
+      run: |
+        echo "$GITHUB_CONTEXT_JSON"
+
+    - name: Show Workflow Inputs contexts
+      env:
+        WORKFLOW_INPUTS_CONTEXT_JSON: ${{ toJson(inputs) }}
+      run: |
+        echo "$WORKFLOW_INPUTS_CONTEXT_JSON"
+
+    - name: Search and replace value in Nomad Config
+      run: |
+        sed -i "s|place_image_sha|${{ inputs.image-tag }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+        sed -i "s|ghcr_password|${{ secrets.GH_TOKEN }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+        sed -i "s|mode_env|${{ inputs.environment }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+
+    - name: Backend Config Nomad
+      if: inputs.module == 'engine'
+      run: |
+        sed -i "s|place_mongo_uri|${{ secrets.MONGO_URI }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+
+    - name: Nomad parse .hcl to .json
+      id: job-parse
+      run: |
+        jq -Rsc '{ JobHCL: ., Canonicalize: true }' ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }} > payload.json;
+        parsed=$(curl -H "CF-Access-Client-Id: ${{ secrets.CF_Access_Client_Id }}" -H "CF-Access-Client-Secret: ${{ secrets.CF_Access_Client_Secret }}" -d @payload.json -X POST ${{ inputs.nomad-addr }}/v1/jobs/parse);
+        echo "parsed=$parsed" >> $GITHUB_OUTPUT
+
+    - name: Nomad deployment
+      run: |
+        curl -H "CF-Access-Client-Id: ${{ secrets.CF_Access_Client_Id }}" -H "CF-Access-Client-Secret: ${{ secrets.CF_Access_Client_Secret }}" -X POST -d '{ "job": ${{ steps.job-parse.outputs.parsed }} }' ${{ inputs.nomad-addr }}/v1/jobs

@@ -5,7 +5,7 @@ import {
   getTransactionsByCreator,
 } from "../controller/find";
 import { createTransaction } from "../controller/create";
-import { sendToTopic } from "@/packages/rabbitmq";
+// import { sendToTopic } from "@/packages/rabbitmq";
 import { findByAddress } from "@/services/account/controller/find";
 
 const router = Router();
@@ -183,20 +183,20 @@ router.post("/", async (req, res) => {
           }
         : {};
 
-      sendToTopic({
-        exchangeName: creator,
-        feature: "MEDIASHARE",
-        message: JSON.stringify({
-          ...payloadTopic,
-          media,
-        }),
-      });
+      // sendToTopic({
+      //   exchangeName: creator,
+      //   feature: "MEDIASHARE",
+      //   message: JSON.stringify({
+      //     ...payloadTopic,
+      //     media,
+      //   }),
+      // });
     } else {
-      sendToTopic({
-        exchangeName: creator,
-        feature: "ALERT",
-        message: JSON.stringify(payloadTopic),
-      });
+      // sendToTopic({
+      //   exchangeName: creator,
+      //   feature: "ALERT",
+      //   message: JSON.stringify(payloadTopic),
+      // });
     }
 
     res.status(201).json({

@@ -1,4 +1,4 @@
-import { sendToTopic } from "@/packages/rabbitmq";
+// import { sendToTopic } from "@/packages/rabbitmq";
 import { Router } from "express";
 
 const router = Router();
@@ -24,11 +24,11 @@ router.get("/mediashare/:address/:symbol", async (req, res) => {
     },
   };
 
-  sendToTopic({
-    exchangeName: address,
-    feature: "MEDIASHARE",
-    message: JSON.stringify(payload),
-  });
+  // sendToTopic({
+  //   exchangeName: address,
+  //   feature: "MEDIASHARE",
+  //   message: JSON.stringify(payload),
+  // });
 
   res.send({ success: "🍭" });
 });
@@ -50,11 +50,11 @@ router.get("/alerts/:address/:symbol", async (req, res) => {
     symbol: symbol ?? "USDC",
   };
 
-  sendToTopic({
-    exchangeName: address,
-    feature: "ALERT",
-    message: JSON.stringify(payload),
-  });
+  // sendToTopic({
+  //   exchangeName: address,
+  //   feature: "ALERT",
+  //   message: JSON.stringify(payload),
+  // });
 
   res.send({ success: "🍬" });
 });

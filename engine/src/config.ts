@@ -6,7 +6,7 @@ dotenv.config({
 
 const CONFIG = {
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: Number(process.env.PORT) || 3000,
+  PORT: Number(process.env.PORT) || 7000,
   MONGO_URI: process.env.MONGO_URI || "",
   RABBITMQ_URI: process.env.RABBITMQ_URI || "",
   JWT_SECRET: process.env.JWT_SECRET || "supersecretkey",

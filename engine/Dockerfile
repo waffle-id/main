@@ -1,6 +1,6 @@
 FROM node:20-alpine AS base
 
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata curl
 ENV TZ=Asia/Jakarta
 
 COPY . /app
@@ -21,6 +21,6 @@ RUN npm run build
 
 # COPY --from=builder /app/ /app/
 
-EXPOSE 8000:8000
+EXPOSE 7000:7000
 
 CMD ["npm", "run", "start"]

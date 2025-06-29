@@ -1,15 +1,16 @@
 import { mongoConnect } from "./packages/mongodb";
 // import { connectAmq } from "./packages/rabbitmq";
-import { startWatcherEvents } from "./packages/viem";
+// import { startWatcherEvents } from "./packages/viem";
 import { runServer } from "./server";
 
-mongoConnect()
-  .then(() => {
-    // connectAmq().then(() => {
-    runServer();
-    // });
-  })
-  .catch(console.error);
+// mongoConnect()
+//   .then(() => {
+//     console.log("Estabilished mongo");
+// connectAmq().then(() => {
+runServer();
+// });
+// })
+// .catch(console.error);
 
 // startWatcherEvents();
 process.on("SIGINT", () => {

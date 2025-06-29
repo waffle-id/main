@@ -6,12 +6,13 @@ variables {
   ghcr_password = "ghcr_password"
   build_number  = "run_number"
   mode          = "mode_env"
+  mongo_uri     = "place_mongo_uri"
 }
 
-job "job-engine-prod" {
+job "job-waffle-engine-prod" {
   datacenters = ["dc1"]
 
-  group "group-engine-prod" {
+  group "group-waffle-engine-prod" {
     count = 1
     network {
       port "http" {
@@ -27,7 +28,7 @@ job "job-engine-prod" {
     }
 
     service {
-      name = "service-engine-prod"
+      name = "service-waffle-engine-prod"
       port = "http"
       check {
         type     = "http"          # Health check type
@@ -37,12 +38,13 @@ job "job-engine-prod" {
       }
     }
 
-    task "task-engine-prod" {
+    task "task-waffle-engine-prod" {
       env {
         PORT    = "${NOMAD_PORT_http}"
         NODE_IP = "${NOMAD_IP_http}"
         MODE    = "${var.mode}"
         BUILD_NUMBER = "${var.build_number}"
+        MONGO_URI = "${var.mongo_uri}"
       }
 
       driver = "docker"
