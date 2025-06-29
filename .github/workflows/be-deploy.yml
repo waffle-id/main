@@ -1,4 +1,4 @@
-name: 🐳 [FE] Build & Deploy
+name: 🐳 [BE] Build & Deploy
 
 on:
   push:

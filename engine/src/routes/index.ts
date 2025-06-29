@@ -14,7 +14,7 @@ router.use("/account", AccountServices);
 router.use("/trx", TrxServices);
 router.use("/dev", DevRoutes);
 router.get("/waffle", (req, res) => {
-  res.json({ stat: "hi Waffle! " + new Date().toISOString() });
+  res.json({ stat: "hi Waffle!" });
 });
 
 export { router as GlobalRouter };
