@@ -6,6 +6,7 @@ variables {
   ghcr_password = "ghcr_password"
   build_number  = "run_number"
   mode          = "mode_env"
+  mongo_uri     = "place_mongo_uri"
 }
 
 job "job-waffle-engine-prod" {
@@ -43,6 +44,7 @@ job "job-waffle-engine-prod" {
         NODE_IP = "${NOMAD_IP_http}"
         MODE    = "${var.mode}"
         BUILD_NUMBER = "${var.build_number}"
+        MONGO_URI = "${var.mongo_uri}"
       }
 
       driver = "docker"
