@@ -9,7 +9,9 @@ const CONFIG = {
   PORT: Number(process.env.PORT) || 7000,
   MONGO_URI: process.env.MONGO_URI || "",
   RABBITMQ_URI: process.env.RABBITMQ_URI || "",
-};
+  JWT_SECRET: process.env.JWT_SECRET || "supersecretkey",
+  JWT_EXPIRY: process.env.JWT_EXPIRY || "1h",
+} as const;
 
 export { CONFIG };
 export default CONFIG;

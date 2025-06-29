@@ -5,6 +5,7 @@ import cors from "cors";
 import CONFIG from "./config";
 import { GlobalRouter } from "./routes";
 import expressWs from "express-ws";
+import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(
 /* ------------------------------ custom routes ----------------------------- */
 
 app.use(GlobalRouter);
+app.use(errorHandler);
 /* -------------------------- end of custom routes -------------------------- */
 
 app.get("/", (req, res) => {
