@@ -6,6 +6,9 @@ const UserSchema: Schema = new Schema(
   {
     address: { type: String, required: false },
     username: { type: String, required: true },
+    fullName: { type: String, required: false },
+    bio: { type: String, required: false },
+    avatarUrl: { type: String, required: false },
     reputationScore: { type: Number, required: true },
     hasInvitationAuthority: { type: Boolean, required: true },
   },
