@@ -21,6 +21,6 @@ RUN npm run build
 
 # COPY --from=builder /app/ /app/
 
-EXPOSE 8000:8000
+EXPOSE 9000:9000
 
 CMD ["npm", "run", "start"]
