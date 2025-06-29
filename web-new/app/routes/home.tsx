@@ -7,10 +7,7 @@ import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animat
 import { ArrowLink, BackLink } from "~/components/waffle/button/arrow-button";
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
+  return [{ title: "Waffle" }, { name: "description", content: "Welcome to Waffle!" }];
 }
 
 export default function Home() {
