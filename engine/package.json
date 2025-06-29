@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "start": "PORT=9000 node ./dist"
+    "start": "PORT=7000 node ./dist"
   },
   "keywords": [],
   "author": "",
