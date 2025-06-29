@@ -42,7 +42,7 @@ jobs:
       uses: docker/build-push-action@v5
       id: push
       with:
-        context: ./web-new
+        context: ./web
         push: true
         provenance: false
         tags: ${{ env.BASE_IMAGE }}:latest,${{ env.BASE_IMAGE }}:${{ github.run_number }}
