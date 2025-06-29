@@ -1,12 +1,18 @@
 import { serve } from '@hono/node-server';
 import app from './routes/index';
-import { initializeDatabase } from './lib/database';
+import { initializeDatabase, db } from './lib/database';
 
 const port = parseInt(process.env.PORT || '3001');
 
 async function startServer() {
   try {
+    // Initialize database
     initializeDatabase();
+
+    // Test database operations
+    console.log('🔍 Testing database operations...');
+    const dbWorking = db.testDatabase();
+    console.log(`Database test result: ${dbWorking ? '✅ PASS' : '❌ FAIL'}`);
 
     console.log('🚀 Starting Waffle Scraper Service...');
     console.log(`📍 Server running on http://localhost:${port}`);

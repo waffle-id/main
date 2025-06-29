@@ -202,7 +202,17 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
             console.log("========================");
 
             const fullName = nameEl?.textContent?.trim() || null;
-            const handle = usernameEl?.textContent?.replace("@", "").trim() || username;
+
+            // Always use the input username parameter as the actual username
+            // The usernameEl selector might not work reliably, so we use what we requested
+            const handle = username; // Use the input parameter directly
+
+            console.log("=== SCRAPER DEBUG ===");
+            console.log("Input username:", username);
+            console.log("Found fullName:", fullName);
+            console.log("Using handle (forced to input):", handle);
+            console.log("usernameEl content:", usernameEl?.textContent);
+            console.log("=====================");
 
             let followersCount = followersEl || followerText || null;
             if (followersCount) {

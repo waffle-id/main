@@ -29,7 +29,14 @@ app.get("/profile/:username", async (c) => {
   }
 
   try {
+    // Check if we have recent data (within last 24 hours)
+    console.log(`Checking for existing profile: ${username}`);
+
+    // Debug: Check what's in the database
+    db.debugDatabase();
+
     const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
+    console.log(`Profile check result:`, existingProfile ? 'found' : 'not found');
 
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -63,10 +70,28 @@ app.get("/profile/:username", async (c) => {
       );
     }
 
-    if (existingProfile) {
-      db.updateProfile(username, scrapedData);
-    } else {
-      db.insertProfile(scrapedData);
+    console.log("=== SCRAPED DATA DEBUG ===");
+    console.log("Scraped data for username:", username);
+    console.log("Scraped data object:", scrapedData);
+    console.log("==========================");
+
+    // Save to database with better error handling
+    try {
+      if (existingProfile) {
+        console.log(`Updating existing profile for ${username}`);
+        db.updateProfile(username, scrapedData);
+      } else {
+        console.log(`Inserting new profile for ${username}`);
+        db.insertProfile(scrapedData);
+      }
+    } catch (dbError: any) {
+      // If there's a unique constraint error, try updating instead
+      if (dbError.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        console.log(`Constraint error for ${username}, trying update instead`);
+        db.updateProfile(username, scrapedData);
+      } else {
+        throw dbError;
+      }
     }
 
     return c.json({
@@ -120,12 +145,25 @@ app.post("/profile/:username/refresh", async (c) => {
       return c.json({ error: "Failed to scrape profile" }, 404);
     }
 
-    const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
+    // Save to database with better error handling
+    try {
+      const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
 
-    if (existingProfile) {
-      db.updateProfile(username, scrapedData);
-    } else {
-      db.insertProfile(scrapedData);
+      if (existingProfile) {
+        console.log(`Updating existing profile for ${username} (refresh)`);
+        db.updateProfile(username, scrapedData);
+      } else {
+        console.log(`Inserting new profile for ${username} (refresh)`);
+        db.insertProfile(scrapedData);
+      }
+    } catch (dbError: any) {
+      // If there's a unique constraint error, try updating instead
+      if (dbError.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        console.log(`Constraint error for ${username} (refresh), trying update instead`);
+        db.updateProfile(username, scrapedData);
+      } else {
+        throw dbError;
+      }
     }
 
     return c.json({
