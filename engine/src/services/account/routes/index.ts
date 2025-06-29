@@ -6,6 +6,8 @@ import {
   findByUsernameFullData,
   findByAddressFullData,
 } from "../controller/find";
+import { findByCode as findReferralByCode } from "../../referral-codes/controller/find";
+import { update as updateReferralCode } from "../../referral-codes/controller/save";
 import { update, create } from "../controller/save";
 import { add } from "../controller/save";
 import { CONFIG } from "../../../config";
@@ -49,7 +51,7 @@ router.post("/login", async (req, res, next) => {
         address: user.address,
         username: user.username,
       },
-      process.env.JWT_SECRET as string,
+      CONFIG.JWT_SECRET,
       { expiresIn: "1h" }
     );
     res.status(200).json({
@@ -86,6 +88,21 @@ router.post("/register", async (req, res, next) => {
       throw error;
     }
     // TODO Search for referral code, throw if doesnt exist or expired
+    const existingReferralCode = await findReferralByCode(referralCode);
+    if (!existingReferralCode) {
+      const error = Error("You are not invited");
+      (error as any).statusCode = 401;
+      throw error;
+    }
+
+    if (existingReferralCode.isExpired) {
+      const error = Error("Your referral code sucks");
+      (error as any).statusCode = 401;
+      throw error;
+    }
+
+    existingReferralCode.isExpired = true;
+    updateReferralCode(existingReferralCode);
 
     let user;
     if (existingUser != null) {
@@ -106,7 +123,7 @@ router.post("/register", async (req, res, next) => {
         address: user.address,
         username: user.username,
       },
-      process.env.JWT_SECRET as string,
+      CONFIG.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
