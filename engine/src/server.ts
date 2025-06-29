@@ -23,7 +23,7 @@ app.use(GlobalRouter);
 
 app.get("/", (req, res) => {
   res.json({
-    status: `OK ${process.env.NODE_IP}:${process.env.PORT}`,
+    status: `Waffle!`,
   });
 });
 
