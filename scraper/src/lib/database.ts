@@ -2,7 +2,6 @@ import { Database } from "bun:sqlite";
 import type { TwitterProfile, ScrapedProfileRow } from "./schema";
 import path from "path";
 
-// Use absolute path for database to avoid path issues
 const dbPath = path.join(process.cwd(), "database.sqlite");
 console.log(`Database path: ${dbPath}`);
 const sqlite = new Database(dbPath);
@@ -19,14 +18,13 @@ export const db = {
 
       console.log(`Database query for username "${username}":`, result);
 
-      // Ensure we return null if no result found
       if (!result) {
         return null;
       }
 
       return result as ScrapedProfileRow;
     } catch (error) {
-      console.error('Database query error:', error);
+      console.error("Database query error:", error);
       return null;
     }
   },
@@ -81,44 +79,42 @@ export const db = {
     return results as ScrapedProfileRow[];
   },
 
-  // Debug function to check database contents
   debugDatabase: () => {
     try {
-      const query = sqlite.query('SELECT username, last_scraped FROM scraped_profiles ORDER BY last_scraped DESC LIMIT 10');
+      const query = sqlite.query(
+        "SELECT username, last_scraped FROM scraped_profiles ORDER BY last_scraped DESC LIMIT 10"
+      );
       const results = query.all();
-      console.log('Current database contents:', results);
+      console.log("Current database contents:", results);
       return results;
     } catch (error) {
-      console.error('Error checking database contents:', error);
+      console.error("Error checking database contents:", error);
       return [];
     }
   },
 
-  // Test function to verify database operations
   testDatabase: () => {
     try {
-      console.log('Testing database operations...');
+      console.log("Testing database operations...");
 
-      // Test insert
       const testProfile: TwitterProfile = {
-        username: 'test_user_' + Date.now(),
-        fullName: 'Test User',
-        bio: 'Test bio',
-        avatarUrl: 'https://test.com/avatar.jpg',
-        followers: '100',
-        url: 'https://x.com/test'
+        username: "test_user_" + Date.now(),
+        fullName: "Test User",
+        bio: "Test bio",
+        avatarUrl: "https://test.com/avatar.jpg",
+        followers: "100",
+        url: "https://x.com/test",
       };
 
       db.insertProfile(testProfile);
-      console.log('Test insert completed');
+      console.log("Test insert completed");
 
-      // Test select
       const retrieved = db.getProfile(testProfile.username);
-      console.log('Test retrieve result:', retrieved);
+      console.log("Test retrieve result:", retrieved);
 
       return !!retrieved;
     } catch (error) {
-      console.error('Database test failed:', error);
+      console.error("Database test failed:", error);
       return false;
     }
   },

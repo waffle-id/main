@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer from "puppeteer";
 
 export interface TwitterProfile {
     fullName: string | null;
@@ -75,7 +75,13 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 
             let bio = bioEl?.textContent?.trim() || null;
             if (bio) {
-                const tweetPatterns: (RegExp | boolean)[] = [/^RT @/, /https:\/\/t\.co\//, /^@\w+/, bio.length > 300, /\n.*\n/];
+                const tweetPatterns: (RegExp | boolean)[] = [
+                    /^RT @/,
+                    /https:\/\/t\.co\//,
+                    /^@\w+/,
+                    bio.length > 300,
+                    /\n.*\n/,
+                ];
 
                 const looksLikeTweet = tweetPatterns.some((pattern) =>
                     typeof pattern === "boolean" ? pattern : pattern.test(bio!)
@@ -91,7 +97,9 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 
             console.log("=== AVATAR EXTRACTION DEBUG ===");
 
-            const profileImg = document.querySelector('img[alt="Opens profile photo"]') as HTMLImageElement | null;
+            const profileImg = document.querySelector(
+                'img[alt="Opens profile photo"]'
+            ) as HTMLImageElement | null;
             console.log("Profile img element:", profileImg);
             console.log("Profile img src:", profileImg?.src);
 
@@ -134,7 +142,9 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
             }
 
             if (!avatarUrl) {
-                const profileDiv = document.querySelector('div[aria-label="Opens profile photo"]') as HTMLDivElement | null;
+                const profileDiv = document.querySelector(
+                    'div[aria-label="Opens profile photo"]'
+                ) as HTMLDivElement | null;
                 console.log("Profile div with aria-label:", profileDiv);
 
                 if (profileDiv) {
@@ -203,9 +213,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 
             const fullName = nameEl?.textContent?.trim() || null;
 
-            // Always use the input username parameter as the actual username
-            // The usernameEl selector might not work reliably, so we use what we requested
-            const handle = username; // Use the input parameter directly
+            const handle = username;
 
             console.log("=== SCRAPER DEBUG ===");
             console.log("Input username:", username);
@@ -291,13 +299,17 @@ export async function scrapeTwitterAvatar(username: string): Promise<string | nu
         const avatarUrl = await page.evaluate(() => {
             console.log("=== DEDICATED AVATAR SCRAPER ===");
 
-            const profileImg = document.querySelector('img[alt="Opens profile photo"]') as HTMLImageElement | null;
+            const profileImg = document.querySelector(
+                'img[alt="Opens profile photo"]'
+            ) as HTMLImageElement | null;
             if (profileImg && profileImg.src) {
                 console.log('Found via alt="Opens profile photo":', profileImg.src);
                 return profileImg.src;
             }
 
-            const anyProfileImg = document.querySelector('img[src*="pbs.twimg.com/profile_images"]') as HTMLImageElement | null;
+            const anyProfileImg = document.querySelector(
+                'img[src*="pbs.twimg.com/profile_images"]'
+            ) as HTMLImageElement | null;
             if (anyProfileImg && anyProfileImg.src) {
                 console.log("Found via profile_images img:", anyProfileImg.src);
                 return anyProfileImg.src;
