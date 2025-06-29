@@ -5,6 +5,7 @@ import { runServer } from "./server";
 
 mongoConnect()
   .then(() => {
+    console.log("Estabilished mongo");
     // connectAmq().then(() => {
     runServer();
     // });
