@@ -68,21 +68,6 @@ export function TextAnimation({ className }: JSX.IntrinsicElements["svg"]) {
         },
       }
     );
-
-    gsap.fromTo(
-      "#waffle ellipse",
-      {
-        y: "400px",
-        rotate: "30deg",
-      },
-      {
-        y: "0px",
-        rotate: "0deg",
-        duration: 1.2,
-        stagger: 0.1,
-        ease: "power3.out",
-      }
-    );
   });
 
   return (
