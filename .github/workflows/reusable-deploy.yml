@@ -70,7 +70,7 @@ jobs:
         sed -i "s|mode_env|${{ inputs.environment }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
 
     - name: Backend Config Nomad
-      if: inputs.module == "engine"
+      if: inputs.module == 'engine'
       run: |
         sed -i "s|place_mongo_uri|${{ secrets.MONGO_URI }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
 
