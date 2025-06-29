@@ -46,6 +46,9 @@ export async function create(data: {
   address: string;
   has_invitation_authority: boolean;
   reputation_score: number;
+  avatarUrl: string | null;
+  bio: string | null;
+  fullName: string | null;
 }) {
   const user = new UserModel(data);
   return user.save();

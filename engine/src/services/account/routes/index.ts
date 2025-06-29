@@ -72,10 +72,11 @@ router.post("/login", async (req, res, next) => {
 
 router.post("/register", async (req, res, next) => {
   try {
-    const { username, address, referralCode } = req.body;
+    const { username, address, referralCode, fullName, bio, avatarUrl } =
+      req.body;
 
-    if (!username || !address) {
-      const error = Error("Wallet and twitter must be connected");
+    if (!username || !address || !referralCode) {
+      const error = Error("Bad request");
       (error as any).statusCode = 400;
       throw error;
     }
@@ -114,6 +115,9 @@ router.post("/register", async (req, res, next) => {
         address,
         has_invitation_authority: false,
         reputation_score: 1000,
+        avatarUrl: avatarUrl,
+        bio: bio,
+        fullName: fullName,
       });
     }
 
