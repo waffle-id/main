@@ -1,7 +1,6 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
 
 const FEATURES = [
   {
@@ -18,51 +17,34 @@ const FEATURES = [
   },
 ];
 
+/* -------------------------------------------------------------------------- */
+/*                                Features Text                               */
+/* -------------------------------------------------------------------------- */
+
 export function FeaturesText() {
   useGSAP(() => {
-    gsap.registerPlugin(SplitText, ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger);
 
-    console.clear();
+    let containers = gsap.utils.toArray<HTMLDivElement>(".feature");
 
-    gsap.set(".split", { opacity: 1 });
+    if (containers.length > 0) {
+      containers.forEach((container: HTMLElement) => {
+        let text = container.querySelector(".desc");
+        gsap.set(text, { y: "100%" });
 
-    document.fonts.ready.then(() => {
-      let containers = gsap.utils.toArray<HTMLDivElement>(".feature");
-
-      if (containers.length > 0) {
-        console.log(containers);
-
-        containers.forEach((container: HTMLElement) => {
-          let text = container.querySelector(".desc");
-          let animation;
-
-          SplitText.create(text, {
-            type: "words,lines",
-            mask: "lines",
-            linesClass: "line",
-            autoSplit: true,
-            onSplit: (instance) => {
-              console.log("instances", instance);
-              return gsap.from(instance.lines, {
-                yPercent: 120,
-                stagger: 0.1,
-                scrollTrigger: {
-                  trigger: container,
-                  // markers: true,
-                  scrub: 2,
-                  // start: "clamp(top center)",
-                  // end: "clamp(bottom center)",
-                  start: "top 70%",
-                  end: "bottom 90%",
-                },
-              });
-            },
-          });
-
-          //
+        gsap.to(text, {
+          y: 0,
+          stagger: 0.2,
+          scrollTrigger: {
+            trigger: container,
+            start: "top 70%",
+            end: "bottom 90%",
+            scrub: 1.2,
+            // markers: true,
+          },
         });
-      }
-    });
+      });
+    }
   });
 
   return (
@@ -70,25 +52,39 @@ export function FeaturesText() {
       {FEATURES.map((val, i) => (
         <div className="feature py-24 flex flex-col text-center gap-4" key={i}>
           <p className="text-4xl text-black">{val.title}</p>
-          <p className="desc text-2xl text-gray-dark">{val.desc}</p>
+          <p className="overflow-hidden self-end justify-self-end">
+            <span className="desc block text-2xl text-gray-dark">{val.desc}</span>
+          </p>
         </div>
       ))}
     </>
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*                               Features Banner                              */
+/* -------------------------------------------------------------------------- */
 export function FeaturesBanner() {
   return (
     <svg width="297" height="535" viewBox="0 0 297 535" fill="none">
-      <rect x="0.5" y="0.5" width="296" height="534" rx="16.5" fill="url(#paint0_linear_69_221)" />
       <rect
         x="0.5"
         y="0.5"
         width="296"
         height="534"
         rx="16.5"
-        stroke="url(#paint1_linear_69_221)"
+        fill="url(#paint0_linear_69_221)"
+        filter="url(#blurFilter)"
+        mask="url(#roundedMask)"
       />
+      {/* <rect
+        x="0.5"
+        y="0.5"
+        width="296"
+        height="534"
+        rx="16.5"
+        stroke="url(#paint1_linear_69_221)"
+      /> */}
       <mask
         id="mask0_69_221"
         style={{ maskType: "alpha" }}
@@ -126,10 +122,16 @@ export function FeaturesBanner() {
           y2="535"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#FFECBA" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#FFECBA" />
         </linearGradient>
-        <linearGradient
+        <filter id="blurFilter" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="40" />
+        </filter>
+        <mask id="roundedMask">
+          <rect x="0" y="0" width="100%" height="100%" rx="32" ry="32" fill="white" />
+        </mask>
+        {/* <linearGradient
           id="paint1_linear_69_221"
           x1="148.5"
           y1="0"
@@ -137,9 +139,9 @@ export function FeaturesBanner() {
           y2="535"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#E09400" />
-          <stop offset="1" stop-color="#5C3111" />
-        </linearGradient>
+          <stop stopColor="#E09400" />
+          <stop offset="1" stopColor="#5C3111" />
+        </linearGradient> */}
         <image
           id="image0_69_221"
           width="800"

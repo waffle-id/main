@@ -1,17 +1,24 @@
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import gsap from "gsap";
-import type { JSX } from "react";
+import { useRef, type JSX } from "react";
 import { cn } from "~/utils/cn";
 
 export function LogoAnimationNoRepeat({ className }: JSX.IntrinsicElements["svg"]) {
+  const containerRef = useRef<SVGSVGElement>(null);
+
   useGSAP(() => {
     gsap.registerPlugin(ScrollTrigger);
+
+    if (!containerRef.current) return;
+
+    const paths = containerRef.current.querySelectorAll("path");
+
     ScrollTrigger.create({
-      trigger: "#waffle-logo-no-repeat",
+      trigger: containerRef.current,
       onEnter() {
         gsap.fromTo(
-          "#waffle-logo-no-repeat path",
+          paths,
           {
             y: "400px",
             rotate: "30deg",
@@ -30,7 +37,7 @@ export function LogoAnimationNoRepeat({ className }: JSX.IntrinsicElements["svg"
 
   return (
     <svg
-      id="waffle-logo-no-repeat"
+      ref={containerRef}
       fill="none"
       viewBox="0 0 139 152"
       className={cn("w-full h-full overflow-visible", className)}

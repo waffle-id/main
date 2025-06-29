@@ -109,7 +109,7 @@ function ArrowButtonContent({ children, direction = "right" }: ArrowLinkProps) {
       ) : null}
 
       <div className="relative inline-flex h-14 w-14 flex-none items-center justify-center p-1">
-        <div className="absolute text-white/20">
+        <div className="absolute text-foreground">
           <svg width="60" height="60">
             <circle
               stroke="currentColor"
