@@ -1,5 +1,5 @@
 {
-  "name": "@fund-fun/be",
+  "name": "@waffle/be",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/amqplib": "0.10.6",
     "@types/cors": "^2.8.17",
