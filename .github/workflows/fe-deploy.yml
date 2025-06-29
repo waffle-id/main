@@ -5,7 +5,7 @@ on:
     branches:
     - main
     paths:
-    - "web-new/**"
+    - "web/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
