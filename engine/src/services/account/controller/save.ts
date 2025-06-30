@@ -44,8 +44,8 @@ export async function update(user: any) {
 export async function create(data: {
   username: string;
   address: string;
-  has_invitation_authority: boolean;
-  reputation_score: number;
+  hasInvitationAuthority: boolean;
+  reputationScore: number;
   avatarUrl: string | null;
   bio: string | null;
   fullName: string | null;
