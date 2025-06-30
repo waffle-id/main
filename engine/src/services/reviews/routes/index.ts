@@ -13,27 +13,42 @@ import { findByUsernameFullData } from "@/services/account/controller/find";
 import { update as updateUser } from "@/services/account/controller/save";
 const router = Router();
 
-router.post("/:revieweeUserName", authMiddleware, async (req, res, next) => {
+router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
   try {
-    const { revieweeUserName } = req.params;
+    const { revieweeUsername } = req.params;
     const { comment, txHash, personas, overallPersona } = req.body;
     const { id, address, username } = (req as any).user;
+    console.log(`username is: ${username}`);
+
+    if (!comment || !txHash || !personas || !overallPersona) {
+      const error = Error("Bad requests");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+
+    // Can't review self
+    if (username === revieweeUsername) {
+      const error = Error("You can't review yourself");
+      (error as any).statusCode = 400;
+      throw error;
+    }
 
     // Check if reviewer has reviewed the target, if yes, throw
     const existingReview = await findByRevieweeUsernameAndReviewerUsername(
-      revieweeUserName,
+      revieweeUsername,
       username
     );
+    console.log(`review is: ${existingReview}`);
     if (existingReview) {
       const error = Error("You can't review this person anymore");
       (error as any).statusCode = 400;
       throw error;
     }
-    await createReview(txHash, comment, username, revieweeUserName);
+    await createReview(txHash, comment, username, revieweeUsername);
 
     const baseScore = 10;
 
-    const reviewee = await findByUsernameFullData(revieweeUserName);
+    const reviewee = await findByUsernameFullData(revieweeUsername);
     if (!reviewee) {
       const error = Error("This user doesn't exist");
       (error as any).statusCode = 404;
@@ -46,7 +61,7 @@ router.post("/:revieweeUserName", authMiddleware, async (req, res, next) => {
     }
     await updateUser(reviewee);
 
-    personas.array.forEach(async (persona: PersonaRequest) => {
+    for (const persona of personas || []) {
       const existingPersona = await findByName(persona.name);
       if (!existingPersona) {
         const error = Error("Persona is not found");
@@ -54,12 +69,12 @@ router.post("/:revieweeUserName", authMiddleware, async (req, res, next) => {
         throw error;
       }
       let existingPersonaScore = await findByUsernameAndPersonaName(
-        revieweeUserName,
+        revieweeUsername,
         persona.name
       );
       if (!existingPersonaScore) {
         existingPersonaScore = await createPersonaScore({
-          username: revieweeUserName,
+          username: revieweeUsername,
           personaName: persona.name,
           score: 0,
         });
@@ -67,7 +82,7 @@ router.post("/:revieweeUserName", authMiddleware, async (req, res, next) => {
       existingPersonaScore.score =
         (existingPersonaScore.score as any) + baseScore * persona.weight;
       await updatePersonaScore(existingPersonaScore);
-    });
+    }
     res.status(201).json({
       isSuccess: true,
     });
