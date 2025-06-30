@@ -4,8 +4,8 @@ on:
   push:
     branches:
     - main
-    # paths:
-    # - "engine/**"
+    paths:
+    - "engine/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
