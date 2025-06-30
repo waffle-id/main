@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { router as AccountServices } from "@services/account";
-import { router as TrxServices } from "@services/transaction";
-import { router as DevRoutes } from "@services/dev-mode";
+import { router as ReviewRoutes } from "@services/reviews";
 
 const router = Router();
 
@@ -11,8 +10,7 @@ router.use((req, res, next) => {
 });
 
 router.use("/account", AccountServices);
-router.use("/trx", TrxServices);
-router.use("/dev", DevRoutes);
+router.use("/reviews", ReviewRoutes);
 router.get("/waffle", (req, res) => {
   res.json({ stat: "hi Waffle! " + new Date().toISOString() });
 });

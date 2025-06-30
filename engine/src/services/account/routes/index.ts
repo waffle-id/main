@@ -88,7 +88,7 @@ router.post("/register", async (req, res, next) => {
       (error as any).statusCode = 409;
       throw error;
     }
-    // TODO Search for referral code, throw if doesnt exist or expired
+
     const existingReferralCode = await findReferralByCode(referralCode);
     if (!existingReferralCode) {
       const error = Error("You are not invited");
