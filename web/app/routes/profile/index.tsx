@@ -58,7 +58,7 @@ export default function Profile() {
       const img = item.querySelector(".grid-item-img");
       if (!img) return;
 
-      const yPercentRandomVal = gsap.utils.random(50, 70);
+      const yPercentRandomVal = gsap.utils.random(0, 100);
 
       gsap
         .timeline()
@@ -81,7 +81,7 @@ export default function Profile() {
           item,
           {
             ease: "none",
-            xPercent: yPercentRandomVal,
+            yPercent: yPercentRandomVal,
             scrollTrigger: {
               trigger: item,
               start: "top bottom",
