@@ -14,6 +14,7 @@ import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-n
 import type { Route } from "./+types";
 import { Separator } from "~/components/waffle/separator";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
+import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
 // import { PodiumLeaderboards } from "~/components/waffle/podium";
 
 export function meta({}: Route.MetaArgs) {
@@ -35,7 +36,9 @@ export default function Landing() {
             )}
           >
             <div className="flex flex-col gap-6 items-center">
-              <p className="text-7xl text-yelight-dark">Reputation that Sticks.</p>
+              <CommandLineTypo className="text-7xl text-yelight-dark" scrollTrigger={false}>
+                Reputation that Sticks.
+              </CommandLineTypo>
               <p className="text-3xl w-3/4 text-center text-gray-dark">
                 Start building your decentralized credibility. Backed by the community, not
                 algorithms.
@@ -51,9 +54,9 @@ export default function Landing() {
           <GradientBG className="absolute h-3/5 -left-96 blur-lg" />
           <p className="text-8xl text-yelight-dark">
             Own Your Reputation in
-            <span className="bg-linear-170 from-[#EB701F] to-[#F2DB34] bg-clip-text text-transparent">
+            <CommandLineTypo className="bg-linear-170 from-[#EB701F] to-[#F2DB34] bg-clip-text text-transparent">
               Web3
-            </span>
+            </CommandLineTypo>
           </p>
           <div className="flex justify-center relative">
             <FeaturesBanner />
@@ -116,12 +119,12 @@ export default function Landing() {
           </div>
           <div className="flex flex-col items-center justify-center gap-16">
             <LogoAnimationNoRepeat className="h-1/2" />
-            <p className="text-6xl text-gray-dark font-semibold">
+            <CommandLineTypo className="text-6xl text-gray-dark font-semibold">
               Why{" "}
               <span className="bg-linear-170 from-[#EB701F] to-[#F2DB34] bg-clip-text text-transparent">
                 Waffle?
               </span>
-            </p>
+            </CommandLineTypo>
           </div>
         </div>
       </div>
@@ -149,10 +152,10 @@ export default function Landing() {
               Waffle <span className="italic font-medium">Waffle</span> cupcake ipsum dolor sit
               amet. Cupcake ipsum dolor sit amet.
             </h1>
-            <p className="mt-6 md:mt-8 text-xl md:text-3xl leading-tight text-gray-dark">
+            <CommandLineTypo className="mt-6 md:mt-8 text-xl md:text-3xl leading-tight text-gray-dark">
               <span>Sound interesting? </span>
               <span className="text-foreground">Try it yourself</span>.
-            </p>
+            </CommandLineTypo>
             <ArrowLink className="mt-10 md:mt-20" href="https://t.me/HappyCuanAirdrop">
               Join now
             </ArrowLink>
