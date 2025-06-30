@@ -3,10 +3,9 @@ import { mongoConnect } from "./packages/mongodb";
 // import { startWatcherEvents } from "./packages/viem";
 import { runServer } from "./server";
 
-// mongoConnect()
-//   .then(() => {
-//     console.log("Estabilished mongo");
-// connectAmq().then(() => {
+mongoConnect().then(() => {
+  console.log("Estabilished mongo");
+});
 runServer();
 // });
 // })

@@ -103,7 +103,7 @@ router.post("/register", async (req, res, next) => {
     }
 
     existingReferralCode.isExpired = true;
-    updateReferralCode(existingReferralCode);
+    await updateReferralCode(existingReferralCode);
 
     let user;
     if (existingUser != null) {
@@ -113,8 +113,8 @@ router.post("/register", async (req, res, next) => {
       user = await create({
         username,
         address,
-        has_invitation_authority: false,
-        reputation_score: 1000,
+        hasInvitationAuthority: false,
+        reputationScore: 1000,
         avatarUrl: avatarUrl,
         bio: bio,
         fullName: fullName,

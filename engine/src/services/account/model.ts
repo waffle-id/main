@@ -1,5 +1,4 @@
 import { Schema, Document, model } from "mongoose";
-import { unique } from "viem/chains";
 
 const TABLE_ACCOUNT = "accounts";
 
