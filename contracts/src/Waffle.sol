@@ -57,7 +57,6 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
     // Admin mappings
     mapping(address => bool) public moderators;
-    mapping(address => bool) public aiVerifiers; // for AI verification service
 
     // ============ Events ============
 
@@ -90,13 +89,6 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
     modifier onlyModerator() {
         if (!moderators[msg.sender] && msg.sender != owner()) {
-            revert WaffleErrors.OnlyAuthorized();
-        }
-        _;
-    }
-
-    modifier onlyAIVerifier() {
-        if (!aiVerifiers[msg.sender] && msg.sender != owner()) {
             revert WaffleErrors.OnlyAuthorized();
         }
         _;
@@ -272,7 +264,7 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         emit ReviewSubmitted(reviewId, msg.sender, address(0), rating, sanitizedComment, block.timestamp);
     }
 
-    function verifyReview(uint256 reviewId, bool verified) external override onlyAIVerifier {
+    function verifyReview(uint256 reviewId, bool verified) external override onlyModerator whenNotPaused {
         if (reviewId > _reviewIds || reviewId == 0) {
             revert WaffleErrors.ReviewNotFound();
         }
