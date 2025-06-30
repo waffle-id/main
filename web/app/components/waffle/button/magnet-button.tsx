@@ -133,7 +133,7 @@ export function ButtonMagnet({ children, color, size, className, ...props }: But
       className={cn(
         buttonVariants({ color, size }),
         "relative inline-flex items-center justify-center overflow-hidden transition-colors cursor-pointer whitespace-nowrap select-none",
-        "border bg-transparent rounded-full font-semibold h-max",
+        "border-2 bg-transparent rounded-full font-semibold h-max",
         "hover:text-white",
         className
       )}

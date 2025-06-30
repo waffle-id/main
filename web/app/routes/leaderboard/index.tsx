@@ -1,4 +1,5 @@
 import { Award, BadgeCheckIcon } from "lucide-react";
+import React from "react";
 import { Badge } from "~/components/shadcn/badge";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animation";
@@ -46,9 +47,9 @@ export default function LeaderboardPage() {
               Badges
             </p>
             {new Array(20).fill("").map((val, idx) => (
-              <>
+              <React.Fragment key={idx}>
                 <div className="border-b border-gray-400 border-dashed py-3">
-                  <div className="grid grid-cols-2 w-max items-center">
+                  <div className="flex flex-row w-max items-center gap-4">
                     {[0, 1, 2].includes(idx) ? (
                       <Award className="size-5" />
                     ) : (
@@ -57,10 +58,26 @@ export default function LeaderboardPage() {
                     <p className="ml-1">{idx + 1}</p>
                   </div>
                 </div>
-                <div className="border-b border-gray-400 border-dashed py-3">Lorem</div>
-                <div className="border-b border-gray-400 border-dashed py-3">1900</div>
-                <div className="border-b border-gray-400 border-dashed py-3">123</div>
-                <div className="border-b border-gray-400 border-dashed py-3">$2000</div>
+                <div className="border-b border-gray-400 border-dashed py-3">
+                  <div className="flex items-center h-full">
+                    <p>Lorem</p>
+                  </div>
+                </div>
+                <div className="border-b border-gray-400 border-dashed py-3">
+                  <div className="flex items-center h-full">
+                    <p>1900</p>
+                  </div>
+                </div>
+                <div className="border-b border-gray-400 border-dashed py-3">
+                  <div className="flex items-center h-full">
+                    <p>123</p>
+                  </div>
+                </div>
+                <div className="border-b border-gray-400 border-dashed py-3">
+                  <div className="flex items-center h-full">
+                    <p>$2000</p>
+                  </div>
+                </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex flex-row gap-1 items-center justify-center">
                     <Badge variant="secondary" className="bg-blue-500 text-white dark:bg-blue-600">
@@ -81,7 +98,7 @@ export default function LeaderboardPage() {
                     )}
                   </div>
                 </div>
-              </>
+              </React.Fragment>
             ))}
           </div>
           <ButtonMagnet className="w-max self-center mt-12" size="lg">

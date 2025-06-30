@@ -4,6 +4,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { useGSAP } from "@gsap/react";
 import { cn } from "~/utils/cn";
+import { BadgeDollarSign, CircleSlash, Pen, PencilRuler, Share2, Wallet } from "lucide-react";
+import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
+import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
+import { ActionScore } from "./shared/action-score";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
+import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
+import { ContentGiven } from "./shared/content-given";
+import { ContentReceived } from "./shared/content-received";
+import { ContentAll } from "./shared/content-all";
 
 const imageItems = [
   { src: "https://placehold.co/6", r: 1, c: 4, review: "Lorem 1" },
@@ -23,6 +32,7 @@ const imageItems = [
 ];
 
 export default function Profile() {
+  const TABS = ["received", "given", "all"];
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -146,13 +156,14 @@ export default function Profile() {
   });
 
   return (
-    <main className="relative">
+    <>
+      {/* <div className="relative">
+
+    </div> */}
       {/* Cover */}
       <div className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center pointer-events-none z-50">
         {/* <div className=" flex flex-col gap-4 items-center backdrop-blur-lg rounded-lg p-4"> */}
-        <h2 className="text-[8vw] font-bold font-sans m-0">
-          Hawwooo<sup className="text-[4vw] font-bold align-super">&reg;</sup>
-        </h2>
+        <h2 className="text-[8vw] font-bold font-sans m-0">Hawwooo</h2>
         <h3 className="text-xl font-normal m-0">lorem~</h3>
         {/* </div> */}
       </div>
@@ -215,14 +226,63 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="relative z-[10000] h-screen bg-gray-200 text-black text-[5vh] flex items-center justify-center px-4">
-        <p className="max-w-[40ch] leading-snug">
-          From the dawn of civilisation onwards crowds have always undergone the influence of
-          illusions. It is to the creators of illusions that they have raised more temples, statues,
-          and altars than to any other class of men.
-        </p>
+      <div className="relative z-[10000] h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
+        <p className="text-[5vh] max-w-[40ch] leading-snug">use me as a bad example</p>
+        <div className="absolute bottom-0 px-[20px] lg:px-[50px] mb-20 w-full">
+          <div className="flex flex-row items-center justify-between">
+            {/* User */}
+            <div className="flex flex-row items-center gap-8">
+              <img src="https://placehold.co/10" className="size-32 rounded-full aspect-square" />
+              <CommandLineTypo className="text-3xl font-light">Username</CommandLineTypo>
+            </div>
+            {/* Social - Scores */}
+            <ActionScore />
+          </div>
+        </div>
       </div>
-    </main>
+
+      <div className="px-[20px] lg:px-[50px] py-24 relative z-[10000] bg-background text-black">
+        <div className="flex flex-col gap-12">
+          <div className="flex flex-row items-center gap-4 justify-end">
+            <ButtonMagnet className="px-8 py-2">
+              <div className="flex flex-row items-center gap-2">
+                <PencilRuler className="size-5" />
+                Review
+              </div>
+            </ButtonMagnet>
+            <ButtonMagnet className="px-8 py-2">
+              <div className="flex flex-row items-center gap-2">
+                <BadgeDollarSign className="size-5" />
+                Vouch
+              </div>
+            </ButtonMagnet>
+            <ButtonMagnet className="px-8 py-2">
+              <div className="flex flex-row items-center gap-2">
+                <CircleSlash className="size-5" />
+                Slash
+              </div>
+            </ButtonMagnet>
+          </div>
+          <Tabs defaultValue={TABS[0]}>
+            <TabsList className="w-full mb-5 flex flex-wrap gap-2">
+              {TABS.map((val, idx) => (
+                <TabsTrigger key={idx} value={val} className="capitalize">
+                  {val}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <TabsContent value={TABS[0]} className="flex flex-col gap-10">
+              <ContentGiven />
+            </TabsContent>
+            <TabsContent value={TABS[1]} className="flex flex-col gap-10">
+              <ContentReceived />
+            </TabsContent>
+            <TabsContent value={TABS[2]} className="flex flex-col gap-10">
+              <ContentAll />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </>
   );
 }
