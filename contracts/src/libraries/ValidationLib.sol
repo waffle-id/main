@@ -174,8 +174,8 @@ library ValidationLib {
             // Allow alphanumeric characters and underscore
             if (
                 // 0-9
-                    // A-Z
-                    // a-z
+                // A-Z
+                // a-z
                 !(
                     (char >= 0x30 && char <= 0x39) || (char >= 0x41 && char <= 0x5A) || (char >= 0x61 && char <= 0x7A)
                         || char == 0x5F

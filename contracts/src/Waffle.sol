@@ -503,19 +503,19 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     function _checkReviewBadgeEligibility(address user) internal view {
         // Check for Early Adopter badge
         if (!hasBadge[user][1] && _checkBadgeEligibility(user, 1)) {
-            // Auto-claim logic could be implemented here
+            // TBA
         }
 
         // Check for Trusted Reviewer badge
         if (!hasBadge[user][2] && _checkBadgeEligibility(user, 2)) {
-            // Auto-claim logic could be implemented here
+            // TBA
         }
     }
 
     function _checkStreakBadgeEligibility(address user) internal view {
         // Check for Streak Master badge
         if (!hasBadge[user][3] && _checkBadgeEligibility(user, 3)) {
-            // Auto-claim logic could be implemented here
+            // TBA
         }
     }
 
