@@ -17,58 +17,37 @@ contract WaffleDeployment is Script {
     // Deployment configuration
     struct DeploymentConfig {
         bool setupModerators;
-        bool setupAIVerifier;
         bool registerDeployer;
         bool runDemo;
         bool verbose;
     }
 
     function run() external {
-        DeploymentConfig memory config = DeploymentConfig({
-            setupModerators: true,
-            setupAIVerifier: true,
-            registerDeployer: false,
-            runDemo: false,
-            verbose: true
-        });
+        DeploymentConfig memory config =
+            DeploymentConfig({setupModerators: true, registerDeployer: false, runDemo: false, verbose: true});
 
         _deploy(config);
     }
 
     function deployMainnet() external {
-        DeploymentConfig memory config = DeploymentConfig({
-            setupModerators: true,
-            setupAIVerifier: true,
-            registerDeployer: false,
-            runDemo: false,
-            verbose: true
-        });
+        DeploymentConfig memory config =
+            DeploymentConfig({setupModerators: true, registerDeployer: false, runDemo: false, verbose: true});
 
         console.log("=== MAINNET DEPLOYMENT ===");
         _deploy(config);
     }
 
     function deployTestnet() external {
-        DeploymentConfig memory config = DeploymentConfig({
-            setupModerators: true,
-            setupAIVerifier: true,
-            registerDeployer: true,
-            runDemo: true,
-            verbose: true
-        });
+        DeploymentConfig memory config =
+            DeploymentConfig({setupModerators: true, registerDeployer: true, runDemo: true, verbose: true});
 
         console.log("=== TESTNET DEPLOYMENT ===");
         _deploy(config);
     }
 
     function deployDev() external {
-        DeploymentConfig memory config = DeploymentConfig({
-            setupModerators: false,
-            setupAIVerifier: false,
-            registerDeployer: true,
-            runDemo: true,
-            verbose: true
-        });
+        DeploymentConfig memory config =
+            DeploymentConfig({setupModerators: false, registerDeployer: true, runDemo: true, verbose: true});
 
         console.log("=== DEVELOPMENT DEPLOYMENT ===");
         _deploy(config);

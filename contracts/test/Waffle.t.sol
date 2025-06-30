@@ -436,20 +436,6 @@ contract WaffleTest is Test {
         waffle.toggleBadge(1);
     }
 
-    function testOnlyAIVerifierCanVerifyReview() public {
-        vm.prank(alice);
-        waffle.registerUser();
-        vm.prank(bob);
-        waffle.registerUser();
-
-        vm.prank(alice);
-        waffle.submitReview(bob, 3, "Test review");
-
-        vm.expectRevert(WaffleErrors.OnlyAuthorized.selector);
-        vm.prank(charlie);
-        waffle.verifyReview(1, true);
-    }
-
     // ============ Edge Cases & Security Tests ============
 
     function testCannotReviewWhenPaused() public {
