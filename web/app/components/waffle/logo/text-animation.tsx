@@ -60,7 +60,7 @@ export function TextAnimation({ className }: JSX.IntrinsicElements["svg"]) {
                 trigger: `#${v}`,
                 start: "bottom 35%",
                 end: "top top",
-                markers: true,
+                // markers: true,
                 scrub: 5,
               },
             });

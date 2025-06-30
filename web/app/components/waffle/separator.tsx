@@ -1,8 +1,10 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import type { JSX } from "react";
+import { cn } from "~/utils/cn";
 // import "./separator.css";
 
-export function Separator() {
+export function Separator({ className }: JSX.IntrinsicElements["svg"]) {
   useGSAP(() => {
     const paths = document.querySelectorAll<SVGPathElement>("path.path-anim");
 
@@ -32,7 +34,10 @@ export function Separator() {
 
   return (
     <svg
-      className="z-[10000] pointer-none -ml-[2.5px] w-[calc(100% + 5px)] h-auto w-full"
+      className={cn(
+        "z-[10000] pointer-none -ml-[2.5px] w-[calc(100% + 5px)] h-auto w-full",
+        className
+      )}
       viewBox="0 0 900 300"
       fill="none"
     >
