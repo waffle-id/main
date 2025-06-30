@@ -1,6 +1,26 @@
 import { cn } from "~/utils/cn";
 import { LogoAnimation } from "../waffle/logo/logo-animation";
 import { useEffect, useState, type JSX } from "react";
+import { NavLink } from "../waffle/nav-link";
+
+const LINKS_HEADER: Record<string, string>[] = [
+  {
+    to: "/",
+    text: "Home",
+  },
+  {
+    to: "/categories",
+    text: "Categories",
+  },
+  {
+    to: "/leaderboard",
+    text: "Leaderboard",
+  },
+  {
+    to: "/profile",
+    text: "[DEV] Profile",
+  },
+];
 
 export function Header({ className }: JSX.IntrinsicElements["div"]) {
   const [scrolling, setScrolling] = useState(false);
@@ -31,11 +51,17 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
         className
       )}
     >
-      <div className="flex flex-nowrap items-center justify-between w-full gap-4 overflow-x-auto">
-        <LogoAnimation className="h-14 w-max aspect-square flex-shrink-0" />
-        <div className="flex-shrink-0 text-black">
-          <p>Connect Wallet</p>
-        </div>
+      <div className="flex flex-nowrap items-center justify-between w-full gap-4 overflow-hidden">
+        <LogoAnimation className="h-14 w-max aspect-square" />
+
+        <nav className="flex flex-row gap-4 md:gap-8 lg:gap-12">
+          {LINKS_HEADER.map((link, i) => (
+            <NavLink key={link.to} to={link.to} prefetch="intent">
+              {link.text}
+            </NavLink>
+          ))}
+          <p className="text-black">Connect Wallet</p>
+        </nav>
       </div>
     </div>
   );
