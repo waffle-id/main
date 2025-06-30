@@ -24,6 +24,9 @@ import { ContentReceived } from "./shared/content-received";
 import { ContentAll } from "./shared/content-all";
 import { ContentGiven } from "./shared/content-given";
 import { ImageHoverRevealText } from "~/components/waffle/image-hover-reveal-text";
+import Review from "./shared/bottom-sheet/review";
+import Vouch from "./shared/bottom-sheet/vouch";
+import Slash from "./shared/bottom-sheet/slash";
 
 const imageItems = [
   {
@@ -147,24 +150,9 @@ export default function Profile() {
       <div className="px-[20px] lg:px-[50px] py-24 relative z-20 bg-background text-black">
         <div className="flex flex-col gap-12">
           <div className="flex flex-row items-center gap-4 justify-end">
-            <ButtonMagnet className="px-8 py-2">
-              <div className="flex flex-row items-center gap-2">
-                <PencilRuler className="size-5" />
-                Review
-              </div>
-            </ButtonMagnet>
-            <ButtonMagnet className="px-8 py-2">
-              <div className="flex flex-row items-center gap-2">
-                <BadgeDollarSign className="size-5" />
-                Vouch
-              </div>
-            </ButtonMagnet>
-            <ButtonMagnet className="px-8 py-2">
-              <div className="flex flex-row items-center gap-2">
-                <CircleSlash className="size-5" />
-                Slash
-              </div>
-            </ButtonMagnet>
+            <Review />
+            <Vouch />
+            <Slash />
           </div>
           <Tabs defaultValue={TABS[0]}>
             <TabsList className="w-full mb-5 flex flex-wrap gap-2">
