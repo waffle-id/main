@@ -424,27 +424,6 @@ contract WaffleTest is Test {
         assertFalse(badge.isActive);
     }
 
-    function testSetAIVerifier() public {
-        vm.prank(alice);
-        waffle.registerUser();
-        vm.prank(bob);
-        waffle.registerUser();
-
-        // Submit a review
-        vm.prank(alice);
-        waffle.submitReview(bob, 3, "Test review");
-
-        // Set Charlie as AI verifier
-        waffle.setAIVerifier(charlie, true);
-
-        // Charlie should be able to verify reviews
-        vm.prank(charlie);
-        waffle.verifyReview(1, true);
-
-        ReviewStructs.Review memory review = waffle.getReview(1);
-        assertTrue(review.isVerified);
-    }
-
     function testOnlyOwnerCanSetModerator() public {
         vm.expectRevert();
         vm.prank(alice);
@@ -607,5 +586,220 @@ contract WaffleTest is Test {
         assertEq(profile.loginStreak, 8); // Initial + 7 updates
         assertTrue(waffle.hasBadge(alice, 1));
         assertGt(profile.reputationScore, 100); // Should have bonuses
+    }
+
+    // ============ Username Review Tests ============
+
+    function testSubmitUsernameReview() public {
+        // Register alice
+        vm.prank(alice);
+        waffle.registerUser();
+
+        // Alice reviews a non-registered user by username
+        vm.prank(alice);
+        waffle.submitUsernameReview("testuser123", 3, "Great content creator!");
+
+        // Check review was created
+        uint256 totalReviews = waffle.getTotalReviews();
+        assertEq(totalReviews, 1);
+
+        // Get the review
+        ReviewStructs.Review memory review = waffle.getReview(1);
+        assertEq(review.reviewer, alice);
+        assertEq(review.reviewee, address(0)); // No address for non-registered
+        assertEq(review.revieweeUsername, "testuser123");
+        assertEq(review.rating, 3);
+        assertEq(review.comment, "Great content creator!");
+        assertFalse(review.isRegisteredReviewee);
+
+        // Check username stats
+        ReviewStructs.NonRegisteredUser memory userData = waffle.getNonRegisteredUser("testuser123");
+        assertEq(userData.username, "testuser123");
+        assertEq(userData.totalReviews, 1);
+        assertEq(userData.positiveReviews, 1);
+        assertEq(userData.neutralReviews, 0);
+        assertEq(userData.negativeReviews, 0);
+        assertEq(userData.averageRating, 300); // 3.00 * 100
+        assertTrue(userData.exists);
+
+        // Check username reviews array
+        uint256[] memory usernameReviews = waffle.getUsernameReviews("testuser123");
+        assertEq(usernameReviews.length, 1);
+        assertEq(usernameReviews[0], 1);
+    }
+
+    function testSubmitMultipleUsernameReviews() public {
+        // Register users
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Both review the same username
+        vm.prank(alice);
+        waffle.submitUsernameReview("influencer", 3, "Amazing content!");
+
+        vm.prank(bob);
+        waffle.submitUsernameReview("influencer", 2, "Good but could improve");
+
+        // Check stats
+        ReviewStructs.NonRegisteredUser memory userData = waffle.getNonRegisteredUser("influencer");
+        assertEq(userData.totalReviews, 2);
+        assertEq(userData.positiveReviews, 1);
+        assertEq(userData.neutralReviews, 1);
+        assertEq(userData.negativeReviews, 0);
+        assertEq(userData.averageRating, 250); // (3+2)/2 = 2.5 * 100
+
+        // Check review array
+        uint256[] memory reviews = waffle.getUsernameReviews("influencer");
+        assertEq(reviews.length, 2);
+    }
+
+    function testCannotReviewUsernameMultipleTimes() public {
+        vm.prank(alice);
+        waffle.registerUser();
+
+        // First review should succeed
+        vm.prank(alice);
+        waffle.submitUsernameReview("creator", 3, "Great work!");
+
+        // Second review should fail
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.UsernameAlreadyReviewed.selector);
+        waffle.submitUsernameReview("creator", 2, "Changed my mind");
+    }
+
+    function testUsernameReviewValidation() public {
+        vm.prank(alice);
+        waffle.registerUser();
+
+        // Test invalid username (too long)
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.InvalidInput.selector);
+        waffle.submitUsernameReview("verylongusernamethatexceedslimit", 3, "comment");
+
+        // Test invalid username (special characters)
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.InvalidInput.selector);
+        waffle.submitUsernameReview("user@name", 3, "comment");
+
+        // Test invalid rating
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.InvalidInput.selector);
+        waffle.submitUsernameReview("validuser", 4, "comment");
+
+        // Test empty comment
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.InvalidInput.selector);
+        waffle.submitUsernameReview("validuser", 3, "");
+    }
+
+    function testUnregisteredUserCannotSubmitUsernameReview() public {
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.UserNotRegistered.selector);
+        waffle.submitUsernameReview("someone", 3, "comment");
+    }
+
+    function testHasUserReviewedUsername() public {
+        vm.prank(alice);
+        waffle.registerUser();
+
+        // Initially should be false
+        assertFalse(waffle.hasUserReviewedUsername(alice, "testuser"));
+
+        // After review should be true
+        vm.prank(alice);
+        waffle.submitUsernameReview("testuser", 3, "good");
+        assertTrue(waffle.hasUserReviewedUsername(alice, "testuser"));
+
+        // Different user should still be false
+        assertFalse(waffle.hasUserReviewedUsername(bob, "testuser"));
+    }
+
+    function testUsernameReviewStats() public {
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+        vm.prank(charlie);
+        waffle.registerUser();
+
+        // Submit various ratings
+        vm.prank(alice);
+        waffle.submitUsernameReview("creator", 3, "Positive");
+
+        vm.prank(bob);
+        waffle.submitUsernameReview("creator", 1, "Negative");
+
+        vm.prank(charlie);
+        waffle.submitUsernameReview("creator", 2, "Neutral");
+
+        // Check final stats
+        ReviewStructs.NonRegisteredUser memory userData = waffle.getNonRegisteredUser("creator");
+        assertEq(userData.totalReviews, 3);
+        assertEq(userData.positiveReviews, 1);
+        assertEq(userData.neutralReviews, 1);
+        assertEq(userData.negativeReviews, 1);
+        assertEq(userData.averageRating, 200); // (3+1+2)/3 = 2.0 * 100
+    }
+
+    function testValidUsernameFormats() public {
+        vm.prank(alice);
+        waffle.registerUser();
+
+        // Test valid usernames
+        vm.prank(alice);
+        waffle.submitUsernameReview("user123", 3, "valid");
+
+        vm.prank(alice);
+        waffle.submitUsernameReview("User_Name", 3, "valid");
+
+        vm.prank(alice);
+        waffle.submitUsernameReview("ABC", 3, "valid");
+
+        vm.prank(alice);
+        waffle.submitUsernameReview("a", 3, "valid"); // minimum length
+
+        // Check all were created
+        assertEq(waffle.getTotalReviews(), 4);
+    }
+
+    function testMixedRegisteredAndUsernameReviews() public {
+        // Register users
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Alice reviews Bob (registered)
+        vm.prank(alice);
+        waffle.submitReview(bob, 3, "Good registered user");
+
+        // Alice reviews a username (non-registered)
+        vm.prank(alice);
+        waffle.submitUsernameReview("twitteruser", 2, "Good content creator");
+
+        // Bob reviews the same username
+        vm.prank(bob);
+        waffle.submitUsernameReview("twitteruser", 3, "Amazing creator");
+
+        // Check stats
+        assertEq(waffle.getTotalReviews(), 3);
+
+        // Check Alice can't review Bob again
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.UserAlreadyReviewed.selector);
+        waffle.submitReview(bob, 2, "Another review");
+
+        // Check Alice can't review the username again
+        vm.prank(alice);
+        vm.expectRevert(WaffleErrors.UsernameAlreadyReviewed.selector);
+        waffle.submitUsernameReview("twitteruser", 1, "Changed mind");
+
+        // But Alice can review a different username
+        vm.prank(alice);
+        waffle.submitUsernameReview("anotheruser", 3, "Different user");
+
+        assertEq(waffle.getTotalReviews(), 4);
     }
 }

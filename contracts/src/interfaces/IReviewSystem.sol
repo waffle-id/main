@@ -17,6 +17,14 @@ interface IReviewSystem {
     function submitReview(address reviewee, uint8 rating, string calldata comment) external;
 
     /**
+     * @dev Submit a review for a non-registered user by Twitter username
+     * @param username The Twitter username being reviewed
+     * @param rating Rating from 1-3 (1=negative, 2=neutral, 3=positive)
+     * @param comment Review comment (max 500 characters)
+     */
+    function submitUsernameReview(string calldata username, uint8 rating, string calldata comment) external;
+
+    /**
      * @dev Get reviews received by a user
      * @param user The user address
      * @return Array of review IDs
@@ -42,6 +50,23 @@ interface IReviewSystem {
      * @return Total review count
      */
     function getTotalReviews() external view returns (uint256);
+
+    /**
+     * @dev Get reviews for a non-registered user by username
+     * @param username The Twitter username
+     * @return Array of review IDs
+     */
+    function getUsernameReviews(string calldata username) external view returns (uint256[] memory);
+
+    /**
+     * @dev Get non-registered user stats by username
+     * @param username The Twitter username
+     * @return NonRegisteredUser struct with stats
+     */
+    function getNonRegisteredUser(string calldata username)
+        external
+        view
+        returns (ReviewStructs.NonRegisteredUser memory);
 
     /**
      * @dev Admin function to verify review (for AI verification)

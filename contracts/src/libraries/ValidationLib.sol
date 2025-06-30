@@ -11,12 +11,14 @@ library ValidationLib {
     uint256 public constant MAX_RATING = 3;
     uint256 public constant MAX_BADGE_NAME_LENGTH = 50;
     uint256 public constant MAX_BADGE_DESCRIPTION_LENGTH = 200;
+    uint256 public constant MAX_USERNAME_LENGTH = 15; // Twitter username max length
+    uint256 public constant MIN_USERNAME_LENGTH = 1;
 
     /**
-     * @dev Validate review input parameters
+     * @dev Validate review input parameters for registered users
      * @param reviewer Address submitting the review
      * @param reviewee Address being reviewed
-     * @param rating Review rating (1-5)
+     * @param rating Review rating (1-3)
      * @param comment Review comment
      * @return True if valid
      */
@@ -28,6 +30,34 @@ library ValidationLib {
         // Check addresses
         if (reviewer == address(0) || reviewee == address(0)) return false;
         if (reviewer == reviewee) return false;
+
+        // Check rating range
+        if (rating < MIN_RATING || rating > MAX_RATING) return false;
+
+        // Check comment length
+        if (bytes(comment).length == 0 || bytes(comment).length > MAX_COMMENT_LENGTH) return false;
+
+        return true;
+    }
+
+    /**
+     * @dev Validate review input parameters for non-registered users (Twitter username)
+     * @param reviewer Address submitting the review
+     * @param username Twitter username being reviewed
+     * @param rating Review rating (1-3)
+     * @param comment Review comment
+     * @return True if valid
+     */
+    function validateUsernameReviewInput(address reviewer, string memory username, uint8 rating, string memory comment)
+        internal
+        pure
+        returns (bool)
+    {
+        // Check reviewer address
+        if (reviewer == address(0)) return false;
+
+        // Check username
+        if (!isValidUsername(username)) return false;
 
         // Check rating range
         if (rating < MIN_RATING || rating > MAX_RATING) return false;
@@ -122,5 +152,39 @@ library ValidationLib {
         }
 
         return string(finalResult);
+    }
+
+    /**
+     * @dev Validate Twitter username format
+     * @param username Username to validate
+     * @return True if valid Twitter username
+     */
+    function isValidUsername(string memory username) internal pure returns (bool) {
+        bytes memory usernameBytes = bytes(username);
+
+        // Check length
+        if (usernameBytes.length < MIN_USERNAME_LENGTH || usernameBytes.length > MAX_USERNAME_LENGTH) {
+            return false;
+        }
+
+        // Check each character
+        for (uint256 i = 0; i < usernameBytes.length; i++) {
+            bytes1 char = usernameBytes[i];
+
+            // Allow alphanumeric characters and underscore
+            if (
+                // 0-9
+                    // A-Z
+                    // a-z
+                !(
+                    (char >= 0x30 && char <= 0x39) || (char >= 0x41 && char <= 0x5A) || (char >= 0x61 && char <= 0x7A)
+                        || char == 0x5F
+                ) // underscore
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -17,6 +17,8 @@ library WaffleErrors {
     error CannotReviewSelf();
     error ReviewTooFrequent();
     error UserAlreadyReviewed();
+    error UsernameAlreadyReviewed();
+    error InvalidUsername();
     error InvalidRating();
     error CommentTooLong();
     error CommentEmpty();

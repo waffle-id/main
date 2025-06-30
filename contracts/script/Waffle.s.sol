@@ -101,11 +101,6 @@ contract WaffleDeployment is Script {
             _setupModerators();
         }
 
-        // Setup AI verifier
-        if (config.setupAIVerifier) {
-            _setupAIVerifier();
-        }
-
         // Register deployer for testing
         if (config.registerDeployer) {
             waffle.registerUser();
@@ -138,17 +133,6 @@ contract WaffleDeployment is Script {
         }
     }
 
-    function _setupAIVerifier() internal {
-        try vm.envAddress("AI_VERIFIER_ADDRESS") returns (address aiVerifier) {
-            if (aiVerifier != address(0)) {
-                waffle.setAIVerifier(aiVerifier, true);
-                console.log("AI Verifier set:", aiVerifier);
-            }
-        } catch {
-            console.log("No AI_VERIFIER_ADDRESS provided");
-        }
-    }
-
     function _runDemo() internal {
         console.log("\n=== Running Waffle Demo ===");
 
@@ -177,6 +161,9 @@ contract WaffleDeployment is Script {
 
         // Demonstrate one-time review system
         _demonstrateOneTimeReviews(alice, bob, charlie);
+
+        // Demonstrate username reviews
+        _demonstrateUsernameReviews(alice, bob, charlie);
 
         // Demonstrate login streaks
         _demonstrateLoginStreaks(alice, bob);
@@ -218,6 +205,40 @@ contract WaffleDeployment is Script {
         console.log("One-time review enforcement working correctly");
     }
 
+    function _demonstrateUsernameReviews(address alice, address bob, address charlie) internal {
+        console.log("\n--- Username Review System ---");
+
+        // Alice reviews a Twitter user
+        vm.prank(alice);
+        waffle.submitUsernameReview("elonmusk", 2, "Interesting but controversial tweets");
+        console.log("Alice reviewed @elonmusk: neutral (2/3)");
+
+        // Bob reviews the same Twitter user
+        vm.prank(bob);
+        waffle.submitUsernameReview("elonmusk", 3, "Great tech visionary!");
+        console.log("Bob reviewed @elonmusk: positive (3/3)");
+
+        // Charlie reviews a different Twitter user
+        vm.prank(charlie);
+        waffle.submitUsernameReview("vitalik_eth", 3, "Ethereum founder, amazing work!");
+        console.log("Charlie reviewed @vitalik_eth: positive (3/3)");
+
+        // Try duplicate username review (should fail)
+        vm.prank(alice);
+        try waffle.submitUsernameReview("elonmusk", 1, "Changed my mind") {
+            console.log("ERROR: Duplicate username review should have failed!");
+        } catch {
+            console.log("SUCCESS: Duplicate username review correctly prevented");
+        }
+
+        // Show that Alice can review a different username
+        vm.prank(alice);
+        waffle.submitUsernameReview("naval", 3, "Great wisdom and insights");
+        console.log("Alice reviewed @naval: positive (3/3)");
+
+        console.log("Username review system working correctly");
+    }
+
     function _demonstrateLoginStreaks(address alice, address bob) internal {
         console.log("\n--- Login Streak System ---");
 
@@ -247,23 +268,23 @@ contract WaffleDeployment is Script {
 
         // Try to claim badges (users might be eligible after reviews)
         vm.prank(alice);
-        try waffle.claimBadge(0) {
-            console.log("Alice claimed badge #0");
+        try waffle.claimBadge(1) {
+            console.log("Alice claimed badge #1");
         } catch {
-            console.log("Alice not eligible for badge #0 yet");
+            console.log("Alice not eligible for badge #1 yet");
         }
 
         vm.prank(bob);
-        try waffle.claimBadge(0) {
-            console.log("Bob claimed badge #0");
+        try waffle.claimBadge(1) {
+            console.log("Bob claimed badge #1");
         } catch {
-            console.log("Bob not eligible for badge #0 yet");
+            console.log("Bob not eligible for badge #1 yet");
         }
 
         // Display badge information
-        BadgeStructs.Badge memory badge = waffle.getBadge(0);
-        console.log("Badge #0 name:", badge.name);
-        console.log("Badge #0 required score:", badge.requiredScore);
+        BadgeStructs.Badge memory badge = waffle.getBadge(1);
+        console.log("Badge #1 name:", badge.name);
+        console.log("Badge #1 required score:", badge.requiredScore);
     }
 
     function _displayDeploymentSummary() internal view {
@@ -274,6 +295,14 @@ contract WaffleDeployment is Script {
         console.log("Chain ID:", block.chainid);
         console.log("Block Number:", block.number);
         console.log("Gas Price:", tx.gasprice);
+
+        console.log("\n=== FEATURES IMPLEMENTED ===");
+        console.log("- One-time reviews (address-based)");
+        console.log("- Username reviews (Twitter-based)");
+        console.log("- 1-3 rating scale system");
+        console.log("- Login streak tracking");
+        console.log("- Soulbound badge NFTs");
+        console.log("- Reputation scoring");
 
         console.log("\n=== NEXT STEPS ===");
         console.log("1. Verify contract on block explorer");
@@ -302,28 +331,5 @@ contract WaffleDeployment is Script {
         console.log("Last Login Date:", profile.lastLoginDate);
         console.log("Review IDs Count:", reviews.length);
         console.log("Owned Badges Count:", profile.ownedBadges.length);
-    }
-
-    // Emergency functions for post-deployment management
-    function emergencyPause() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
-
-        // Add emergency pause functionality if implemented in main contract
-        console.log("Emergency pause functionality would be called here");
-
-        vm.stopBroadcast();
-    }
-
-    function transferOwnership(address newOwner) external {
-        require(newOwner != address(0), "Invalid new owner");
-
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
-
-        waffle.transferOwnership(newOwner);
-        console.log("Ownership transferred to:", newOwner);
-
-        vm.stopBroadcast();
     }
 }

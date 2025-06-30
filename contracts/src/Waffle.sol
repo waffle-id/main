@@ -43,6 +43,11 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     mapping(address => uint256[]) public reviewsGiven; // reviews given
     mapping(address => mapping(address => bool)) public hasReviewed; // one-time review tracking
 
+    // Username-based review mappings
+    mapping(string => ReviewStructs.NonRegisteredUser) public nonRegisteredUsers; // username => user data
+    mapping(string => uint256[]) public usernameReviews; // username => review IDs
+    mapping(address => mapping(string => bool)) public hasReviewedUsername; // reviewer => username => bool
+
     // Badge system mappings
     mapping(address => mapping(uint256 => bool)) public hasBadge;
     mapping(uint256 => address[]) public badgeHolders; // for leaderboards
@@ -204,10 +209,12 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
             id: reviewId,
             reviewer: msg.sender,
             reviewee: reviewee,
+            revieweeUsername: "", // Empty for registered users
             rating: rating,
             comment: sanitizedComment,
             timestamp: block.timestamp,
-            isVerified: false
+            isVerified: false,
+            isRegisteredReviewee: true
         });
 
         userReviews[reviewee].push(reviewId);
@@ -218,6 +225,51 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         _updateUserStats(reviewee, rating);
 
         emit ReviewSubmitted(reviewId, msg.sender, reviewee, rating, sanitizedComment, block.timestamp);
+    }
+
+    function submitUsernameReview(string calldata username, uint8 rating, string calldata comment)
+        external
+        override
+        onlyRegistered
+        whenNotPaused
+        nonReentrant
+    {
+        // Validate input
+        if (!ValidationLib.validateUsernameReviewInput(msg.sender, username, rating, comment)) {
+            revert WaffleErrors.InvalidInput();
+        }
+
+        // Check if user has already reviewed this username
+        if (hasReviewedUsername[msg.sender][username]) {
+            revert WaffleErrors.UsernameAlreadyReviewed();
+        }
+
+        // Sanitize comment
+        string memory sanitizedComment = comment.sanitizeString();
+
+        _reviewIds++;
+        uint256 reviewId = _reviewIds;
+
+        reviews[reviewId] = ReviewStructs.Review({
+            id: reviewId,
+            reviewer: msg.sender,
+            reviewee: address(0), // No address for non-registered users
+            revieweeUsername: username,
+            rating: rating,
+            comment: sanitizedComment,
+            timestamp: block.timestamp,
+            isVerified: false,
+            isRegisteredReviewee: false
+        });
+
+        usernameReviews[username].push(reviewId);
+        reviewsGiven[msg.sender].push(reviewId);
+        hasReviewedUsername[msg.sender][username] = true;
+
+        // Update username stats
+        _updateUsernameStats(username, rating);
+
+        emit ReviewSubmitted(reviewId, msg.sender, address(0), rating, sanitizedComment, block.timestamp);
     }
 
     function verifyReview(uint256 reviewId, bool verified) external override onlyAIVerifier {
@@ -336,6 +388,19 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         return _reviewIds;
     }
 
+    function getUsernameReviews(string calldata username) external view override returns (uint256[] memory) {
+        return usernameReviews[username];
+    }
+
+    function getNonRegisteredUser(string calldata username)
+        external
+        view
+        override
+        returns (ReviewStructs.NonRegisteredUser memory)
+    {
+        return nonRegisteredUsers[username];
+    }
+
     function getTotalBadges() external view override returns (uint256) {
         return _badgeIds;
     }
@@ -378,6 +443,33 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
         // Check for review-based badge eligibility
         _checkReviewBadgeEligibility(user);
+    }
+
+    function _updateUsernameStats(string memory username, uint8 rating) internal {
+        ReviewStructs.NonRegisteredUser storage userData = nonRegisteredUsers[username];
+
+        // Initialize if first review
+        if (!userData.exists) {
+            userData.username = username;
+            userData.exists = true;
+        }
+
+        userData.totalReviews++;
+
+        if (rating == 3) {
+            userData.positiveReviews++;
+        } else if (rating == 2) {
+            userData.neutralReviews++;
+        } else {
+            userData.negativeReviews++;
+        }
+
+        // Calculate average rating (multiply by 100 for precision)
+        if (userData.totalReviews > 0) {
+            uint256 totalRatingPoints =
+                (userData.positiveReviews * 3) + (userData.neutralReviews * 2) + (userData.negativeReviews * 1);
+            userData.averageRating = (totalRatingPoints * 100) / userData.totalReviews;
+        }
     }
 
     function _checkBadgeEligibility(address user, uint256 badgeId) internal view returns (bool) {
@@ -490,10 +582,6 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         moderators[user] = isModerator;
     }
 
-    function setAIVerifier(address verifier, bool isVerifier) external onlyOwner {
-        aiVerifiers[verifier] = isVerifier;
-    }
-
     function setInvitationAuthority(address user, bool hasAuthority) external override onlyOwner {
         userProfiles[user].hasInvitationAuthority = hasAuthority;
     }
@@ -534,5 +622,9 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
     function hasUserReviewed(address reviewer, address reviewee) external view returns (bool) {
         return hasReviewed[reviewer][reviewee];
+    }
+
+    function hasUserReviewedUsername(address reviewer, string calldata username) external view returns (bool) {
+        return hasReviewedUsername[reviewer][username];
     }
 }
