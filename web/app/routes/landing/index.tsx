@@ -142,7 +142,7 @@ export default function Landing() {
       <div className="px-[20px] lg:px-[50px]">
         <div className="grid grid-cols-1 lg:grid-cols-11 max-w-[90%] mx-auto text-black">
           <div className="col-span-1 lg:col-span-5 relative flex flex-col justify-center px-4">
-            <LogoAnimationNoRepeat className="h-1/2" />
+            <LogoAnimationNoRepeat className="h-1/2" disable={true} />
           </div>
           <div className="col-span-1 lg:col-span-5 lg:col-start-7 flex flex-col justify-center px-4">
             <h2 className="flex flex-row items-center mt-12 gap-x-4">

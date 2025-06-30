@@ -60,7 +60,10 @@ export function ContentGiven() {
           const isExpanded = expandedIndexes[i];
 
           return (
-            <div className="break-inside-avoid p-8 mb-6 w-full h-full bg-gray-100 rounded-lg">
+            <div
+              key={i}
+              className="break-inside-avoid p-8 mb-6 w-full h-full bg-gray-100 rounded-lg"
+            >
               <div className="flex flex-row gap-8">
                 <img src={val.avatar} alt="" className="size-24 aspect-square rounded-full" />
                 <div className="flex flex-col gap-4">

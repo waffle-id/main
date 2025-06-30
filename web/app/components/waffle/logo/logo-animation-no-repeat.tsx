@@ -4,13 +4,18 @@ import gsap from "gsap";
 import { useRef, type JSX } from "react";
 import { cn } from "~/utils/cn";
 
-export function LogoAnimationNoRepeat({ className }: JSX.IntrinsicElements["svg"]) {
+export function LogoAnimationNoRepeat({
+  className,
+  disable = false,
+}: JSX.IntrinsicElements["svg"] & { disable?: boolean }) {
   const containerRef = useRef<SVGSVGElement>(null);
 
   useGSAP(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     if (!containerRef.current) return;
+
+    if (disable) return;
 
     const paths = containerRef.current.querySelectorAll("path");
 
@@ -22,9 +27,11 @@ export function LogoAnimationNoRepeat({ className }: JSX.IntrinsicElements["svg"
           {
             y: "400px",
             rotate: "30deg",
+            opacity: 0,
           },
           {
             y: "0px",
+            opacity: 1,
             rotate: "0deg",
             duration: 1.2,
             stagger: 0.1,
