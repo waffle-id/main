@@ -1,4 +1,6 @@
 import puppeteer from "puppeteer";
+// import puppeteer from "puppeteer-extra";
+// import chromePaths from "chrome-paths";
 
 export interface TwitterProfile {
   fullName: string | null;
@@ -16,6 +18,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
   console.log("scrapeTwitterProfile ", url);
 
   const browser = await puppeteer.launch({
+    //   executablePath: chromePaths.chrome,
     headless: true,
     args: [
       "--no-sandbox",

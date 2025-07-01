@@ -1,36 +1,37 @@
-FROM oven/bun:1 as base
-WORKDIR /usr/src/app
+FROM node:20 AS base
+WORKDIR /app
 
-# Install dependencies for Puppeteer
+# Install dependencies required to build native modules and Puppeteer
 RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-sandbox \
     python3 \
-    python3-pip \
-    build-essential \
     make \
     g++ \
     curl \
+    ca-certificates \
+    chromium \
+    chromium-sandbox \
+    sqlite3 libsqlite3-dev \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
-
-# Copy package files
-COPY package.json bun.lock ./
-
-# Install dependencies
-RUN bun install --frozen-lockfile
-
-# Copy source code
-COPY . .
 
 # Set Puppeteer to use installed Chromium
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Create database directory
-RUN mkdir -p /usr/src/app/data
+# Copy package files and install
+COPY package.json ./
+# COPY package-lock.json ./
+# RUN npm ci
 
-# Expose port
+# Copy source code
+COPY . .
+
+RUN npm i
+
+# Create a database directory if needed
+RUN mkdir -p /app/data
+
+# Expose app port
 EXPOSE 3001
 
 # Start the application
-CMD ["bun", "run", "start"]
+CMD ["npm", "run", "start"]
