@@ -12,6 +12,8 @@ library WaffleErrors {
     error UserSuspended();
     error UserBanned();
     error InvalidAddress();
+    error UsernameAlreadyLinked();
+    error EntityAlreadyReviewed();
 
     // Review System Errors
     error CannotReviewSelf();

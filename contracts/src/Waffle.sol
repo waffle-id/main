@@ -38,6 +38,10 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     mapping(address => UserStructs.UserProfile) public userProfiles;
     mapping(address => bool) public isRegistered;
 
+    // User linking mappings
+    mapping(address => string) public addressToUsername; // wallet => twitter username
+    mapping(string => address) public usernameToAddress; // twitter username => wallet
+
     // Review system mappings
     mapping(address => uint256[]) public userReviews; // reviews received
     mapping(address => uint256[]) public reviewsGiven; // reviews given
@@ -47,6 +51,9 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     mapping(string => ReviewStructs.NonRegisteredUser) public nonRegisteredUsers; // username => user data
     mapping(string => uint256[]) public usernameReviews; // username => review IDs
     mapping(address => mapping(string => bool)) public hasReviewedUsername; // reviewer => username => bool
+
+    // Unified entity review tracking (to prevent double reviews of same entity)
+    mapping(address => mapping(bytes32 => bool)) public hasReviewedEntity; // reviewer => entityHash => bool
 
     // Badge system mappings
     mapping(address => mapping(uint256 => bool)) public hasBadge;
@@ -126,6 +133,41 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         emit LoginStreakUpdated(msg.sender, 1, 1);
     }
 
+    function registerUserWithTwitter(string calldata twitterUsername) external override whenNotPaused {
+        if (isRegistered[msg.sender]) {
+            revert WaffleErrors.UserAlreadyRegistered();
+        }
+
+        // Validate username
+        if (!ValidationLib.validateUsername(twitterUsername)) {
+            revert WaffleErrors.InvalidInput();
+        }
+
+        // Check if username is already linked to another address
+        if (usernameToAddress[twitterUsername] != address(0)) {
+            revert WaffleErrors.UsernameAlreadyLinked();
+        }
+
+        // Link the username to the address
+        addressToUsername[msg.sender] = twitterUsername;
+        usernameToAddress[twitterUsername] = msg.sender;
+
+        // Register the user
+        UserStructs.UserProfile storage profile = userProfiles[msg.sender];
+        profile.reputationScore = ReputationLib.BASE_SCORE;
+        profile.loginStreak = 1;
+        profile.lastLoginDate = block.timestamp;
+
+        // Initialize login data
+        loginData[msg.sender] =
+            UserStructs.LoginData({currentStreak: 1, longestStreak: 1, lastLoginDate: block.timestamp, totalLogins: 1});
+
+        isRegistered[msg.sender] = true;
+
+        emit UserRegistered(msg.sender, block.timestamp);
+        emit LoginStreakUpdated(msg.sender, 1, 1);
+    }
+
     function updateLoginStreak() external override onlyRegistered whenNotPaused {
         UserStructs.LoginData storage loginInfo = loginData[msg.sender];
         UserStructs.UserProfile storage profile = userProfiles[msg.sender];
@@ -174,21 +216,18 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     function submitReview(address reviewee, uint8 rating, string calldata comment)
         external
         override
-        onlyRegistered
         whenNotPaused
         validAddress(reviewee)
         nonReentrant
     {
-        if (!isRegistered[reviewee]) revert WaffleErrors.UserNotRegistered();
-
         // Validate input
         if (!ValidationLib.validateReviewInput(msg.sender, reviewee, rating, comment)) {
             revert WaffleErrors.InvalidInput();
         }
 
-        // Check if user has already reviewed this person
-        if (!ValidationLib.canReviewUser(hasReviewed[msg.sender][reviewee])) {
-            revert WaffleErrors.UserAlreadyReviewed();
+        // Check if entity can be reviewed (unified logic)
+        if (!_canReviewEntity(msg.sender, reviewee, "")) {
+            revert WaffleErrors.EntityAlreadyReviewed();
         }
 
         // Sanitize comment
@@ -211,10 +250,17 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
         userReviews[reviewee].push(reviewId);
         reviewsGiven[msg.sender].push(reviewId);
+
+        // Use unified entity tracking
+        _markEntityReviewed(msg.sender, reviewee, "");
+
+        // Maintain backward compatibility with old mapping
         hasReviewed[msg.sender][reviewee] = true;
 
         // Update reviewee's stats and reputation
-        _updateUserStats(reviewee, rating);
+        if (isRegistered[reviewee]) {
+            _updateUserStats(reviewee, rating);
+        }
 
         emit ReviewSubmitted(reviewId, msg.sender, reviewee, rating, sanitizedComment, block.timestamp);
     }
@@ -222,7 +268,6 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     function submitUsernameReview(string calldata username, uint8 rating, string calldata comment)
         external
         override
-        onlyRegistered
         whenNotPaused
         nonReentrant
     {
@@ -231,9 +276,9 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
             revert WaffleErrors.InvalidInput();
         }
 
-        // Check if user has already reviewed this username
-        if (hasReviewedUsername[msg.sender][username]) {
-            revert WaffleErrors.UsernameAlreadyReviewed();
+        // Check if entity can be reviewed (unified logic)
+        if (!_canReviewEntity(msg.sender, address(0), username)) {
+            revert WaffleErrors.EntityAlreadyReviewed();
         }
 
         // Sanitize comment
@@ -256,12 +301,106 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
         usernameReviews[username].push(reviewId);
         reviewsGiven[msg.sender].push(reviewId);
+
+        // Use unified entity tracking
+        _markEntityReviewed(msg.sender, address(0), username);
+
+        // Maintain backward compatibility with old mapping
         hasReviewedUsername[msg.sender][username] = true;
 
         // Update username stats
         _updateUsernameStats(username, rating);
 
+        // If username is linked to a registered address, also update user stats
+        address linkedAddress = usernameToAddress[username];
+        if (linkedAddress != address(0) && isRegistered[linkedAddress]) {
+            _updateUserStats(linkedAddress, rating);
+        }
+
         emit ReviewSubmitted(reviewId, msg.sender, address(0), rating, sanitizedComment, block.timestamp);
+    }
+
+    function submitEntityReview(
+        address revieweeAddress,
+        string calldata revieweeUsername,
+        uint8 rating,
+        string calldata comment
+    ) external override whenNotPaused nonReentrant {
+        // Validate that exactly one of address or username is provided
+        bool hasAddress = revieweeAddress != address(0);
+        bool hasUsername = bytes(revieweeUsername).length > 0;
+
+        if (hasAddress == hasUsername) {
+            revert WaffleErrors.InvalidInput(); // Must provide exactly one
+        }
+
+        // Validate input based on type
+        if (hasAddress) {
+            if (!ValidationLib.validateReviewInput(msg.sender, revieweeAddress, rating, comment)) {
+                revert WaffleErrors.InvalidInput();
+            }
+        } else {
+            if (!ValidationLib.validateUsernameReviewInput(msg.sender, revieweeUsername, rating, comment)) {
+                revert WaffleErrors.InvalidInput();
+            }
+        }
+
+        // Check if entity can be reviewed (unified logic)
+        if (!_canReviewEntity(msg.sender, revieweeAddress, revieweeUsername)) {
+            revert WaffleErrors.EntityAlreadyReviewed();
+        }
+
+        // Sanitize comment
+        string memory sanitizedComment = comment.sanitizeString();
+
+        _reviewIds++;
+        uint256 reviewId = _reviewIds;
+
+        // Create review
+        reviews[reviewId] = ReviewStructs.Review({
+            id: reviewId,
+            reviewer: msg.sender,
+            reviewee: revieweeAddress,
+            revieweeUsername: revieweeUsername,
+            rating: rating,
+            comment: sanitizedComment,
+            timestamp: block.timestamp,
+            isVerified: false,
+            isRegisteredReviewee: hasAddress
+        });
+
+        // Add to appropriate review arrays
+        if (hasAddress) {
+            userReviews[revieweeAddress].push(reviewId);
+        } else {
+            usernameReviews[revieweeUsername].push(reviewId);
+        }
+        reviewsGiven[msg.sender].push(reviewId);
+
+        // Mark entity as reviewed (unified tracking)
+        _markEntityReviewed(msg.sender, revieweeAddress, revieweeUsername);
+
+        // Maintain backward compatibility with old mappings
+        if (hasAddress) {
+            hasReviewed[msg.sender][revieweeAddress] = true;
+        } else {
+            hasReviewedUsername[msg.sender][revieweeUsername] = true;
+        }
+
+        // Update stats
+        if (hasAddress) {
+            _updateUserStats(revieweeAddress, rating);
+        } else {
+            _updateUsernameStats(revieweeUsername, rating);
+
+            // If username is linked to a registered address, also update user stats
+            address linkedAddress = usernameToAddress[revieweeUsername];
+            if (linkedAddress != address(0) && isRegistered[linkedAddress]) {
+                _updateUserStats(linkedAddress, rating);
+            }
+        }
+
+        emit ReviewSubmitted(reviewId, msg.sender, revieweeAddress, rating, sanitizedComment, block.timestamp);
     }
 
     function verifyReview(uint256 reviewId, bool verified) external override onlyModerator whenNotPaused {
@@ -424,9 +563,11 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         } else {
             // Negative review (rating == 1)
             profile.negativeReviews++;
-            // Prevent going below base score
-            if (profile.reputationScore >= ReputationLib.BASE_SCORE + ReputationLib.NEGATIVE_REVIEW_PENALTY) {
-                profile.reputationScore -= ReputationLib.NEGATIVE_REVIEW_PENALTY;
+            // Allow going below base score if many negative reviews
+            if (profile.reputationScore >= ReputationLib.NEGATIVE_REVIEW_POINTS) {
+                profile.reputationScore -= ReputationLib.NEGATIVE_REVIEW_POINTS;
+            } else {
+                profile.reputationScore = 0; // Minimum possible score
             }
         }
 
@@ -578,6 +719,14 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         userProfiles[user].hasInvitationAuthority = hasAuthority;
     }
 
+    function getLinkedAddress(string calldata username) external view override returns (address) {
+        return usernameToAddress[username];
+    }
+
+    function getLinkedUsername(address user) external view override returns (string memory) {
+        return addressToUsername[user];
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -618,5 +767,93 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
     function hasUserReviewedUsername(address reviewer, string calldata username) external view returns (bool) {
         return hasReviewedUsername[reviewer][username];
+    }
+
+    function hasReviewedEntityByHash(address reviewer, address entityAddress, string calldata entityUsername)
+        external
+        view
+        returns (bool)
+    {
+        bytes32 entityHash = _getEntityHash(entityAddress, entityUsername);
+        return hasReviewedEntity[reviewer][entityHash];
+    }
+
+    function canReviewEntity(address reviewer, address entityAddress, string calldata entityUsername)
+        external
+        view
+        returns (bool)
+    {
+        return _canReviewEntity(reviewer, entityAddress, entityUsername);
+    }
+
+    // ============ Internal Helper Functions ============
+
+    function _getEntityHash(address entityAddress, string memory entityUsername) internal pure returns (bytes32) {
+        // Create a unique hash for the entity (address or username)
+        if (entityAddress != address(0)) {
+            return keccak256(abi.encodePacked("address:", entityAddress));
+        } else {
+            return keccak256(abi.encodePacked("username:", entityUsername));
+        }
+    }
+
+    function _canReviewEntity(address reviewer, address entityAddress, string memory entityUsername)
+        internal
+        view
+        returns (bool)
+    {
+        // Check if reviewer has already reviewed this entity
+        bytes32 entityHash = _getEntityHash(entityAddress, entityUsername);
+        if (hasReviewedEntity[reviewer][entityHash]) {
+            return false;
+        }
+
+        // If reviewing by address, also check if they've reviewed the linked username
+        if (entityAddress != address(0)) {
+            string memory linkedUsername = addressToUsername[entityAddress];
+            if (bytes(linkedUsername).length > 0) {
+                bytes32 usernameHash = _getEntityHash(address(0), linkedUsername);
+                if (hasReviewedEntity[reviewer][usernameHash]) {
+                    return false;
+                }
+            }
+        }
+
+        // If reviewing by username, also check if they've reviewed the linked address
+        if (bytes(entityUsername).length > 0) {
+            address linkedAddress = usernameToAddress[entityUsername];
+            if (linkedAddress != address(0)) {
+                bytes32 addressHash = _getEntityHash(linkedAddress, "");
+                if (hasReviewedEntity[reviewer][addressHash]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function _markEntityReviewed(address reviewer, address entityAddress, string memory entityUsername) internal {
+        // Mark the primary entity as reviewed
+        bytes32 entityHash = _getEntityHash(entityAddress, entityUsername);
+        hasReviewedEntity[reviewer][entityHash] = true;
+
+        // If reviewing by address, also mark the linked username as reviewed
+        if (entityAddress != address(0)) {
+            string memory linkedUsername = addressToUsername[entityAddress];
+            if (bytes(linkedUsername).length > 0) {
+                bytes32 usernameHash = _getEntityHash(address(0), linkedUsername);
+                hasReviewedEntity[reviewer][usernameHash] = true;
+            }
+        }
+
+        // If reviewing by username, also mark the linked address as reviewed
+        if (bytes(entityUsername).length > 0) {
+            address linkedAddress = usernameToAddress[entityUsername];
+            if (linkedAddress != address(0)) {
+                bytes32 addressHash = _getEntityHash(linkedAddress, "");
+                hasReviewedEntity[reviewer][addressHash] = true;
+            }
+        }
     }
 }

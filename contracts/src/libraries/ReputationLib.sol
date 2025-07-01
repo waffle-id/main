@@ -12,7 +12,7 @@ library ReputationLib {
     uint256 public constant BASE_SCORE = 1000;
     uint256 public constant POSITIVE_REVIEW_POINTS = 1;
     uint256 public constant NEUTRAL_REVIEW_POINTS = 0;
-    uint256 public constant NEGATIVE_REVIEW_PENALTY = 0;
+    uint256 public constant NEGATIVE_REVIEW_POINTS = 1;
     uint256 public constant STREAK_WEEKLY_BONUS = 25;
     uint256 public constant BADGE_BONUS_MULTIPLIER = 100;
 
@@ -30,12 +30,14 @@ library ReputationLib {
         // Add points for neutral reviews
         score += profile.neutralReviews * NEUTRAL_REVIEW_POINTS;
 
-        // Subtract points for negative reviews (but don't go below base)
-        uint256 penalty = profile.negativeReviews * NEGATIVE_REVIEW_PENALTY;
-        if (score > penalty) {
+        // Subtract points for negative reviews (can go below base score)
+        uint256 penalty = profile.negativeReviews * NEGATIVE_REVIEW_POINTS;
+        if (score >= penalty) {
             score -= penalty;
         } else {
-            score = BASE_SCORE;
+            // If penalty is greater than current score, set to minimum score
+            // Allow reputation to go below BASE_SCORE if user gets many negative reviews
+            score = 0; // Minimum possible score
         }
 
         // Add streak bonuses (weekly milestones)
@@ -68,11 +70,21 @@ library ReputationLib {
      * @return Tier name
      */
     function getTierName(WaffleEnums.ReputationTier tier) internal pure returns (string memory) {
-        if (tier == WaffleEnums.ReputationTier.WAFFLE_MASTER) return "Waffle Master";
-        if (tier == WaffleEnums.ReputationTier.GOLDEN_WAFFLE) return "Golden Waffle";
-        if (tier == WaffleEnums.ReputationTier.TRUSTED_BAKER) return "Trusted Baker";
-        if (tier == WaffleEnums.ReputationTier.RISING_STAR) return "Rising Star";
-        if (tier == WaffleEnums.ReputationTier.FRESH_WAFFLE) return "Fresh Waffle";
+        if (tier == WaffleEnums.ReputationTier.WAFFLE_MASTER) {
+            return "Waffle Master";
+        }
+        if (tier == WaffleEnums.ReputationTier.GOLDEN_WAFFLE) {
+            return "Golden Waffle";
+        }
+        if (tier == WaffleEnums.ReputationTier.TRUSTED_BAKER) {
+            return "Trusted Baker";
+        }
+        if (tier == WaffleEnums.ReputationTier.RISING_STAR) {
+            return "Rising Star";
+        }
+        if (tier == WaffleEnums.ReputationTier.FRESH_WAFFLE) {
+            return "Fresh Waffle";
+        }
         return "Newcomer";
     }
 

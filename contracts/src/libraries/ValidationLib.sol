@@ -187,4 +187,36 @@ library ValidationLib {
 
         return true;
     }
+
+    /**
+     * @dev Validate Twitter username format
+     * @param username Twitter username to validate
+     * @return True if valid
+     */
+    function validateUsername(string memory username) internal pure returns (bool) {
+        bytes memory usernameBytes = bytes(username);
+
+        // Check length (Twitter usernames are 1-15 characters)
+        if (usernameBytes.length == 0 || usernameBytes.length > 15) {
+            return false;
+        }
+
+        // Check for valid characters (alphanumeric and underscore only)
+        for (uint256 i = 0; i < usernameBytes.length; i++) {
+            bytes1 char = usernameBytes[i];
+            if (
+                ! // 0-9
+                    // A-Z
+                    // a-z
+                (
+                    (char >= 0x30 && char <= 0x39) || (char >= 0x41 && char <= 0x5A) || (char >= 0x61 && char <= 0x7A)
+                        || char == 0x5F
+                ) // underscore
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

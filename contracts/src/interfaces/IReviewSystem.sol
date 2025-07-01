@@ -9,7 +9,7 @@ import "../structs/ReviewStructs.sol";
  */
 interface IReviewSystem {
     /**
-     * @dev Submit a review for another user
+     * @dev Submit a review for a user by address
      * @param reviewee The address being reviewed
      * @param rating Rating from 1-3 (1=negative, 2=neutral, 3=positive)
      * @param comment Review comment (max 500 characters)
@@ -17,12 +17,26 @@ interface IReviewSystem {
     function submitReview(address reviewee, uint8 rating, string calldata comment) external;
 
     /**
-     * @dev Submit a review for a non-registered user by Twitter username
+     * @dev Submit a review for a user by Twitter username
      * @param username The Twitter username being reviewed
      * @param rating Rating from 1-3 (1=negative, 2=neutral, 3=positive)
      * @param comment Review comment (max 500 characters)
      */
     function submitUsernameReview(string calldata username, uint8 rating, string calldata comment) external;
+
+    /**
+     * @dev Submit a review for any entity (unified function)
+     * @param revieweeAddress The address being reviewed (use address(0) for username-only)
+     * @param revieweeUsername The username being reviewed (use empty string for address-only)
+     * @param rating Rating from 1-3 (1=negative, 2=neutral, 3=positive)
+     * @param comment Review comment (max 500 characters)
+     */
+    function submitEntityReview(
+        address revieweeAddress,
+        string calldata revieweeUsername,
+        uint8 rating,
+        string calldata comment
+    ) external;
 
     /**
      * @dev Get reviews received by a user

@@ -116,13 +116,16 @@ contract WaffleTest is Test {
         waffle.submitReview(alice, 3, "Reviewing myself");
     }
 
-    function testCannotReviewUnregisteredUser() public {
+    function testCanReviewUnregisteredUser() public {
         vm.prank(alice);
         waffle.registerUser();
 
-        vm.expectRevert(WaffleErrors.UserNotRegistered.selector);
+        // Should now work - anyone can review any address
         vm.prank(alice);
-        waffle.submitReview(bob, 3, "Bob is not registered");
+        waffle.submitReview(bob, 3, "Bob is not registered but can be reviewed");
+
+        // Check that the review was recorded
+        assertEq(waffle.getTotalReviews(), 1);
     }
 
     function testCannotReviewWithInvalidRating() public {
@@ -164,7 +167,7 @@ contract WaffleTest is Test {
         waffle.submitReview(bob, 3, "First review");
 
         // Second review should fail
-        vm.expectRevert(WaffleErrors.UserAlreadyReviewed.selector);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
         vm.prank(alice);
         waffle.submitReview(bob, 2, "Second review");
     }
@@ -527,13 +530,17 @@ contract WaffleTest is Test {
         vm.prank(bob);
         waffle.registerUser();
 
+        // Test both old function and new entity-based function
         assertFalse(waffle.hasUserReviewed(alice, bob));
+        assertTrue(waffle.canReviewEntity(alice, bob, ""));
 
         vm.prank(alice);
         waffle.submitReview(bob, 3, "Test review");
 
         assertTrue(waffle.hasUserReviewed(alice, bob));
+        assertFalse(waffle.canReviewEntity(alice, bob, "")); // Should not be able to review again
         assertFalse(waffle.hasUserReviewed(bob, alice)); // Different direction
+        assertTrue(waffle.canReviewEntity(bob, alice, "")); // Bob can still review Alice
     }
 
     // ============ Integration Tests ============
@@ -651,7 +658,7 @@ contract WaffleTest is Test {
 
         // Second review should fail
         vm.prank(alice);
-        vm.expectRevert(WaffleErrors.UsernameAlreadyReviewed.selector);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
         waffle.submitUsernameReview("creator", 2, "Changed my mind");
     }
 
@@ -680,23 +687,28 @@ contract WaffleTest is Test {
         waffle.submitUsernameReview("validuser", 3, "");
     }
 
-    function testUnregisteredUserCannotSubmitUsernameReview() public {
+    function testUnregisteredUserCanSubmitUsernameReview() public {
+        // Should now work - anyone can review any username
         vm.prank(alice);
-        vm.expectRevert(WaffleErrors.UserNotRegistered.selector);
         waffle.submitUsernameReview("someone", 3, "comment");
+
+        // Check that the review was recorded
+        assertEq(waffle.getTotalReviews(), 1);
     }
 
     function testHasUserReviewedUsername() public {
         vm.prank(alice);
         waffle.registerUser();
 
-        // Initially should be false
+        // Initially should be false for old function and true for entity check
         assertFalse(waffle.hasUserReviewedUsername(alice, "testuser"));
+        assertTrue(waffle.canReviewEntity(alice, address(0), "testuser"));
 
-        // After review should be true
+        // After review should be true for old function and false for entity check
         vm.prank(alice);
         waffle.submitUsernameReview("testuser", 3, "good");
         assertTrue(waffle.hasUserReviewedUsername(alice, "testuser"));
+        assertFalse(waffle.canReviewEntity(alice, address(0), "testuser"));
 
         // Different user should still be false
         assertFalse(waffle.hasUserReviewedUsername(bob, "testuser"));
@@ -774,12 +786,12 @@ contract WaffleTest is Test {
 
         // Check Alice can't review Bob again
         vm.prank(alice);
-        vm.expectRevert(WaffleErrors.UserAlreadyReviewed.selector);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
         waffle.submitReview(bob, 2, "Another review");
 
         // Check Alice can't review the username again
         vm.prank(alice);
-        vm.expectRevert(WaffleErrors.UsernameAlreadyReviewed.selector);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
         waffle.submitUsernameReview("twitteruser", 1, "Changed mind");
 
         // But Alice can review a different username
@@ -787,5 +799,344 @@ contract WaffleTest is Test {
         waffle.submitUsernameReview("anotheruser", 3, "Different user");
 
         assertEq(waffle.getTotalReviews(), 4);
+    }
+
+    // ============ Negative Review Penalty Tests ============
+
+    function testNegativeReviewPenalty() public {
+        // Register users
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Check initial reputation (should be BASE_SCORE = 1000)
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(bob);
+        assertEq(profile.reputationScore, 1000);
+
+        // Alice gives Bob a negative review
+        vm.prank(alice);
+        waffle.submitReview(bob, 1, "Poor performance");
+
+        // Check Bob's reputation decreased by 1 point
+        profile = waffle.getUserProfile(bob);
+        assertEq(profile.reputationScore, 999);
+        assertEq(profile.negativeReviews, 1);
+        assertEq(profile.totalReviews, 1);
+    }
+
+    function testMultipleNegativeReviewsBelowBaseScore() public {
+        // Register multiple users
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+        vm.prank(charlie);
+        waffle.registerUser();
+
+        vm.prank(dave);
+        waffle.registerUser();
+
+        vm.prank(eve);
+        waffle.registerUser();
+
+        // Check initial reputation
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(eve);
+        assertEq(profile.reputationScore, 1000);
+
+        // Multiple users give Eve negative reviews
+        vm.prank(alice);
+        waffle.submitReview(eve, 1, "Bad experience 1");
+
+        vm.prank(bob);
+        waffle.submitReview(eve, 1, "Bad experience 2");
+
+        vm.prank(charlie);
+        waffle.submitReview(eve, 1, "Bad experience 3");
+
+        vm.prank(dave);
+        waffle.submitReview(eve, 1, "Bad experience 4");
+
+        // Check Eve's reputation went below base score
+        profile = waffle.getUserProfile(eve);
+        assertEq(profile.reputationScore, 996); // 1000 - 4 = 996
+        assertEq(profile.negativeReviews, 4);
+        assertEq(profile.totalReviews, 4);
+
+        // Verify reputation tier (996 should be TRUSTED_BAKER tier >= 1000)
+        WaffleEnums.ReputationTier tier = waffle.getReputationTier(eve);
+        // 996 is below 1000, so it should be RISING_STAR (500-999)
+        assertEq(uint256(tier), uint256(WaffleEnums.ReputationTier.RISING_STAR));
+    }
+
+    function testReputationCanReachZero() public {
+        // This test simulates extreme negative reviews to reach minimum score
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Create many fake users to give negative reviews
+        address[] memory reviewers = new address[](1005);
+        for (uint256 i = 0; i < 1005; i++) {
+            reviewers[i] = makeAddr(string(abi.encodePacked("reviewer", i)));
+            vm.prank(reviewers[i]);
+            waffle.registerUser();
+        }
+
+        // Give Bob 1005 negative reviews (more than BASE_SCORE)
+        for (uint256 i = 0; i < 1005; i++) {
+            vm.prank(reviewers[i]);
+            waffle.submitReview(bob, 1, "Very bad");
+        }
+
+        // Check Bob's reputation hit minimum (0)
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(bob);
+        assertEq(profile.reputationScore, 0);
+        assertEq(profile.negativeReviews, 1005);
+
+        // Verify reputation tier is lowest
+        WaffleEnums.ReputationTier tier = waffle.getReputationTier(bob);
+        assertEq(uint256(tier), uint256(WaffleEnums.ReputationTier.NEWCOMER));
+    }
+
+    function testMixedReviewsReputationCalculation() public {
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+        vm.prank(charlie);
+        waffle.registerUser();
+
+        vm.prank(dave);
+        waffle.registerUser();
+
+        vm.prank(eve);
+        waffle.registerUser();
+
+        // Give mixed reviews to Eve
+        vm.prank(alice);
+        waffle.submitReview(eve, 3, "Positive review"); // +1
+
+        vm.prank(bob);
+        waffle.submitReview(eve, 1, "Negative review"); // -1
+
+        vm.prank(charlie);
+        waffle.submitReview(eve, 2, "Neutral review"); // +0
+
+        vm.prank(dave);
+        waffle.submitReview(eve, 3, "Another positive"); // +1
+
+        // Check final reputation: 1000 + 1 - 1 + 0 + 1 = 1001
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(eve);
+        assertEq(profile.reputationScore, 1001);
+        assertEq(profile.positiveReviews, 2);
+        assertEq(profile.neutralReviews, 1);
+        assertEq(profile.negativeReviews, 1);
+        assertEq(profile.totalReviews, 4);
+    }
+
+    function testUsernameReviewsWithNegativePenalty() public {
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Give negative review to a username
+        vm.prank(alice);
+        waffle.submitUsernameReview("baduser", 1, "Terrible content");
+
+        vm.prank(bob);
+        waffle.submitUsernameReview("baduser", 1, "Agree, very bad");
+
+        // Check username stats
+        ReviewStructs.NonRegisteredUser memory userData = waffle.getNonRegisteredUser("baduser");
+        assertEq(userData.totalReviews, 2);
+        assertEq(userData.negativeReviews, 2);
+        assertEq(userData.positiveReviews, 0);
+        assertEq(userData.averageRating, 100); // (1+1)/2 = 1.0 * 100
+    }
+
+    // ============ Unified Entity Review Tests ============
+
+    function testRegisterUserWithTwitter() public {
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("alice_crypto");
+
+        assertTrue(waffle.isRegistered(alice));
+        assertEq(waffle.getLinkedUsername(alice), "alice_crypto");
+        assertEq(waffle.getLinkedAddress("alice_crypto"), alice);
+    }
+
+    function testCannotLinkSameUsernameToMultipleAddresses() public {
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("crypto_user");
+
+        vm.prank(bob);
+        vm.expectRevert(WaffleErrors.UsernameAlreadyLinked.selector);
+        waffle.registerUserWithTwitter("crypto_user");
+    }
+
+    function testUnifiedEntityReviewSystem() public {
+        // Register alice with Twitter username
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("alice_crypto");
+
+        // Register bob without Twitter
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Charlie is not registered at all
+
+        // Bob reviews Alice by address
+        vm.prank(bob);
+        waffle.submitReview(alice, 3, "Great user!");
+
+        // Verify linkage
+        assertEq(waffle.getLinkedUsername(alice), "alice_crypto");
+        assertEq(waffle.getLinkedAddress("alice_crypto"), alice);
+
+        // Bob should NOT be able to review Alice again by username (same entity)
+        assertFalse(waffle.canReviewEntity(bob, address(0), "alice_crypto"));
+        vm.prank(bob);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
+        waffle.submitUsernameReview("alice_crypto", 2, "Different opinion");
+
+        // But Charlie CAN review Alice by username (different reviewer)
+        assertTrue(waffle.canReviewEntity(charlie, address(0), "alice_crypto"));
+        vm.prank(charlie);
+        waffle.submitUsernameReview("alice_crypto", 2, "Charlie's opinion");
+
+        // Now Charlie should NOT be able to review Alice by address (same entity)
+        assertFalse(waffle.canReviewEntity(charlie, alice, ""));
+        vm.prank(charlie);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
+        waffle.submitReview(alice, 1, "Changed mind");
+
+        // And Charlie can review a truly different username
+        vm.prank(charlie);
+        waffle.submitUsernameReview("different_user", 3, "This is different");
+
+        assertEq(waffle.getTotalReviews(), 3);
+    }
+
+    function testEntityHashConsistency() public {
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("alice_crypto");
+
+        // Review via address
+        vm.prank(bob);
+        waffle.submitReview(alice, 3, "Address review");
+
+        // Should not be able to review same entity via username
+        vm.prank(bob);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
+        waffle.submitUsernameReview("alice_crypto", 2, "Username review");
+
+        // Check entity review status
+        assertFalse(waffle.canReviewEntity(bob, alice, ""));
+        assertFalse(waffle.canReviewEntity(bob, address(0), "alice_crypto"));
+        assertTrue(waffle.hasReviewedEntityByHash(bob, alice, ""));
+        assertTrue(waffle.hasReviewedEntityByHash(bob, address(0), "alice_crypto"));
+    }
+
+    function testUnifiedSubmitEntityReview() public {
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("alice_crypto");
+
+        // Test address-only review
+        vm.prank(bob);
+        waffle.submitEntityReview(alice, "", 3, "Address review via unified function");
+
+        // Test username-only review for different entity
+        vm.prank(bob);
+        waffle.submitEntityReview(address(0), "different_user", 2, "Username review via unified function");
+
+        // Test invalid input (both address and username)
+        vm.prank(charlie);
+        vm.expectRevert(WaffleErrors.InvalidInput.selector);
+        waffle.submitEntityReview(alice, "alice_crypto", 3, "Invalid input");
+
+        // Test invalid input (neither address nor username)
+        vm.prank(charlie);
+        vm.expectRevert(WaffleErrors.InvalidInput.selector);
+        waffle.submitEntityReview(address(0), "", 3, "Invalid input");
+
+        assertEq(waffle.getTotalReviews(), 2);
+    }
+
+    // ============ Comprehensive Integration Test ============
+
+    function testCompleteUnifiedReviewSystemIntegration() public {
+        // Scenario: Demonstrate the complete unified review system with linked accounts
+
+        // 1. Alice registers with Twitter username
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("alice_crypto");
+
+        // 2. Bob registers normally (no Twitter link)
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // 3. Charlie and Dave are unregistered users
+
+        // 4. Multiple review scenarios
+
+        // Charlie (unregistered) reviews Alice by address
+        vm.prank(charlie);
+        waffle.submitReview(alice, 3, "Alice is great!");
+
+        // Dave (unregistered) reviews Alice by username (linked to same address)
+        vm.prank(dave);
+        waffle.submitUsernameReview("alice_crypto", 2, "Alice via username");
+
+        // Charlie tries to review Alice again via username - should fail (same entity)
+        vm.prank(charlie);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
+        waffle.submitUsernameReview("alice_crypto", 1, "Trying again");
+
+        // Dave tries to review Alice again via address - should fail (same entity)
+        vm.prank(dave);
+        vm.expectRevert(WaffleErrors.EntityAlreadyReviewed.selector);
+        waffle.submitReview(alice, 1, "Trying again");
+
+        // Bob reviews a non-registered username (not linked to any address)
+        vm.prank(bob);
+        waffle.submitUsernameReview("random_user", 3, "Random Twitter user");
+
+        // Alice reviews Bob by address
+        vm.prank(alice);
+        waffle.submitReview(bob, 2, "Bob is okay");
+
+        // Test the unified review function
+        vm.prank(charlie);
+        waffle.submitEntityReview(bob, "", 3, "Bob via unified function");
+
+        vm.prank(dave);
+        waffle.submitEntityReview(address(0), "another_user", 2, "Another user via unified");
+
+        // Verify final state
+        assertEq(waffle.getTotalReviews(), 6);
+
+        // Verify Alice's stats (she received 2 reviews: 1 by address, 1 by username)
+        UserStructs.UserProfile memory aliceProfile = waffle.getUserProfile(alice);
+        assertEq(aliceProfile.totalReviews, 2);
+        assertEq(aliceProfile.positiveReviews, 1); // Rating 3 from Charlie
+        assertEq(aliceProfile.neutralReviews, 1); // Rating 2 from Dave
+
+        // Verify Bob's stats (he received 2 reviews: 1 normal, 1 via unified function)
+        UserStructs.UserProfile memory bobProfile = waffle.getUserProfile(bob);
+        assertEq(bobProfile.totalReviews, 2);
+        assertEq(bobProfile.neutralReviews, 1); // Rating 2 from Alice
+        assertEq(bobProfile.positiveReviews, 1); // Rating 3 from Charlie
+
+        // Verify non-registered user stats
+        ReviewStructs.NonRegisteredUser memory randomUser = waffle.getNonRegisteredUser("random_user");
+        assertEq(randomUser.totalReviews, 1);
+        assertEq(randomUser.positiveReviews, 1);
+
+        ReviewStructs.NonRegisteredUser memory anotherUser = waffle.getNonRegisteredUser("another_user");
+        assertEq(anotherUser.totalReviews, 1);
+        assertEq(anotherUser.neutralReviews, 1);
     }
 }

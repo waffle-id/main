@@ -53,6 +53,15 @@ contract WaffleDeployment is Script {
         _deploy(config);
     }
 
+    function deployDevWithUnifiedDemo() external {
+        DeploymentConfig memory config =
+            DeploymentConfig({setupModerators: false, registerDeployer: true, runDemo: true, verbose: true});
+
+        console.log("=== DEVELOPMENT DEPLOYMENT WITH UNIFIED ENTITY REVIEW DEMO ===");
+        _deploy(config);
+        _runUnifiedEntityDemo();
+    }
+
     function _deploy(DeploymentConfig memory config) internal {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
@@ -149,6 +158,78 @@ contract WaffleDeployment is Script {
 
         // Demonstrate badge system
         _demonstrateBadgeSystem(alice, bob);
+    }
+
+    function _runUnifiedEntityDemo() internal {
+        console.log("\n=== UNIFIED ENTITY REVIEW SYSTEM DEMO ===");
+
+        address alice = makeAddr("alice");
+        address bob = makeAddr("bob");
+        address charlie = makeAddr("charlie");
+        address unregistered = makeAddr("unregistered");
+
+        // Demo 1: Register user with Twitter username
+        console.log("\n--- User Registration with Twitter Linking ---");
+        vm.prank(alice);
+        waffle.registerUserWithTwitter("alice_crypto");
+        console.log("Alice registered with Twitter username: alice_crypto");
+        console.log("Linked address:", waffle.getLinkedAddress("alice_crypto"));
+        console.log("Linked username:", waffle.getLinkedUsername(alice));
+
+        // Demo 2: Register bob normally
+        vm.prank(bob);
+        waffle.registerUser();
+        console.log("Bob registered normally (no Twitter link)");
+
+        // Demo 3: Unified entity reviews
+        console.log("\n--- Unified Entity Review System ---");
+
+        // Charlie (unregistered) reviews Alice by address
+        vm.prank(charlie);
+        waffle.submitReview(alice, 3, "Alice is amazing!");
+        console.log("Charlie reviewed Alice by address (rating: 3)");
+
+        // Unregistered user reviews Alice by username (should work - different reviewer)
+        vm.prank(unregistered);
+        waffle.submitUsernameReview("alice_crypto", 2, "Alice via username");
+        console.log("Unregistered user reviewed Alice by username (rating: 2)");
+
+        // Charlie tries to review Alice again by username - should fail (same entity)
+        vm.prank(charlie);
+        try waffle.submitUsernameReview("alice_crypto", 1, "Trying again") {
+            console.log("ERROR: Charlie was able to review Alice again!");
+        } catch {
+            console.log("SUCCESS: Charlie cannot review Alice again by username (same entity)");
+        }
+
+        // Demo 4: Check Alice's aggregated stats
+        console.log("\n--- Alice's Aggregated Stats ---");
+        UserStructs.UserProfile memory aliceProfile = waffle.getUserProfile(alice);
+        console.log("Total reviews received:", aliceProfile.totalReviews);
+        console.log("Positive reviews:", aliceProfile.positiveReviews);
+        console.log("Neutral reviews:", aliceProfile.neutralReviews);
+        console.log("Reputation score:", aliceProfile.reputationScore);
+
+        // Demo 5: Unified entity review function
+        console.log("\n--- Unified Entity Review Function ---");
+        vm.prank(bob);
+        waffle.submitEntityReview(alice, "", 1, "Using unified function");
+        console.log("Bob reviewed Alice using unified function (rating: 1)");
+
+        vm.prank(bob);
+        waffle.submitEntityReview(address(0), "random_user", 3, "Reviewing random user");
+        console.log("Bob reviewed random_user using unified function (rating: 3)");
+
+        // Demo 6: Check entity review capabilities
+        console.log("\n--- Entity Review Capabilities ---");
+        console.log("Can Charlie review Alice by address?", waffle.canReviewEntity(charlie, alice, ""));
+        console.log(
+            "Can Charlie review Alice by username?", waffle.canReviewEntity(charlie, address(0), "alice_crypto")
+        );
+        console.log("Can Bob review random_user again?", waffle.canReviewEntity(bob, address(0), "random_user"));
+
+        console.log("\nTotal reviews in system:", waffle.getTotalReviews());
+        console.log("Unified Entity Review System demo completed!\n");
     }
 
     function _demonstrateOneTimeReviews(address alice, address bob, address charlie) internal {
