@@ -43,7 +43,6 @@ job "job-waffle-scraper-prod" {
         NODE_IP = "${NOMAD_IP_http}"
         MODE    = "${var.mode}"
         BUILD_NUMBER = "${var.build_number}"
-        MONGO_URI = "${var.mongo_uri}"
       }
 
       driver = "docker"
