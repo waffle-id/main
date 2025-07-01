@@ -1,4 +1,3 @@
-// import puppeteer from "puppeteer";
 import puppeteer from "puppeteer-extra";
 
 export interface TwitterProfile {
@@ -12,7 +11,6 @@ export interface TwitterProfile {
 
 export async function scrapeTwitterProfile(username: string): Promise<TwitterProfile | null> {
   const url = `https://x.com/${username}`;
-  //   const url = `https://google.com`;
 
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
 
@@ -37,7 +35,6 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     process.platform
   );
 
-  // More aggressive Chrome args for container environments
   const chromeArgs = [
     "--no-sandbox",
     "--disable-setuid-sandbox",
@@ -80,7 +77,8 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     executablePath,
     headless: true,
     args: chromeArgs,
-    timeout: 15000, // 15 second timeout for browser launch
+    timeout: 15000,
+    protocolTimeout: 60000,
   });
   const page = await browser.newPage();
 
@@ -92,19 +90,16 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     );
 
     console.log("Navigating to:", url);
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 }); // Reduced timeout and changed wait condition
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
 
     console.log("Page loaded, waiting for content...");
 
-    // Try to wait for any basic content first
     try {
       await page.waitForSelector("div, span, h1", { timeout: 10000 });
       console.log("Basic content found");
     } catch (e) {
       console.log("No basic content found, proceeding anyway");
     }
-
-    // return {} as TwitterProfile;
 
     await page.waitForSelector(
       'div[data-testid="UserName"], [data-testid="UserAvatar-Container-"], h1',
@@ -350,6 +345,7 @@ export async function scrapeTwitterAvatar(username: string): Promise<string | nu
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    protocolTimeout: 60000,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",

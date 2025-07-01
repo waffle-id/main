@@ -81,7 +81,8 @@ app.get("/test-chrome", async (c) => {
     const browser = await puppeteer.default.launch({
       executablePath,
       headless: true,
-      timeout: 10000, // 10 second timeout
+      timeout: 10000,
+      protocolTimeout: 60000,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
