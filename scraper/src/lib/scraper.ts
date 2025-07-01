@@ -251,6 +251,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     return data;
   } catch (err) {
     await browser.close();
+    console.log("err ", err);
     const error = err as Error;
     console.error("Scraping failed:", error.message);
     console.error("This might be due to:");
