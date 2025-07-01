@@ -1,6 +1,6 @@
-// import puppeteer from "puppeteer";
-import puppeteer from "puppeteer-extra";
-import chromePaths from "chrome-paths";
+import puppeteer from "puppeteer";
+// import puppeteer from "puppeteer-extra";
+// import chromePaths from "chrome-paths";
 
 export interface TwitterProfile {
   fullName: string | null;
@@ -15,16 +15,17 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
   const url = `https://x.com/${username}`;
   //   const url = `https://google.com`;
 
-  console.log("scrapeTwitterProfile ", url, chromePaths.chrome);
+  console.log("scrapeTwitterProfile ", url);
 
   const browser = await puppeteer.launch({
-    executablePath: chromePaths.chrome,
+    // executablePath: chromePaths.chrome,
     headless: true,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-blink-features=AutomationControlled",
       "--disable-features=VizDisplayCompositor",
+      "--disable-gpu",
     ],
   });
   const page = await browser.newPage();
@@ -269,7 +270,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 export async function scrapeTwitterAvatar(username: string): Promise<string | null> {
   const url = `https://x.com/${username}`;
   const browser = await puppeteer.launch({
-    executablePath: chromePaths.chrome,
+    // executablePath: chromePaths.chrome,
     headless: true,
     args: [
       "--no-sandbox",
