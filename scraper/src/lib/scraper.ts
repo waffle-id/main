@@ -15,7 +15,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
   const url = `https://x.com/${username}`;
   //   const url = `https://google.com`;
 
-  console.log("scrapeTwitterProfile ", url);
+  console.log("scrapeTwitterProfile ", url, chromePaths.chrome);
 
   const browser = await puppeteer.launch({
     executablePath: chromePaths.chrome,
@@ -269,6 +269,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 export async function scrapeTwitterAvatar(username: string): Promise<string | null> {
   const url = `https://x.com/${username}`;
   const browser = await puppeteer.launch({
+    executablePath: chromePaths.chrome,
     headless: true,
     args: [
       "--no-sandbox",
