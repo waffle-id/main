@@ -11,7 +11,7 @@ job "job-waffle-web-prod" {
   datacenters = ["dc1"]
 
   group "group-waffle-web-prod" {
-    count = 3
+    count = 2
     network {
       port "http" {
         to = -1
