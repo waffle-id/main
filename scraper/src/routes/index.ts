@@ -41,6 +41,7 @@ app.get("/profile/:username", async (c) => {
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     if (existingProfile) {
+      console.log("if existingProfile");
       const lastScraped = new Date(existingProfile.last_scraped * 1000);
 
       if (lastScraped > oneDayAgo) {
@@ -59,6 +60,8 @@ app.get("/profile/:username", async (c) => {
         });
       }
     }
+
+    console.log("else existingProfile");
 
     const scrapedData = await scrapeTwitterProfile(username);
 

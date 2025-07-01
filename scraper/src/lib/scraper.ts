@@ -12,6 +12,8 @@ export interface TwitterProfile {
 export async function scrapeTwitterProfile(username: string): Promise<TwitterProfile | null> {
   const url = `https://x.com/${username}`;
 
+  console.log("scrapeTwitterProfile ", url);
+
   const browser = await puppeteer.launch({
     headless: true,
     args: [
