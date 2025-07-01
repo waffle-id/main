@@ -5,11 +5,16 @@ WORKDIR /usr/src/app
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-sandbox \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+    build-essential \
+    make \
+    g++ \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy package files
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 
 # Install dependencies
 RUN bun install --frozen-lockfile

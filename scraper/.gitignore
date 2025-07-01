@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-bun.lockb
+# bun.lockb
 
 # Environment variables
 .env

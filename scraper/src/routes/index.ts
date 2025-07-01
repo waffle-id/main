@@ -9,11 +9,12 @@ const app = new Hono();
 
 app.use(
   "*",
-  cors({
-    origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:4173"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  })
+  cors()
+  // cors({
+  //   origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:4173"],
+  //   allowMethods: ["GET", "POST", "PUT", "DELETE"],
+  //   allowHeaders: ["Content-Type", "Authorization"],
+  // })
 );
 app.use("*", logger());
 

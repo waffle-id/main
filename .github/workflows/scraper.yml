@@ -1,11 +1,11 @@
-name: 🐳 [BE] Build & Deploy
+name: 🐳 [SCRAPER] Build & Deploy
 
 on:
   push:
     branches:
     - main
     paths:
-    - "engine/**"
+    - "scraper/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,7 +21,7 @@ jobs:
     outputs:
       pushout: ${{ github.run_number }}
     env:
-      BASE_IMAGE: "ghcr.io/waffle-id/engine"
+      BASE_IMAGE: "ghcr.io/waffle-id/scraper"
     steps:
     - name: ⬇️ Checkout repo
       uses: actions/checkout@v4
@@ -42,13 +42,13 @@ jobs:
       uses: docker/build-push-action@v5
       id: push
       with:
-        context: ./engine
+        context: ./scraper
         push: true
         provenance: false
         tags: ${{ env.BASE_IMAGE }}:latest,${{ env.BASE_IMAGE }}:${{ github.run_number }}
 
   deploy-prod:
-    name: Engine to Production
+    name: Scraper to Production
     if: |
       success() &&
       (github.ref == 'refs/heads/main') &&
@@ -59,9 +59,9 @@ jobs:
       environment: "production"
       environment-url: "https://waffle.food/"
       nomad-directory: ".deployment/nomad"
-      nomad-job: "engine.hcl"
+      nomad-job: "scraper.hcl"
       nomad-addr: "https://nomad.waffle.food"
       image-tag: ${{ needs.build.outputs.pushout }}
-      module: "engine"
+      module: "scraper"
       semver-type: minor
     secrets: inherit
