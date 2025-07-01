@@ -14,6 +14,12 @@ interface IUserManagement {
     function registerUser() external;
 
     /**
+     * @dev Register a new user with Twitter username
+     * @param twitterUsername The Twitter username to link
+     */
+    function registerUserWithTwitter(string calldata twitterUsername) external;
+
+    /**
      * @dev Update daily login streak
      */
     function updateLoginStreak() external;
@@ -45,4 +51,18 @@ interface IUserManagement {
      * @param hasAuthority Whether to grant authority
      */
     function setInvitationAuthority(address user, bool hasAuthority) external;
+
+    /**
+     * @dev Get the wallet address linked to a Twitter username
+     * @param username The Twitter username
+     * @return The linked wallet address (address(0) if not linked)
+     */
+    function getLinkedAddress(string calldata username) external view returns (address);
+
+    /**
+     * @dev Get the Twitter username linked to a wallet address
+     * @param user The wallet address
+     * @return The linked Twitter username (empty string if not linked)
+     */
+    function getLinkedUsername(address user) external view returns (string memory);
 }
