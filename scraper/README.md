@@ -155,4 +155,3 @@ Common HTTP status codes:
 - **Database**: SQLite (Bun built-in)
 - **Scraping**: Puppeteer
 - **Language**: TypeScript
-  .
