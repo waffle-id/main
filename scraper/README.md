@@ -100,7 +100,7 @@ Database file location: `./database.sqlite`
 
 ```typescript
 // Get Twitter profile
-const response = await fetch('http://localhost:3001/profile/elonmusk');
+const response = await fetch("http://localhost:3001/profile/elonmusk");
 const { data } = await response.json();
 
 console.log(data);
@@ -117,7 +117,7 @@ console.log(data);
 ### Avatar Endpoint Example
 
 ```typescript
-const response = await fetch('http://localhost:3001/avatar/elonmusk');
+const response = await fetch("http://localhost:3001/avatar/elonmusk");
 const { data } = await response.json();
 
 console.log(data.avatarUrl);
@@ -151,7 +151,8 @@ Common HTTP status codes:
 ## Technologies Used
 
 - **Runtime**: Bun
-- **Web Framework**: Hono  
+- **Web Framework**: Hono
 - **Database**: SQLite (Bun built-in)
 - **Scraping**: Puppeteer
 - **Language**: TypeScript
+  .
