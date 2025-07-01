@@ -37,26 +37,50 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     process.platform
   );
 
+  // More aggressive Chrome args for container environments
+  const chromeArgs = [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--disable-software-rasterizer",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-renderer-backgrounding",
+    "--disable-features=TranslateUI",
+    "--disable-ipc-flooding-protection",
+    "--disable-blink-features=AutomationControlled",
+    "--disable-features=VizDisplayCompositor",
+    "--disable-extensions",
+    "--disable-plugins",
+    "--disable-default-apps",
+    "--disable-sync",
+    "--disable-translate",
+    "--hide-scrollbars",
+    "--mute-audio",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--no-zygote",
+    "--single-process",
+    "--disable-web-security",
+    "--disable-features=site-per-process",
+    "--disable-infobars",
+    "--window-position=0,0",
+    "--ignore-certifcate-errors",
+    "--ignore-certifcate-errors-spki-list",
+    "--ignore-certificate-errors",
+    "--ignore-ssl-errors",
+    "--allow-running-insecure-content",
+    "--disable-web-security",
+    "--disable-features=VizDisplayCompositor",
+    "--remote-debugging-port=0",
+  ];
+
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-blink-features=AutomationControlled",
-      "--disable-features=VizDisplayCompositor",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-extensions",
-      "--disable-default-apps",
-      "--disable-background-timer-throttling",
-      "--disable-backgrounding-occluded-windows",
-      "--disable-renderer-backgrounding",
-      "--remote-debugging-port=0",
-    ],
+    args: chromeArgs,
+    timeout: 15000, // 15 second timeout for browser launch
   });
   const page = await browser.newPage();
 
@@ -67,9 +91,18 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     );
 
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 * 2 });
+    console.log("Navigating to:", url);
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 }); // Reduced timeout and changed wait condition
 
-    console.log("page result", await page.content());
+    console.log("Page loaded, waiting for content...");
+
+    // Try to wait for any basic content first
+    try {
+      await page.waitForSelector("div, span, h1", { timeout: 10000 });
+      console.log("Basic content found");
+    } catch (e) {
+      console.log("No basic content found, proceeding anyway");
+    }
 
     // return {} as TwitterProfile;
 
@@ -300,22 +333,16 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 export async function scrapeTwitterAvatar(username: string): Promise<string | null> {
   const url = `https://x.com/${username}`;
 
-  // Use environment variable or fallback based on platform
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
 
   if (!executablePath) {
-    // Auto-detect based on platform for local development
     if (process.platform === "darwin") {
-      // macOS
       executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
     } else if (process.platform === "linux") {
-      // Linux (containers)
       executablePath = "/usr/bin/chromium";
     } else if (process.platform === "win32") {
-      // Windows
       executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     } else {
-      // Default fallback
       executablePath = "/usr/bin/chromium";
     }
   }
