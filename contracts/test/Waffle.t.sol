@@ -788,4 +788,160 @@ contract WaffleTest is Test {
 
         assertEq(waffle.getTotalReviews(), 4);
     }
+
+    // ============ Negative Review Penalty Tests ============
+
+    function testNegativeReviewPenalty() public {
+        // Register users
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Check initial reputation (should be BASE_SCORE = 1000)
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(bob);
+        assertEq(profile.reputationScore, 1000);
+
+        // Alice gives Bob a negative review
+        vm.prank(alice);
+        waffle.submitReview(bob, 1, "Poor performance");
+
+        // Check Bob's reputation decreased by 1 point
+        profile = waffle.getUserProfile(bob);
+        assertEq(profile.reputationScore, 999);
+        assertEq(profile.negativeReviews, 1);
+        assertEq(profile.totalReviews, 1);
+    }
+
+    function testMultipleNegativeReviewsBelowBaseScore() public {
+        // Register multiple users
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+        vm.prank(charlie);
+        waffle.registerUser();
+
+        vm.prank(dave);
+        waffle.registerUser();
+
+        vm.prank(eve);
+        waffle.registerUser();
+
+        // Check initial reputation
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(eve);
+        assertEq(profile.reputationScore, 1000);
+
+        // Multiple users give Eve negative reviews
+        vm.prank(alice);
+        waffle.submitReview(eve, 1, "Bad experience 1");
+
+        vm.prank(bob);
+        waffle.submitReview(eve, 1, "Bad experience 2");
+
+        vm.prank(charlie);
+        waffle.submitReview(eve, 1, "Bad experience 3");
+
+        vm.prank(dave);
+        waffle.submitReview(eve, 1, "Bad experience 4");
+
+        // Check Eve's reputation went below base score
+        profile = waffle.getUserProfile(eve);
+        assertEq(profile.reputationScore, 996); // 1000 - 4 = 996
+        assertEq(profile.negativeReviews, 4);
+        assertEq(profile.totalReviews, 4);
+
+        // Verify reputation tier (996 should be TRUSTED_BAKER tier >= 1000)
+        WaffleEnums.ReputationTier tier = waffle.getReputationTier(eve);
+        // 996 is below 1000, so it should be RISING_STAR (500-999)
+        assertEq(uint256(tier), uint256(WaffleEnums.ReputationTier.RISING_STAR));
+    }
+
+    function testReputationCanReachZero() public {
+        // This test simulates extreme negative reviews to reach minimum score
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Create many fake users to give negative reviews
+        address[] memory reviewers = new address[](1005);
+        for (uint256 i = 0; i < 1005; i++) {
+            reviewers[i] = makeAddr(string(abi.encodePacked("reviewer", i)));
+            vm.prank(reviewers[i]);
+            waffle.registerUser();
+        }
+
+        // Give Bob 1005 negative reviews (more than BASE_SCORE)
+        for (uint256 i = 0; i < 1005; i++) {
+            vm.prank(reviewers[i]);
+            waffle.submitReview(bob, 1, "Very bad");
+        }
+
+        // Check Bob's reputation hit minimum (0)
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(bob);
+        assertEq(profile.reputationScore, 0);
+        assertEq(profile.negativeReviews, 1005);
+
+        // Verify reputation tier is lowest
+        WaffleEnums.ReputationTier tier = waffle.getReputationTier(bob);
+        assertEq(uint256(tier), uint256(WaffleEnums.ReputationTier.NEWCOMER));
+    }
+
+    function testMixedReviewsReputationCalculation() public {
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+        vm.prank(charlie);
+        waffle.registerUser();
+
+        vm.prank(dave);
+        waffle.registerUser();
+
+        vm.prank(eve);
+        waffle.registerUser();
+
+        // Give mixed reviews to Eve
+        vm.prank(alice);
+        waffle.submitReview(eve, 3, "Positive review"); // +1
+
+        vm.prank(bob);
+        waffle.submitReview(eve, 1, "Negative review"); // -1
+
+        vm.prank(charlie);
+        waffle.submitReview(eve, 2, "Neutral review"); // +0
+
+        vm.prank(dave);
+        waffle.submitReview(eve, 3, "Another positive"); // +1
+
+        // Check final reputation: 1000 + 1 - 1 + 0 + 1 = 1001
+        UserStructs.UserProfile memory profile = waffle.getUserProfile(eve);
+        assertEq(profile.reputationScore, 1001);
+        assertEq(profile.positiveReviews, 2);
+        assertEq(profile.neutralReviews, 1);
+        assertEq(profile.negativeReviews, 1);
+        assertEq(profile.totalReviews, 4);
+    }
+
+    function testUsernameReviewsWithNegativePenalty() public {
+        vm.prank(alice);
+        waffle.registerUser();
+        vm.prank(bob);
+        waffle.registerUser();
+
+        // Give negative review to a username
+        vm.prank(alice);
+        waffle.submitUsernameReview("baduser", 1, "Terrible content");
+
+        vm.prank(bob);
+        waffle.submitUsernameReview("baduser", 1, "Agree, very bad");
+
+        // Check username stats
+        ReviewStructs.NonRegisteredUser memory userData = waffle.getNonRegisteredUser("baduser");
+        assertEq(userData.totalReviews, 2);
+        assertEq(userData.negativeReviews, 2);
+        assertEq(userData.positiveReviews, 0);
+        assertEq(userData.averageRating, 100); // (1+1)/2 = 1.0 * 100
+    }
 }

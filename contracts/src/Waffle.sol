@@ -424,9 +424,11 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         } else {
             // Negative review (rating == 1)
             profile.negativeReviews++;
-            // Prevent going below base score
-            if (profile.reputationScore >= ReputationLib.BASE_SCORE + ReputationLib.NEGATIVE_REVIEW_PENALTY) {
-                profile.reputationScore -= ReputationLib.NEGATIVE_REVIEW_PENALTY;
+            // Allow going below base score if many negative reviews
+            if (profile.reputationScore >= ReputationLib.NEGATIVE_REVIEW_POINTS) {
+                profile.reputationScore -= ReputationLib.NEGATIVE_REVIEW_POINTS;
+            } else {
+                profile.reputationScore = 0; // Minimum possible score
             }
         }
 
