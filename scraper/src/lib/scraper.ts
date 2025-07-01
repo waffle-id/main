@@ -37,7 +37,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 
     console.log("page result", await page.content());
 
-    return {} as TwitterProfile;
+    // return {} as TwitterProfile;
 
     await page.waitForSelector(
       'div[data-testid="UserName"], [data-testid="UserAvatar-Container-"], h1',
