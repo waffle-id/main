@@ -234,7 +234,7 @@ HoverImageRevealProps) {
           <div
             ref={revealImgRef}
             className={cn(
-              "bg-black text-white p-8 rounded-md shadow-lg text-sm flex items-center justify-center w-[25vh] h-full",
+              "bg-black text-white px-6 py-4 rounded-md shadow-lg text-sm flex items-center justify-center w-max max-w-[33vw] h-full",
               childrenClassName
             )}
           >

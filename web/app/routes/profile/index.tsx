@@ -58,7 +58,7 @@ export default function Profile() {
       const img = item.querySelector(".grid-item-img");
       if (!img) return;
 
-      const yPercentRandomVal = gsap.utils.random(0, 100);
+      const yPercentRandomVal = gsap.utils.random(0, 50);
 
       gsap
         .timeline()
