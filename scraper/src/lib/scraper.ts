@@ -10,7 +10,8 @@ export interface TwitterProfile {
 }
 
 export async function scrapeTwitterProfile(username: string): Promise<TwitterProfile | null> {
-  const url = `https://x.com/${username}`;
+  //   const url = `https://x.com/${username}`;
+  const url = `https://google.com`;
 
   console.log("scrapeTwitterProfile ", url);
 
@@ -35,6 +36,8 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 * 2 });
 
     console.log("page result", await page.content());
+
+    return {} as TwitterProfile;
 
     await page.waitForSelector(
       'div[data-testid="UserName"], [data-testid="UserAvatar-Container-"], h1',

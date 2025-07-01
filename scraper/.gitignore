@@ -56,4 +56,4 @@ coverage/
 tmp/
 temp/
 
-# database.sqlite-*
+database.sqlite-*
