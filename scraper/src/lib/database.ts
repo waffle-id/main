@@ -1,112 +1,101 @@
-import sqlite3 from "sqlite3";
-import { open, Database as SQLiteDatabase } from "sqlite";
-import path from "path";
+import { Database } from "bun:sqlite";
 import type { TwitterProfile, ScrapedProfileRow } from "./schema";
+import path from "path";
 
 const dbPath = path.join(process.cwd(), "database.sqlite");
 console.log(`Database path: ${dbPath}`);
-
-let sqlite: SQLiteDatabase<sqlite3.Database, sqlite3.Statement>;
+const sqlite = new Database(dbPath);
 
 export const db = {
-  async init() {
-    sqlite = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
-    });
-    await sqlite.run("PRAGMA journal_mode = WAL");
-    console.log("✅ Database connection initialized");
-  },
-
-  async getProfile(username: string): Promise<ScrapedProfileRow | null> {
+  getProfile: (username: string): ScrapedProfileRow | null => {
     try {
-      const result = await sqlite.get<ScrapedProfileRow>(
-        `SELECT * FROM scraped_profiles WHERE username = ? LIMIT 1`,
-        username
-      );
-      console.log(`Database query for "${username}":`, result);
-      return result ?? null;
+      const query = sqlite.query(`
+        SELECT * FROM scraped_profiles 
+        WHERE username = ? 
+        LIMIT 1
+      `);
+      const result = query.get(username);
+
+      console.log(`Database query for username "${username}":`, result);
+
+      if (!result) {
+        return null;
+      }
+
+      return result as ScrapedProfileRow;
     } catch (error) {
       console.error("Database query error:", error);
       return null;
     }
   },
 
-  async insertProfile(profile: TwitterProfile): Promise<void> {
-    try {
-      console.log(`Inserting profile for: ${profile.username}`);
-      const now = Math.floor(Date.now() / 1000);
-      await sqlite.run(
-        `INSERT INTO scraped_profiles 
-        (username, full_name, bio, avatar_url, followers, url, last_scraped, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        profile.username,
-        profile.fullName,
-        profile.bio,
-        profile.avatarUrl,
-        profile.followers,
-        profile.url,
-        now,
-        now,
-        now
-      );
-      console.log("Insert complete");
-    } catch (error) {
-      console.error("Insert error:", error);
-    }
+  insertProfile: (profile: TwitterProfile): void => {
+    console.log(`Attempting to insert profile for: ${profile.username}`);
+    const query = sqlite.query(`
+      INSERT INTO scraped_profiles 
+      (username, full_name, bio, avatar_url, followers, url, last_scraped, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const now = Math.floor(Date.now() / 1000);
+    const result = query.run(
+      profile.username,
+      profile.fullName,
+      profile.bio,
+      profile.avatarUrl,
+      profile.followers,
+      profile.url,
+      now,
+      now,
+      now
+    );
+    console.log(`Insert result:`, result);
   },
 
-  async updateProfile(username: string, profile: TwitterProfile): Promise<void> {
-    try {
-      console.log(`Updating profile for: ${username}`);
-      const now = Math.floor(Date.now() / 1000);
-      await sqlite.run(
-        `UPDATE scraped_profiles 
-        SET full_name = ?, bio = ?, avatar_url = ?, followers = ?, url = ?, 
-            last_scraped = ?, updated_at = ?
-        WHERE username = ?`,
-        profile.fullName,
-        profile.bio,
-        profile.avatarUrl,
-        profile.followers,
-        profile.url,
-        now,
-        now,
-        username
-      );
-      console.log("Update complete");
-    } catch (error) {
-      console.error("Update error:", error);
-    }
+  updateProfile: (username: string, profile: TwitterProfile): void => {
+    console.log(`Attempting to update profile for: ${username}`);
+    const query = sqlite.query(`
+      UPDATE scraped_profiles 
+      SET full_name = ?, bio = ?, avatar_url = ?, followers = ?, url = ?, 
+          last_scraped = ?, updated_at = ?
+      WHERE username = ?
+    `);
+    const now = Math.floor(Date.now() / 1000);
+    const result = query.run(
+      profile.fullName,
+      profile.bio,
+      profile.avatarUrl,
+      profile.followers,
+      profile.url,
+      now,
+      now,
+      username
+    );
+    console.log(`Update result:`, result);
   },
 
-  async getAllProfiles(): Promise<ScrapedProfileRow[]> {
-    try {
-      return await sqlite.all<ScrapedProfileRow[]>(
-        `SELECT * FROM scraped_profiles ORDER BY updated_at DESC`
-      );
-    } catch (error) {
-      console.error("Get all profiles error:", error);
-      return [];
-    }
+  getAllProfiles: (): ScrapedProfileRow[] => {
+    const query = sqlite.query("SELECT * FROM scraped_profiles ORDER BY updated_at DESC");
+    const results = query.all();
+    return results as ScrapedProfileRow[];
   },
 
-  async debugDatabase(): Promise<ScrapedProfileRow[]> {
+  debugDatabase: () => {
     try {
-      const results = await sqlite.all<ScrapedProfileRow[]>(
-        `SELECT username, last_scraped FROM scraped_profiles ORDER BY last_scraped DESC LIMIT 10`
+      const query = sqlite.query(
+        "SELECT username, last_scraped FROM scraped_profiles ORDER BY last_scraped DESC LIMIT 10"
       );
-      console.log("Database contents:", results);
+      const results = query.all();
+      console.log("Current database contents:", results);
       return results;
     } catch (error) {
-      console.error("Debug error:", error);
+      console.error("Error checking database contents:", error);
       return [];
     }
   },
 
-  async testDatabase(): Promise<boolean> {
+  testDatabase: () => {
     try {
-      console.log("Testing database...");
+      console.log("Testing database operations...");
 
       const testProfile: TwitterProfile = {
         username: "test_user_" + Date.now(),
@@ -117,21 +106,25 @@ export const db = {
         url: "https://x.com/test",
       };
 
-      await db.insertProfile(testProfile);
-      const retrieved = await db.getProfile(testProfile.username);
-      console.log("Retrieved:", retrieved);
+      db.insertProfile(testProfile);
+      console.log("Test insert completed");
+
+      const retrieved = db.getProfile(testProfile.username);
+      console.log("Test retrieve result:", retrieved);
+
       return !!retrieved;
     } catch (error) {
-      console.error("Test failed:", error);
+      console.error("Database test failed:", error);
       return false;
     }
   },
 };
 
-export async function initializeDatabase() {
+export function initializeDatabase() {
   try {
-    await db.init();
-    await sqlite.exec(`
+    sqlite.exec("PRAGMA journal_mode = WAL;");
+
+    sqlite.exec(`
       CREATE TABLE IF NOT EXISTS scraped_profiles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -145,9 +138,10 @@ export async function initializeDatabase() {
         updated_at INTEGER DEFAULT (strftime('%s', 'now'))
       );
     `);
-    console.log("✅ Database schema initialized");
+
+    console.log("✅ Database initialized successfully");
   } catch (error) {
-    console.error("❌ Failed to initialize database schema:", error);
+    console.error("❌ Failed to initialize database:", error);
     throw error;
   }
 }

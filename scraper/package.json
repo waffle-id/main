@@ -4,8 +4,8 @@
   "description": "Standalone Twitter scraper service for Waffle platform",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir ./dist --target bun",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "drizzle-kit migrate",
