@@ -22,6 +22,116 @@ app.get("/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.get("/debug", (c) => {
+  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+
+  if (!executablePath) {
+    if (process.platform === "darwin") {
+      executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    } else if (process.platform === "linux") {
+      executablePath = "/usr/bin/chromium";
+    } else if (process.platform === "win32") {
+      executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+    } else {
+      executablePath = "/usr/bin/chromium";
+    }
+  }
+
+  return c.json({
+    environment: {
+      PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
+      CHROME_BIN: process.env.CHROME_BIN,
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD,
+      DISPLAY: process.env.DISPLAY,
+      NODE_ENV: process.env.NODE_ENV,
+    },
+    computed: {
+      executablePath,
+      platform: process.platform,
+      arch: process.arch,
+      nodeVersion: process.version,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/test-chrome", async (c) => {
+  try {
+    console.log("Testing Chrome launch...");
+
+    let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+
+    if (!executablePath) {
+      if (process.platform === "darwin") {
+        executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+      } else if (process.platform === "linux") {
+        executablePath = "/usr/bin/chromium";
+      } else if (process.platform === "win32") {
+        executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+      } else {
+        executablePath = "/usr/bin/chromium";
+      }
+    }
+
+    const { scrapeTwitterProfile } = await import("../lib/scraper");
+
+    const puppeteer = await import("puppeteer-extra");
+
+    console.log("Attempting to launch Chrome...");
+    const browser = await puppeteer.default.launch({
+      executablePath,
+      headless: true,
+      timeout: 10000,
+      protocolTimeout: 60000,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--single-process",
+        "--no-zygote",
+        "--disable-web-security",
+        "--disable-features=site-per-process",
+        "--remote-debugging-port=0",
+      ],
+    });
+
+    console.log("Chrome launched successfully!");
+
+    const page = await browser.newPage();
+    console.log("New page created");
+
+    await page.goto("data:text/html,<h1>Test</h1>", { timeout: 5000 });
+    console.log("Navigation successful");
+
+    const title = await page.evaluate(() => document.querySelector("h1")?.textContent);
+    console.log("Page evaluation successful:", title);
+
+    await browser.close();
+    console.log("Chrome closed successfully");
+
+    return c.json({
+      success: true,
+      message: "Chrome test passed",
+      title: title,
+      executable: executablePath,
+      platform: process.platform,
+    });
+  } catch (error: any) {
+    console.error("Chrome test failed:", error);
+    return c.json(
+      {
+        success: false,
+        error: error.message,
+        stack: error.stack,
+        executable: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
+        platform: process.platform,
+      },
+      500
+    );
+  }
+});
+
 app.get("/profile/:username", async (c) => {
   const username = c.req.param("username");
 

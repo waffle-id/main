@@ -15,7 +15,6 @@
   "dependencies": {
     "@hono/node-server": "^1.8.0",
     "better-sqlite3": "^9.2.2",
-    "chrome-paths": "^1.0.1",
     "drizzle-orm": "^0.29.0",
     "hono": "^4.0.0",
     "puppeteer": "^21.0.0",
