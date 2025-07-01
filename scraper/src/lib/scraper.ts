@@ -10,8 +10,8 @@ export interface TwitterProfile {
 }
 
 export async function scrapeTwitterProfile(username: string): Promise<TwitterProfile | null> {
-  //   const url = `https://x.com/${username}`;
-  const url = `https://google.com`;
+  const url = `https://x.com/${username}`;
+  //   const url = `https://google.com`;
 
   console.log("scrapeTwitterProfile ", url);
 
