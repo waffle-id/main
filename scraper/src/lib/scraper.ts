@@ -1,6 +1,5 @@
-import puppeteer from "puppeteer";
-// import puppeteer from "puppeteer-extra";
-// import chromePaths from "chrome-paths";
+// import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-extra";
 
 export interface TwitterProfile {
   fullName: string | null;
@@ -15,17 +14,48 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
   const url = `https://x.com/${username}`;
   //   const url = `https://google.com`;
 
-  console.log("scrapeTwitterProfile ", url);
+  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+
+  if (!executablePath) {
+    if (process.platform === "darwin") {
+      executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    } else if (process.platform === "linux") {
+      executablePath = "/usr/bin/chromium";
+    } else if (process.platform === "win32") {
+      executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+    } else {
+      executablePath = "/usr/bin/chromium";
+    }
+  }
+
+  console.log(
+    "scrapeTwitterProfile ",
+    url,
+    "using executable:",
+    executablePath,
+    "platform:",
+    process.platform
+  );
 
   const browser = await puppeteer.launch({
-    // executablePath: chromePaths.chrome,
+    executablePath,
     headless: true,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
       "--disable-blink-features=AutomationControlled",
       "--disable-features=VizDisplayCompositor",
-      "--disable-gpu",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-extensions",
+      "--disable-default-apps",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--remote-debugging-port=0",
     ],
   });
   const page = await browser.newPage();
@@ -269,14 +299,46 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
 
 export async function scrapeTwitterAvatar(username: string): Promise<string | null> {
   const url = `https://x.com/${username}`;
+
+  // Use environment variable or fallback based on platform
+  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+
+  if (!executablePath) {
+    // Auto-detect based on platform for local development
+    if (process.platform === "darwin") {
+      // macOS
+      executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    } else if (process.platform === "linux") {
+      // Linux (containers)
+      executablePath = "/usr/bin/chromium";
+    } else if (process.platform === "win32") {
+      // Windows
+      executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+    } else {
+      // Default fallback
+      executablePath = "/usr/bin/chromium";
+    }
+  }
+
   const browser = await puppeteer.launch({
-    // executablePath: chromePaths.chrome,
+    executablePath,
     headless: true,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
       "--disable-blink-features=AutomationControlled",
       "--disable-features=VizDisplayCompositor",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-extensions",
+      "--disable-default-apps",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--remote-debugging-port=0",
     ],
   });
   const page = await browser.newPage();

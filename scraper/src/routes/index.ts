@@ -22,6 +22,29 @@ app.get("/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.get("/debug", (c) => {
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH ||
+    process.env.CHROME_BIN ||
+    '/usr/bin/chromium';
+
+  return c.json({
+    environment: {
+      PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
+      CHROME_BIN: process.env.CHROME_BIN,
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD,
+      DISPLAY: process.env.DISPLAY,
+      NODE_ENV: process.env.NODE_ENV,
+    },
+    computed: {
+      executablePath,
+      platform: process.platform,
+      arch: process.arch,
+      nodeVersion: process.version,
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get("/profile/:username", async (c) => {
   const username = c.req.param("username");
 
