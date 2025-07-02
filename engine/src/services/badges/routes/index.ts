@@ -6,7 +6,9 @@ const router = Router();
 router.get("/", async (req, res) => {
   const items = findAllBadges();
 
-  res.json(items);
+  res.json({
+    data: items,
+  });
 });
 
 export { router };
