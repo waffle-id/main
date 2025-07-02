@@ -6,3 +6,7 @@ export async function findByRevieweeUsernameAndReviewerUsername(
 ) {
   return ReviewModel.findOne({ revieweeUsername, reviewerUsername });
 }
+
+export async function findAllByRevieweeUsername(revieweeUsername: string) {
+  return ReviewModel.find({ revieweeUsername });
+}

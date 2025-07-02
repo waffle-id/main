@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { authMiddleware } from "../../../middleware/authMiddleware";
-import { findByRevieweeUsernameAndReviewerUsername } from "../controller/find";
+import {
+  findAllByRevieweeUsername,
+  findByRevieweeUsernameAndReviewerUsername,
+} from "../controller/find";
 import { findByName } from "@/services/personas/controller/find";
 import { PersonaRequest } from "@/types/Persona";
 import { findByUsernameAndPersonaName } from "@/services/user-persona-scores/controller/find";
@@ -85,6 +88,24 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
     }
     res.status(201).json({
       isSuccess: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/:revieweeUsername", async (req, res, next) => {
+  try {
+    const { revieweeUsername } = req.params;
+    if (!revieweeUsername) {
+      const error = Error("Param is required");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+    const reviews = await findAllByRevieweeUsername(revieweeUsername);
+    res.status(200).json({
+      isSuccess: true,
+      reviews: reviews,
     });
   } catch (err) {
     next(err);
