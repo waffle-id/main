@@ -1,15 +1,9 @@
 import { TextAnimation } from "~/components/waffle/logo/text-animation";
-import { ClientOnly } from "remix-utils/client-only";
-import { CircleButton } from "~/components/waffle/button/circle-button";
-import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animation";
-import { ArrowLink, BackLink } from "~/components/waffle/button/arrow-button";
-import { WebGLCanvas } from "~/components/waffle/three";
-import { LogoAnimation } from "~/components/waffle/logo/logo-animation";
+import { ArrowLink } from "~/components/waffle/button/arrow-button";
 import { GradientBG } from "~/components/waffle/gradient-bg";
-import { Button } from "~/components/shadcn/button";
 import { cn } from "~/utils/cn";
 
-import { FeaturesBanner, FeaturesText } from "./features";
+import { FeaturesBanner, FeaturesText } from "./shared/features";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 import type { Route } from "./+types";
 import { Separator } from "~/components/waffle/separator";
