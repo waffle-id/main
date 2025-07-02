@@ -12,6 +12,9 @@ import { update, create } from "../controller/save";
 import { add } from "../controller/save";
 import { CONFIG } from "../../../config";
 import jwt from "jsonwebtoken";
+import { verifyWalletSignature } from "@/helpers/verify-signature";
+import { get } from "http";
+import { deleteNonce, generateNonce, getNonce } from "@/helpers/nonce-store";
 
 const router = Router();
 
@@ -35,15 +38,61 @@ router.get("/:username", async (req, res) => {
   res.send(user);
 });
 
+router.get("/nonce/:address", async (req, res, next) => {
+  try {
+    const { address } = req.params;
+    if (!address) {
+      const error = Error("Address is required");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+
+    const nonce = generateNonce(address);
+    res.status(200).json({
+      isSuccess: true,
+      nonce,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/login", async (req, res, next) => {
   try {
-    const { address } = req.body;
+    const { address, signature } = req.body;
+    if (!address || !signature) {
+      const error = Error("Missing fields");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+
     const user = await findByAddressFullData(address);
     if (!user) {
       const error = Error("You have not registered yet");
       (error as any).statusCode = 401;
       throw error;
     }
+
+    const nonce = getNonce(address);
+    if (!nonce) {
+      const error = Error("Nonce expired or missing");
+      (error as any).statusCode = 401;
+      throw error;
+    }
+
+    const expectedMessage = `Sign in to Waffle App\nNonce: ${nonce}`;
+    const isSignatureValid = verifyWalletSignature({
+      address,
+      message: expectedMessage,
+      signature,
+    });
+    if (!isSignatureValid) {
+      const error = Error("Invalid signature");
+      (error as any).statusCode = 401;
+      throw error;
+    }
+
+    deleteNonce(address);
 
     const token = jwt.sign(
       {
