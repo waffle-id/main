@@ -2,6 +2,8 @@ import { cn } from "~/utils/cn";
 import { LogoAnimation } from "../waffle/logo/logo-animation";
 import { useEffect, useState, type JSX } from "react";
 import { NavLink } from "../waffle/nav-link";
+import { ConnectWalletXellar } from "../waffle/wallet/connect-wallet-xellar";
+import { ConnectWalletRainbow } from "../waffle/wallet/connect-wallet-rainbow";
 
 const LINKS_HEADER: Record<string, string>[] = [
   {
@@ -54,13 +56,14 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
       <div className="flex flex-nowrap items-center justify-between w-full gap-4 overflow-hidden">
         <LogoAnimation className="h-14 w-max aspect-square" />
 
-        <nav className="flex flex-row gap-4 md:gap-8 lg:gap-12">
+        <nav className="flex flex-row gap-4 md:gap-8 lg:gap-12 items-center">
           {LINKS_HEADER.map((link, i) => (
             <NavLink key={link.to} to={link.to} prefetch="intent">
               {link.text}
             </NavLink>
           ))}
-          <p className="text-black">Connect Wallet</p>
+          {/* <ConnectWalletXellar /> */}
+          <ConnectWalletRainbow />
         </nav>
       </div>
     </div>

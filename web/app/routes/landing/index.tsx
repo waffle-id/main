@@ -18,7 +18,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Landing() {
   return (
     <>
-      <GradientBG className="absolute h-1/3 -top-28 -right-12 blur-lg" />
+      <GradientBG className="fixed h-1/3 -top-28 -right-12 blur-lg" />
 
       <div className="px-[20px] lg:px-[50px] mt-32">
         <div className="h-[90vh] flex flex-col">

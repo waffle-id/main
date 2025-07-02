@@ -11,11 +11,15 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.12",
+    "@rainbow-me/rainbowkit": "^2.2.8",
     "@react-router/node": "^7.5.3",
     "@react-router/serve": "^7.5.3",
+    "@tanstack/react-query": "^5.81.5",
     "@types/three": "^0.177.0",
+    "@xellar/kit": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.13.0",
@@ -32,7 +36,9 @@
     "split-type": "^0.3.4",
     "tailwind-merge": "^3.3.1",
     "three": "^0.177.0",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "viem": "^2.31.6",
+    "wagmi": "^2.15.6"
   },
   "devDependencies": {
     "@react-router/dev": "^7.5.3",
@@ -45,5 +51,8 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4"
+  },
+  "overrides": {
+    "use-sync-external-store": "^1.4.0"
   }
 }

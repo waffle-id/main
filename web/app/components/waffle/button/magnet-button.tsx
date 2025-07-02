@@ -7,6 +7,7 @@ const buttonVariants = cva("", {
   variants: {
     color: {
       orange: "border-foreground text-foreground",
+      // black: "border-black text-black",
       // orange: "border-[#FF764A] text-[#FF764A]",
       // yellow: "border-[#FFB84F] text-[#FFB84F]",
       // pink: "border-[#E97B86] text-[#E97B86]",
@@ -29,6 +30,7 @@ const bgFlairVarians = cva("", {
   variants: {
     background: {
       orange: "bg-foreground",
+      // dark: "bg-foreground",
       // orange: "bg-[#FF764A]",
       // yellow: "bg-[#FFB84F]",
       // pink: "bg-[#E97B86]",
@@ -41,7 +43,7 @@ const bgFlairVarians = cva("", {
   },
 });
 
-export const ButtonMagnetVariantsVal = ["orange", "yellow", "pink", "blue", "green"];
+// export const ButtonMagnetVariantsVal = ["orange", "yellow", "pink", "blue", "green"];
 export type ButtonMagnetVariants = VariantProps<typeof buttonVariants>;
 
 type ButtonMagnetProps = {} & ButtonMagnetVariants & JSX.IntrinsicElements["button"];

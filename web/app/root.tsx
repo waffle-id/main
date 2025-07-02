@@ -8,11 +8,17 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import "./assets/styles/index.css";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useEffect } from "react";
 import Lenis from "lenis";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WAGMI_RAINBOW_CONFIG } from "./constants/wagmi";
+import { WagmiProvider } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+
+import "./assets/styles/index.css";
+import "@rainbow-me/rainbowkit/styles.css";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,6 +60,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const queryClient = new QueryClient();
+
   useEffect(() => {
     const lenis = new Lenis({
       lerp: 0.1,
@@ -70,9 +78,15 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <Outlet />
-    </>
+    <WagmiProvider config={WAGMI_RAINBOW_CONFIG}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <Outlet />
+        </RainbowKitProvider>
+        {/* <XellarKitProvider theme={lightTheme}> */}
+        {/* </XellarKitProvider> */}
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
 
