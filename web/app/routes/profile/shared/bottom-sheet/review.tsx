@@ -1,6 +1,9 @@
 import { PencilRuler } from "lucide-react";
 import { useState } from "react";
+import { Button } from "~/components/shadcn/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
+import { Input } from "~/components/shadcn/input";
+import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 
 export default function Review() {
@@ -16,13 +19,53 @@ export default function Review() {
       </ButtonMagnet>
 
       <DrawerContent className="pb-10 text-black">
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm flex flex-col gap-12">
           <DrawerHeader>
-            <DrawerTitle className="text-center font-bold text-black">Review Someone</DrawerTitle>
+            <DrawerTitle className="text-center font-bold text-black text-2xl">
+              Write review
+            </DrawerTitle>
           </DrawerHeader>
-          <div className="flex flex-col gap-10">
-            <p>halo</p>
+
+          <div className="flex flex-row items-center gap-4 w-full">
+            {/* <Button className="text-red-500 border-re" variant="outline">Negative</Button> */}
+            <ButtonMagnet color="red" className="w-full">
+              Negative
+            </ButtonMagnet>
+            <ButtonMagnet className="w-full">Neutral</ButtonMagnet>
+            <ButtonMagnet className="w-full" color="green">
+              Positive
+            </ButtonMagnet>
           </div>
+
+          <div className="flex flex-col gap-2">
+            <p>Title</p>
+            <Input
+              placeholder="Title"
+              className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
+              type="text"
+              // value={form.from}
+              // onChange={(e) =>
+              //   setForm((prev) => {
+              //     return { ...prev, from: e.target.value };
+              //   })
+              // }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p>Description</p>
+            <Textarea
+              placeholder="Description"
+              className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
+              // value={form.message}
+              // onChange={(e) =>
+              //   setForm((prev) => {
+              //     return { ...prev, message: e.target.value };
+              //   })
+              // }
+            />
+          </div>
+
+          <ButtonMagnet className="self-center w-max px-16">Submit</ButtonMagnet>
         </div>
       </DrawerContent>
     </Drawer>

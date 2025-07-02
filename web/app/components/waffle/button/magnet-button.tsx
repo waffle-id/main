@@ -7,12 +7,13 @@ const buttonVariants = cva("", {
   variants: {
     color: {
       orange: "border-foreground text-foreground",
+      red: "border-red-500 text-red-500",
       // black: "border-black text-black",
       // orange: "border-[#FF764A] text-[#FF764A]",
       // yellow: "border-[#FFB84F] text-[#FFB84F]",
       // pink: "border-[#E97B86] text-[#E97B86]",
       // blue: "border-[#77C6D9] text-[#77C6D9]",
-      // green: "border-[#47B172] text-[#47B172]",
+      green: "border-[#47B172] text-[#47B172]",
     },
     size: {
       default: "px-4 py-2 text-lg",
@@ -30,12 +31,13 @@ const bgFlairVarians = cva("", {
   variants: {
     background: {
       orange: "bg-foreground",
+      red: "bg-red-500",
       // dark: "bg-foreground",
       // orange: "bg-[#FF764A]",
       // yellow: "bg-[#FFB84F]",
       // pink: "bg-[#E97B86]",
       // blue: "bg-[#77C6D9]",
-      // green: "bg-[#47B172]",
+      green: "bg-[#47B172]",
     },
   },
   defaultVariants: {

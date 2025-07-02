@@ -4,7 +4,7 @@ export default [
   layout("routes/_layout.tsx", [
     index("routes/landing/index.tsx"),
     // route("/ui", "routes/ui/docs.tsx"),
-    route("/profile", "routes/profile/index.tsx"),
+    route("/profile/:slug", "routes/profile/index.tsx"),
     // route("/hover", "routes/profile/hover.tsx"),
     // route("/hover2", "routes/profile/hover-new.tsx"),
     route("/categories", "routes/categories/index.tsx"),
