@@ -3,7 +3,7 @@ name: 🐳 [CONTRACTS] Integration
 on:
   push:
     paths:
-    - "engine/**"
+    - "contracts/**"
 
 env:
   FOUNDRY_PROFILE: ci
