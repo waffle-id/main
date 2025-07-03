@@ -45,7 +45,7 @@ export function ConnectWalletXellar() {
       setHasValidInvitation(true);
       setInvitationError("");
       setInvitationCode("");
-      setIsInvitationDrawerOpen(false);
+      // Keep drawer open to show Twitter connect button
     } else {
       setInvitationError("Invalid invitation code. Please try again.");
     }
@@ -152,23 +152,14 @@ export function ConnectWalletXellar() {
                           <Twitter className="size-4" />
                         </DropdownMenuShortcut>
                       </DropdownMenuItem>
-                    ) : hasValidInvitation ? (
-                      <NavLink to="/auth/twitter">
-                        <DropdownMenuItem className="py-4">
-                          Connect Twitter ✓
-                          <DropdownMenuShortcut>
-                            <Twitter className="size-4" />
-                          </DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      </NavLink>
-                    ) : (
+                    ) : !hasValidInvitation ? (
                       <DropdownMenuItem className="py-4" onClick={handleConnectTwitterClick}>
                         Connect Twitter
                         <DropdownMenuShortcut>
                           <Twitter className="size-4" />
                         </DropdownMenuShortcut>
                       </DropdownMenuItem>
-                    )}
+                    ) : null}
                     {twitterUser && (
                       <Form action="/auth/logout" method="post">
                         <DropdownMenuItem className="py-4" asChild>
@@ -205,62 +196,88 @@ export function ConnectWalletXellar() {
                     <div className="flex flex-col h-full">
                       <DrawerHeader className="text-center flex-shrink-0">
                         <DrawerTitle className="text-xl font-semibold">
-                          Invitation Required
+                          {hasValidInvitation ? "Connect Your Twitter" : "Invitation Required"}
                         </DrawerTitle>
                         <DrawerDescription className="text-base mt-2">
-                          You need a valid invitation code to access full features and connect your
-                          Twitter account.
+                          {hasValidInvitation
+                            ? "Great! Now you can connect your Twitter account to access full features."
+                            : "You need a valid invitation code to access full features and connect your Twitter account."}
                         </DrawerDescription>
                       </DrawerHeader>
 
                       <div className="flex-1 flex items-center justify-center px-6 py-8">
                         <div className="w-full max-w-sm">
-                          <form onSubmit={handleInvitationSubmit} className="space-y-6">
-                            <div className="space-y-3">
-                              <label
-                                htmlFor="invitation-code"
-                                className="text-sm font-medium block"
-                              >
-                                Invitation Code
-                              </label>
-                              <Input
-                                id="invitation-code"
-                                type="text"
-                                placeholder="Enter your invitation code"
-                                value={invitationCode}
-                                onChange={(e) => {
-                                  setInvitationCode(e.target.value);
-                                  setInvitationError("");
-                                }}
-                                className={`h-12 text-center text-lg ${
-                                  invitationError ? "border-red-500" : ""
-                                }`}
-                                autoFocus
-                              />
-                              {invitationError && (
-                                <p className="text-sm text-red-500 text-center">
-                                  {invitationError}
-                                </p>
-                              )}
-                            </div>
+                          {!hasValidInvitation ? (
+                            <form onSubmit={handleInvitationSubmit} className="space-y-6">
+                              <div className="space-y-3">
+                                <label
+                                  htmlFor="invitation-code"
+                                  className="text-sm font-medium block"
+                                >
+                                  Invitation Code
+                                </label>
+                                <Input
+                                  id="invitation-code"
+                                  type="text"
+                                  placeholder="Enter your invitation code"
+                                  value={invitationCode}
+                                  onChange={(e) => {
+                                    setInvitationCode(e.target.value);
+                                    setInvitationError("");
+                                  }}
+                                  className={`h-12 text-center text-lg ${
+                                    invitationError ? "border-red-500" : ""
+                                  }`}
+                                  autoFocus
+                                />
+                                {invitationError && (
+                                  <p className="text-sm text-red-500 text-center">
+                                    {invitationError}
+                                  </p>
+                                )}
+                              </div>
 
-                            <div className="flex gap-3 pt-4">
-                              <ButtonMagnet type="submit" className="flex-1 h-12">
-                                Verify Code
-                              </ButtonMagnet>
-                              <DrawerClose>
-                                <ButtonMagnet type="button" className="h-12 px-4">
-                                  <X className="size-5" />
+                              <div className="flex gap-3 pt-4">
+                                <ButtonMagnet type="submit" className="flex-1 h-12">
+                                  Verify Code
                                 </ButtonMagnet>
-                              </DrawerClose>
+                                <DrawerClose>
+                                  <ButtonMagnet type="button" className="h-12 px-4">
+                                    <X className="size-5" />
+                                  </ButtonMagnet>
+                                </DrawerClose>
+                              </div>
+                            </form>
+                          ) : (
+                            <div className="space-y-6 text-center">
+                              <div className="text-green-600 text-lg font-medium">
+                                ✓ Invitation Code Verified!
+                              </div>
+                              <div className="flex gap-3">
+                                <NavLink to="/auth/twitter" className="flex-1">
+                                  <ButtonMagnet className="w-full h-12">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <Twitter className="size-5" />
+                                      <span>Connect Twitter</span>
+                                    </div>
+                                  </ButtonMagnet>
+                                </NavLink>
+                                <DrawerClose>
+                                  <ButtonMagnet type="button" className="h-12 px-4">
+                                    <X className="size-5" />
+                                  </ButtonMagnet>
+                                </DrawerClose>
+                              </div>
                             </div>
-                          </form>
+                          )}
                         </div>
                       </div>
 
                       <div className="flex-shrink-0 px-6 pb-6 text-center">
                         <p className="text-xs text-muted-foreground">
-                          Need an invitation code? Contact support for access.
+                          {!hasValidInvitation
+                            ? "Need an invitation code? Contact support for access."
+                            : "You can close this dialog and connect Twitter anytime."}
                         </p>
                       </div>
                     </div>
