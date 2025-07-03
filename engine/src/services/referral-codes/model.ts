@@ -4,7 +4,7 @@ const TABLE_REFERRAL_CODE = "referral_codes";
 
 const ReferralCodeSchema: Schema = new Schema(
   {
-    code: { type: String, required: true },
+    code: { type: String, required: true, unique: true },
     isExpired: { type: Boolean, required: true },
   },
   {
