@@ -20,6 +20,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "./assets/styles/index.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { XellarKitProvider } from "@xellar/kit";
+import { WaffleProvider } from "./components/waffle/waffle-provider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -83,7 +84,9 @@ export default function App() {
     <WagmiProvider config={WAGMI_RAINBOW_CONFIG}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <Outlet />
+          <WaffleProvider>
+            <Outlet />
+          </WaffleProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
