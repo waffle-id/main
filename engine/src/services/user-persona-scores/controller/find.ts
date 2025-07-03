@@ -9,3 +9,9 @@ export async function findByUsernameAndPersonaName(
     personaName: new RegExp(`^${personaName}$`, "i"),
   });
 }
+
+export async function findAllByUsername(username: string) {
+  return UserPersonaScoreModel.find({
+    username,
+  });
+}
