@@ -28,7 +28,7 @@ export default function BadgesPage({}) {
             <div key={idx} className="flex flex-col gap-2 h-full mx-2">
               <p className="font-alt text-2xl">-{idx + 1}</p>
               <div className="aspect-square p-12 flex items-center justify-center">
-                <img src={val.img} className="aspect-square object-contain h-3/4" />
+                <img src={val.images} className="aspect-square object-contain h-3/4" />
               </div>
               <p className="text-3xl">{val.title}</p>
               <p className="text-gray-dark">{val.desc}</p>

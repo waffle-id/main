@@ -3,7 +3,18 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useSwitchChain, useDisconnect } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Hash, House, LogOut, RefreshCcw, User, Twitter, X } from "lucide-react";
+import {
+  ChevronDown,
+  Hash,
+  House,
+  LogOut,
+  RefreshCcw,
+  User,
+  Twitter,
+  X,
+  Award,
+  BadgeCheck,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,7 +115,11 @@ export function ConnectWalletRainbow() {
                           </ButtonMagnet>
                         </div>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="center" className="w-48 reeiiiiiii">
+                      <DropdownMenuContent
+                        align="center"
+                        className="w-48"
+                        onPointerDownOutside={() => setDropdownOpenControl(false)}
+                      >
                         {chain.unsupported && (
                           <DropdownMenuItem className="py-4" onClick={openChainModal}>
                             Change Network
@@ -113,6 +128,7 @@ export function ConnectWalletRainbow() {
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
                         )}
+
                         <NavLink to="/">
                           <DropdownMenuItem className="py-4">
                             Home
@@ -121,11 +137,39 @@ export function ConnectWalletRainbow() {
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
                         </NavLink>
+
                         <NavLink to="/categories">
                           <DropdownMenuItem className="py-4">
                             Categories
                             <DropdownMenuShortcut>
                               <Hash className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        </NavLink>
+
+                        <NavLink to="/leaderboard">
+                          <DropdownMenuItem className="py-4">
+                            Leaderboards
+                            <DropdownMenuShortcut>
+                              <Award className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        </NavLink>
+
+                        <NavLink to="/badges">
+                          <DropdownMenuItem className="py-4">
+                            Badges
+                            <DropdownMenuShortcut>
+                              <BadgeCheck className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        </NavLink>
+
+                        <NavLink to={`/profile/w/${address}`}>
+                          <DropdownMenuItem className="py-4">
+                            My Profile
+                            <DropdownMenuShortcut>
+                              <User className="size-5" />
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
                         </NavLink>
@@ -159,15 +203,6 @@ export function ConnectWalletRainbow() {
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
                         )}
-
-                        <NavLink to={`/profile/w/${address}`}>
-                          <DropdownMenuItem className="py-4">
-                            My Profile
-                            <DropdownMenuShortcut>
-                              <User className="size-5" />
-                            </DropdownMenuShortcut>
-                          </DropdownMenuItem>
-                        </NavLink>
 
                         <DropdownMenuItem className="py-4" onClick={handleDisconnect}>
                           Disconnect Wallet

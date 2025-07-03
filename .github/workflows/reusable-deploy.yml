@@ -89,4 +89,19 @@ jobs:
 
     - name: Nomad deployment
       run: |
-        curl -H "CF-Access-Client-Id: ${{ secrets.CF_Access_Client_Id }}" -H "CF-Access-Client-Secret: ${{ secrets.CF_Access_Client_Secret }}" -X POST -d '{ "job": ${{ steps.job-parse.outputs.parsed }} }' ${{ inputs.nomad-addr }}/v1/jobs
+        response=$(curl -s -o response.json -w "%{http_code}" \
+          -H "CF-Access-Client-Id: ${{ secrets.CF_Access_Client_Id }}" \
+          -H "CF-Access-Client-Secret: ${{ secrets.CF_Access_Client_Secret }}" \
+          -X POST \
+          -d '{ "job": ${{ steps.job-parse.outputs.parsed }} }' \
+          ${{ inputs.nomad-addr }}/v1/jobs)
+
+        echo "Nomad response status: $response"
+        cat response.json
+
+        if [ "$response" -ne 200 ]; then
+          echo "❌ Nomad deployment failed with status $response"
+          exit 1
+        else
+          echo "✅ Nomad deployment succeeded"
+        fi

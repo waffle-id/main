@@ -56,15 +56,15 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
       <div className="flex flex-nowrap items-center justify-between w-full gap-4 overflow-hidden">
         <LogoAnimation className="h-14 w-max aspect-square" />
 
-        <nav className="flex flex-row gap-4 md:gap-8 lg:gap-12 items-center">
-          {LINKS_HEADER.map((link, i) => (
+        {/* <nav className="flex flex-row gap-4 md:gap-8 lg:gap-12 items-center"> */}
+        {/* {LINKS_HEADER.map((link, i) => (
             <NavLink key={link.to} to={link.to} prefetch="intent">
               {link.text}
             </NavLink>
-          ))}
-          {/* <ConnectWalletXellar /> */}
-          <ConnectWalletRainbow />
-        </nav>
+          ))} */}
+        {/* <ConnectWalletXellar /> */}
+        <ConnectWalletRainbow />
+        {/* </nav> */}
       </div>
     </div>
   );
