@@ -2,6 +2,7 @@ import { Router } from "express";
 import { router as AccountServices } from "@services/account";
 import { router as ReviewRoutes } from "@services/reviews";
 import { router as BadgesServices } from "@services/badges";
+import { router as PersonaServices } from "@services/personas";
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.use((req, res, next) => {
 router.use("/account", AccountServices);
 router.use("/reviews", ReviewRoutes);
 router.use("/badges", BadgesServices);
+router.use("/personas", PersonaServices);
 router.get("/waffle", (req, res) => {
   res.json({ stat: "hi Waffle! " + new Date().toISOString() });
 });
