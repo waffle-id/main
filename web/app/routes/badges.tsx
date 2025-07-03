@@ -12,7 +12,7 @@ export async function loader() {
   };
 }
 
-export default function BadgesPage({}) {
+export default function BadgesPage() {
   const loaderData = useLoaderData<typeof loader>();
   const { badges } = loaderData;
 

@@ -6,7 +6,7 @@ export default [
     index("routes/landing/index.tsx"),
     route("/categories", "routes/categories/index.tsx"),
     route("/badges", "routes/badges.tsx"),
-    route("/leaderboard", "routes/leaderboard/index.tsx"),
+    route("/leaderboard/:categories?", "routes/leaderboard/index.tsx"),
 
     /* ------------------------------- User pages ------------------------------- */
     route("/profile/:slug", "routes/profile/index.tsx"),

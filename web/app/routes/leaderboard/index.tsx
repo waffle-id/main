@@ -1,18 +1,38 @@
 import { Award, BadgeCheckIcon } from "lucide-react";
 import React from "react";
+import { useLoaderData, useLocation } from "react-router";
 import { Badge } from "~/components/shadcn/badge";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animation";
 import { Separator } from "~/components/waffle/separator";
+import type { Route } from "./+types";
+import { capitalizeEachWord } from "~/utils/formatter";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/shadcn/tooltip";
+
+export async function loader({ params, request, context }: Route.LoaderArgs) {
+  let title = "most-credible"; // default
+
+  if (params && params.categories) {
+    title = params.categories;
+  }
+
+  return {
+    title: capitalizeEachWord(title.split("-").join(" ")),
+  };
+}
 
 export default function LeaderboardPage() {
+  const loaderData = useLoaderData();
+  const { title } = loaderData;
+
   return (
     <>
       <div className="mt-32 px-[20px] lg:px-[50px]">
+        {/* <p>{JSON.stringify(loc)}</p> */}
         <div className="grid grid-cols-2 ">
           <div className="flex flex-col justify-between mt-24">
             <div className="flex flex-col gap-2">
-              <p className="text-gray-dark">Most Credible</p>
+              <p className="text-gray-dark">{title}</p>
               <p className="text-black text-5xl">Leaderboards</p>
             </div>
             <TextStaticAnimation className="w-max" />
@@ -80,21 +100,48 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex flex-row gap-1 items-center justify-center">
-                    <Badge variant="secondary" className="bg-blue-500 text-white dark:bg-blue-600">
-                      <BadgeCheckIcon />
-                      Verified
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge className="bg-white text-black">
+                          <img
+                            src="https://ik.imagekit.io/3592mo0vh/waffle/contrib.svg"
+                            className="size-10"
+                          />
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Contributor</p>
+                      </TooltipContent>
+                    </Tooltip>
                     {idx % 2 == 0 && (
-                      <Badge className="bg-foreground text-white dark:bg-blue-600">
-                        <BadgeCheckIcon />
-                        Verified
-                      </Badge>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Badge className="bg-white text-black">
+                            <img
+                              src="https://ik.imagekit.io/3592mo0vh/waffle/support.svg"
+                              className="size-10"
+                            />
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Supportive</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     {idx % 3 == 0 && (
-                      <Badge className="bg-white text-black dark:bg-blue-600">
-                        <BadgeCheckIcon />
-                        Verified
-                      </Badge>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Badge className="bg-white text-black">
+                            <img
+                              src="https://ik.imagekit.io/3592mo0vh/waffle/build.svg"
+                              className="size-10"
+                            />
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Builder</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 </div>
