@@ -74,6 +74,12 @@ jobs:
       run: |
         sed -i "s|place_mongo_uri|${{ secrets.MONGO_URI }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
 
+    - name: Frontend Config Nomad
+      if: inputs.module == 'web'
+      run: |
+        sed -i "s|place_client_id|${{ secrets.CLIENT_ID }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+        sed -i "s|place_client_secret|${{ secrets.CLIENT_SECRET }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+
     - name: Nomad parse .hcl to .json
       id: job-parse
       run: |
