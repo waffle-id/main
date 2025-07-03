@@ -2,7 +2,7 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useSwitchChain } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
-import { ChevronDown, Hash, House, LogOut, RefreshCcw, User } from "lucide-react";
+import { ChevronDown, Hash, House, LogOut, RefreshCcw, User, Twitter } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "~/components/shadcn/dropdown-menu";
 import { monadTestnet } from "viem/chains";
-import { NavLink } from "react-router";
+import { NavLink, Form } from "react-router";
+import { useOptionalUser } from "~/utils/auth";
 
 export function ConnectWalletRainbow() {
   const { isConnected, chain, address } = useAccount();
+  const twitterUser = useOptionalUser();
 
   return (
     <ConnectButton.Custom>
@@ -27,8 +29,6 @@ export function ConnectWalletRainbow() {
         authenticationStatus,
         mounted,
       }) => {
-        // Note: If your app doesn't use authentication, you
-        // can remove all 'authenticationStatus' checks
         const ready = mounted && authenticationStatus !== "loading";
         const connected =
           ready &&
@@ -49,11 +49,7 @@ export function ConnectWalletRainbow() {
 
               if (chain.unsupported) {
                 return (
-                  <ButtonMagnet
-                    className="w-full sm:max-w-xs"
-                    // onClick={() => switchChain?.({ chainId: monadTestnet.id })}
-                    onClick={openChainModal}
-                  >
+                  <ButtonMagnet className="w-full sm:max-w-xs" onClick={openChainModal}>
                     <div className="flex flex-row items-center gap-2">
                       <RefreshCcw className="size-5" />
                       <span className="text-sm">Switch Network</span>
@@ -64,7 +60,7 @@ export function ConnectWalletRainbow() {
 
               return (
                 <>
-                  {/* <DropdownMenu>
+                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <div>
                         <ButtonMagnet>
@@ -106,14 +102,42 @@ export function ConnectWalletRainbow() {
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
                       </NavLink>
-                      <NavLink to={`/profile/w/${address}`}>
-                        <DropdownMenuItem className="py-4">
-                          My Profile
+
+                      {twitterUser ? (
+                        <DropdownMenuItem className="py-4" disabled>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{twitterUser.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              @{twitterUser.screen_name}
+                            </span>
+                          </div>
                           <DropdownMenuShortcut>
-                            <User />
+                            <Twitter className="size-4" />
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
-                      </NavLink>
+                      ) : (
+                        <NavLink to="/auth/twitter">
+                          <DropdownMenuItem className="py-4">
+                            Connect Twitter
+                            <DropdownMenuShortcut>
+                              <Twitter className="size-4" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        </NavLink>
+                      )}
+                      {twitterUser && (
+                        <Form action="/auth/logout" method="post">
+                          <DropdownMenuItem className="py-4" asChild>
+                            <button type="submit" className="w-full text-left">
+                              [DEV] Logout Twitter
+                              <DropdownMenuShortcut>
+                                <LogOut className="size-4" />
+                              </DropdownMenuShortcut>
+                            </button>
+                          </DropdownMenuItem>
+                        </Form>
+                      )}
+
                       <DropdownMenuItem className="py-4" onClick={openAccountModal}>
                         Log out
                         <DropdownMenuShortcut>
@@ -121,8 +145,9 @@ export function ConnectWalletRainbow() {
                         </DropdownMenuShortcut>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu> */}
+                  </DropdownMenu>
 
+                  {/*
                   <ButtonMagnet className="w-full sm:max-w-xs" onClick={openAccountModal}>
                     <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
                       <span className="truncate">
@@ -135,6 +160,7 @@ export function ConnectWalletRainbow() {
                       </span>
                     </div>
                   </ButtonMagnet>
+                  */}
                 </>
               );
             })()}

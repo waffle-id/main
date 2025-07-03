@@ -10,5 +10,8 @@ export default [
     route("/categories", "routes/categories/index.tsx"),
     route("/badges", "routes/badges.tsx"),
     route("/leaderboard", "routes/leaderboard/index.tsx"),
+    route("/auth/twitter", "routes/auth.twitter.tsx"),
+    route("/auth/twitter/callback", "routes/auth.twitter.callback.tsx"),
+    route("/auth/logout", "routes/auth.logout.tsx"),
   ]),
 ] satisfies RouteConfig;
