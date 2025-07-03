@@ -4,5 +4,8 @@ export async function findByUsernameAndPersonaName(
   username: string,
   personaName: string
 ) {
-  return UserPersonaScoreModel.findOne({ username, personaName });
+  return UserPersonaScoreModel.findOne({
+    username,
+    personaName: new RegExp(`^${personaName}$`, "i"),
+  });
 }
