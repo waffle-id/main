@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddleware } from "../../../middleware/authMiddleware";
 import {
   findAllByRevieweeUsername,
+  findAllByReviewerUsername,
   findByRevieweeUsernameAndReviewerUsername,
 } from "../controller/find";
 import { findByName } from "@/services/personas/controller/find";
@@ -94,18 +95,30 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
   }
 });
 
-router.get("/:revieweeUsername", async (req, res, next) => {
+// GET /reviews?revieweeUsername=alice
+// GET /reviews?reviewerUsername=bob
+router.get("/", async (req, res, next) => {
   try {
-    const { revieweeUsername } = req.params;
-    if (!revieweeUsername) {
-      const error = Error("Param is required");
+    const { revieweeUsername, reviewerUsername } = req.query;
+
+    if (!revieweeUsername && !reviewerUsername) {
+      const error = Error(
+        "Either revieweeUsername or reviewerUsername is required"
+      );
       (error as any).statusCode = 400;
       throw error;
     }
-    const reviews = await findAllByRevieweeUsername(revieweeUsername);
+
+    let reviews;
+    if (revieweeUsername) {
+      reviews = await findAllByRevieweeUsername(revieweeUsername as string);
+    } else {
+      reviews = await findAllByReviewerUsername(reviewerUsername as string);
+    }
+
     res.status(200).json({
       isSuccess: true,
-      reviews: reviews,
+      reviews,
     });
   } catch (err) {
     next(err);
