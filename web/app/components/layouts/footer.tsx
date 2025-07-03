@@ -4,7 +4,7 @@ import { TextStaticAnimation } from "../waffle/logo/text-static-animation";
 
 export function Footer() {
   return (
-    <div className="px-[20px] lg:px-[50px]">
+    <div className="px-[20px] lg:px-[50px] relative bg-background z-[100000]">
       <div className="col-start-1 row-start-3 md:col-start-2 relative before:absolute before:top-0 before:h-px before:w-[200vw] before:bg-foreground before:-left-[100vw] after:absolute after:bottom-0 after:h-px after:w-[200vw] after:bg-foreground after:-left-[100vw]">
         <footer className="text-sm/loose text-gray-950">
           <div className="mx-auto hidden w-full grid-cols-4 justify-between gap-y-0 md:grid md:grid-cols-4 md:gap-6 md:gap-x-4 lg:gap-8 *:first:border-l-0 *:last:border-r-0">

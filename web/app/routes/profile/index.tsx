@@ -27,7 +27,8 @@ import { ImageHoverRevealText } from "~/components/waffle/image-hover-reveal-tex
 import Review from "./shared/bottom-sheet/review";
 import Vouch from "./shared/bottom-sheet/vouch";
 import Slash from "./shared/bottom-sheet/slash";
-import { useParams } from "react-router";
+import { redirect, useParams } from "react-router";
+import type { Route } from "./+types";
 
 const imageItems = [
   {
@@ -44,6 +45,16 @@ const imageItems = [
   { src: "https://placehold.co/500/880808/FFFFFF/png", r: 4, c: 6, review: "Lorem 6" },
   { src: "https://placehold.co/500/880808/FFFFFF/png", r: 5, c: 2, review: "Lorem 7" },
 ];
+
+export async function loader({ params }: Route.LoaderArgs) {
+  const { variant } = params;
+
+  if (variant !== "x" && variant !== "w") {
+    return redirect("/");
+  }
+
+  return {};
+}
 
 export default function Profile() {
   const params = useParams();
@@ -101,7 +112,11 @@ export default function Profile() {
       {/* Cover */}
       <div className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center pointer-events-none z-10">
         {/* <div className=" flex flex-col gap-4 items-center backdrop-blur-lg rounded-lg p-4"> */}
-        <p className="text-[8vw] font-bold font-sans m-0">{params.slug}</p>
+        <p className="text-[8vw] font-bold font-sans m-0">
+          {params.slug!!.length > 15
+            ? `${params.slug?.slice(0, 6)}...${params.slug?.slice(-4)}`
+            : params.slug}
+        </p>
         <CommandLineTypo className="flex flex-row text-xl font-normal m-0 italic items-center gap-2">
           scroll down
           <MoveDown className="size-6" />

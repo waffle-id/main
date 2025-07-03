@@ -176,17 +176,19 @@ export function ConnectWalletRainbow() {
 
                         {/* {address && <ConnectTwitter address={address} />} */}
                         {twitterUser ? (
-                          <DropdownMenuItem className="py-4" disabled>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{twitterUser?.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                @{twitterUser?.screen_name}
-                              </span>
-                            </div>
-                            <DropdownMenuShortcut>
-                              <Twitter className="size-4" />
-                            </DropdownMenuShortcut>
-                          </DropdownMenuItem>
+                          <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
+                            <DropdownMenuItem className="py-4">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">{twitterUser?.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  @{twitterUser?.screen_name}
+                                </span>
+                              </div>
+                              <DropdownMenuShortcut>
+                                <Twitter className="size-4" />
+                              </DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                          </NavLink>
                         ) : (
                           <DropdownMenuItem
                             className="py-4"

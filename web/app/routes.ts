@@ -9,7 +9,7 @@ export default [
     route("/leaderboard/:categories?", "routes/leaderboard/index.tsx"),
 
     /* ------------------------------- User pages ------------------------------- */
-    route("/profile/:slug", "routes/profile/index.tsx"),
+    route("/profile/:variant/:slug", "routes/profile/index.tsx"),
     // route("/hover", "routes/profile/hover.tsx"),
     // route("/hover2", "routes/profile/hover-new.tsx"),
 
