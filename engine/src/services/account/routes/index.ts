@@ -13,8 +13,8 @@ import { add } from "../controller/save";
 import { CONFIG } from "../../../config";
 import jwt from "jsonwebtoken";
 import { verifyWalletSignature } from "@/helpers/verify-signature";
-import { get } from "http";
 import { deleteNonce, generateNonce, getNonce } from "@/helpers/nonce-store";
+import { findAllByUsername } from "@/services/user-persona-scores/controller/find";
 
 const router = Router();
 
@@ -23,19 +23,32 @@ router.get("/", async (req, res) => {
   res.json(items);
 });
 
-router.get("/:username", async (req, res) => {
-  const { username } = req.params;
-  if (!username) {
-    throw new Error("Username is required");
+router.get("/:username", async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    if (!username) {
+      const error = Error("Username is required");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+
+    const user = await findByUsername(username);
+
+    if (!user) {
+      const error = Error("User not found");
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    const userPersonaScores = await findAllByUsername(username);
+    const response = {
+      ...(user.toObject?.() ?? user), // for Mongoose documents
+      userPersonaScores,
+    };
+
+    res.send(response);
+  } catch (err) {
+    next(err);
   }
-
-  const user = await findByUsername(req.params.username);
-
-  if (!user) {
-    throw new Error("Not found");
-  }
-
-  res.send(user);
 });
 
 router.get("/nonce/:address", async (req, res, next) => {
