@@ -13,12 +13,13 @@ import gsap from "gsap";
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WAGMI_RAINBOW_CONFIG } from "./constants/wagmi";
+import { WAGMI_RAINBOW_CONFIG, WAGMI_XELLAR_CONFIG } from "./constants/wagmi";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import "./assets/styles/index.css";
 import "@rainbow-me/rainbowkit/styles.css";
+import { XellarKitProvider } from "@xellar/kit";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -78,13 +79,23 @@ export default function App() {
   }, []);
 
   return (
-    <WagmiProvider config={WAGMI_RAINBOW_CONFIG}>
+    /* ------------------------------- RAINBOW KIT ------------------------------ */
+    // <WagmiProvider config={WAGMI_RAINBOW_CONFIG}>
+    //   <QueryClientProvider client={queryClient}>
+    //     <XellarKitProvider>
+    //       {/* <RainbowKitProvider> */}
+    //       <Outlet />
+    //       {/* </RainbowKitProvider> */}
+    //     </XellarKitProvider>
+    //   </QueryClientProvider>
+    // </WagmiProvider>
+
+    /* ------------------------------- XELLAR KIT ------------------------------- */
+    <WagmiProvider config={WAGMI_XELLAR_CONFIG}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <XellarKitProvider>
           <Outlet />
-        </RainbowKitProvider>
-        {/* <XellarKitProvider theme={lightTheme}> */}
-        {/* </XellarKitProvider> */}
+        </XellarKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
