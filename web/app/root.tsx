@@ -80,24 +80,22 @@ export default function App() {
 
   return (
     /* ------------------------------- RAINBOW KIT ------------------------------ */
-    // <WagmiProvider config={WAGMI_RAINBOW_CONFIG}>
+    <WagmiProvider config={WAGMI_RAINBOW_CONFIG}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <Outlet />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+
+    /* ------------------------------- XELLAR KIT ------------------------------- */
+    // <WagmiProvider config={WAGMI_XELLAR_CONFIG}>
     //   <QueryClientProvider client={queryClient}>
     //     <XellarKitProvider>
-    //       {/* <RainbowKitProvider> */}
     //       <Outlet />
-    //       {/* </RainbowKitProvider> */}
     //     </XellarKitProvider>
     //   </QueryClientProvider>
     // </WagmiProvider>
-
-    /* ------------------------------- XELLAR KIT ------------------------------- */
-    <WagmiProvider config={WAGMI_XELLAR_CONFIG}>
-      <QueryClientProvider client={queryClient}>
-        <XellarKitProvider>
-          <Outlet />
-        </XellarKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
   );
 }
 

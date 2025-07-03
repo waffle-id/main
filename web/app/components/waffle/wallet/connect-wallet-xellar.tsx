@@ -36,18 +36,58 @@ export function ConnectWalletXellar() {
   const [invitationCode, setInvitationCode] = useState("");
   const [hasValidInvitation, setHasValidInvitation] = useState(false);
   const [invitationError, setInvitationError] = useState("");
+  const [validatedInvitationCode, setValidatedInvitationCode] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
 
-  const VALID_INVITATION_CODE = "123abc"; // Example valid invitation code
+  const validateReferralCode = async (code: string) => {
+    try {
+      const response = await fetch(
+        `https://api.waffle.food/referral-codes/${encodeURIComponent(code)}`
+      );
+      const data = await response.json();
 
-  const handleInvitationSubmit = (e: React.FormEvent) => {
+      if (response.ok && data._id && !data.isExpired) {
+        return { isValid: true, data };
+      } else {
+        return {
+          isValid: false,
+          error: data.message || "Invalid or expired referral code",
+        };
+      }
+    } catch (error) {
+      console.error("Error validating referral code:", error);
+      return {
+        isValid: false,
+        error: "Failed to validate referral code. Please try again.",
+      };
+    }
+  };
+
+  const handleInvitationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (invitationCode.trim() === VALID_INVITATION_CODE) {
+    const code = invitationCode.trim();
+
+    if (!code) {
+      setInvitationError("Please enter a referral code");
+      return;
+    }
+
+    setIsValidating(true);
+    setInvitationError("");
+
+    const result = await validateReferralCode(code);
+
+    setIsValidating(false);
+
+    if (result.isValid) {
       setHasValidInvitation(true);
       setInvitationError("");
+      setValidatedInvitationCode(code);
       setInvitationCode("");
-      // Keep drawer open to show Twitter connect button
+      localStorage.setItem("waffle_referral_code", code);
+      console.log("Valid referral code:", result.data);
     } else {
-      setInvitationError("Invalid invitation code. Please try again.");
+      setInvitationError(result.error || "Invalid referral code. Please try again.");
     }
   };
 
@@ -61,6 +101,58 @@ export function ConnectWalletXellar() {
     setIsInvitationDrawerOpen(false);
     setInvitationCode("");
     setInvitationError("");
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+
+    localStorage.removeItem("waffle_wallet_address");
+    localStorage.removeItem("waffle_referral_code");
+    setHasValidInvitation(false);
+    setValidatedInvitationCode("");
+  };
+
+  useEffect(() => {
+    if (isConnected && address) {
+      localStorage.setItem("waffle_wallet_address", address);
+    } else {
+      localStorage.removeItem("waffle_wallet_address");
+    }
+  }, [isConnected, address]);
+
+  useEffect(() => {
+    const storedReferralCode = localStorage.getItem("waffle_referral_code");
+    if (storedReferralCode) {
+      // Validate stored referral code on mount
+      validateReferralCode(storedReferralCode)
+        .then((result) => {
+          if (result.isValid) {
+            setHasValidInvitation(true);
+            setValidatedInvitationCode(storedReferralCode);
+            console.log("Stored referral code is valid:", result.data);
+          } else {
+            // Remove invalid stored code
+            localStorage.removeItem("waffle_referral_code");
+            setHasValidInvitation(false);
+            setValidatedInvitationCode("");
+            console.log("Stored referral code is invalid, removed from storage");
+          }
+        })
+        .catch((error) => {
+          console.error("Error validating stored referral code:", error);
+          // Keep the stored code but don't mark as valid
+          setValidatedInvitationCode(storedReferralCode);
+        });
+    }
+  }, []);
+
+  const getTwitterAuthUrl = () => {
+    const storedAddress = localStorage.getItem("waffle_wallet_address") || address || "";
+    const storedReferralCode =
+      localStorage.getItem("waffle_referral_code") || validatedInvitationCode;
+    return `/auth/twitter?address=${encodeURIComponent(
+      storedAddress
+    )}&referralCode=${encodeURIComponent(storedReferralCode)}`;
   };
 
   useEffect(() => {
@@ -182,7 +274,7 @@ export function ConnectWalletXellar() {
                       </DropdownMenuItem>
                     </NavLink>
 
-                    <DropdownMenuItem className="py-4" onClick={() => disconnect()}>
+                    <DropdownMenuItem className="py-4" onClick={handleDisconnect}>
                       Disconnect Wallet
                       <DropdownMenuShortcut>
                         <LogOut className="size-5" />
@@ -200,7 +292,7 @@ export function ConnectWalletXellar() {
                         </DrawerTitle>
                         <DrawerDescription className="text-base mt-2">
                           {hasValidInvitation
-                            ? "Great! Now you can connect your Twitter account to access full features."
+                            ? "Great! Now you can connect your Twitter account to access full features. Registration will complete automatically."
                             : "You need a valid invitation code to access full features and connect your Twitter account."}
                         </DrawerDescription>
                       </DrawerHeader>
@@ -228,6 +320,7 @@ export function ConnectWalletXellar() {
                                   className={`h-12 text-center text-lg ${
                                     invitationError ? "border-red-500" : ""
                                   }`}
+                                  disabled={isValidating}
                                   autoFocus
                                 />
                                 {invitationError && (
@@ -238,11 +331,19 @@ export function ConnectWalletXellar() {
                               </div>
 
                               <div className="flex gap-3 pt-4">
-                                <ButtonMagnet type="submit" className="flex-1 h-12">
-                                  Verify Code
+                                <ButtonMagnet
+                                  type="submit"
+                                  className="flex-1 h-12"
+                                  disabled={isValidating}
+                                >
+                                  {isValidating ? "Verifying..." : "Verify Code"}
                                 </ButtonMagnet>
                                 <DrawerClose>
-                                  <ButtonMagnet type="button" className="h-12 px-4">
+                                  <ButtonMagnet
+                                    type="button"
+                                    className="h-12 px-4"
+                                    disabled={isValidating}
+                                  >
                                     <X className="size-5" />
                                   </ButtonMagnet>
                                 </DrawerClose>
@@ -252,22 +353,33 @@ export function ConnectWalletXellar() {
                             <div className="space-y-6 text-center">
                               <div className="text-green-600 text-lg font-medium">
                                 ✓ Invitation Code Verified!
-                              </div>
-                              <div className="flex gap-3">
-                                <NavLink to="/auth/twitter" className="flex-1">
-                                  <ButtonMagnet className="w-full h-12">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <Twitter className="size-5" />
-                                      <span>Connect Twitter</span>
-                                    </div>
-                                  </ButtonMagnet>
-                                </NavLink>
-                                <DrawerClose>
-                                  <ButtonMagnet type="button" className="h-12 px-4">
-                                    <X className="size-5" />
-                                  </ButtonMagnet>
-                                </DrawerClose>
-                              </div>
+                              </div>{" "}
+                              {!twitterUser ? (
+                                <div className="flex gap-3">
+                                  <NavLink to={getTwitterAuthUrl()} className="flex-1">
+                                    <ButtonMagnet className="w-full h-12">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Twitter className="size-5" />
+                                        <span>Connect Twitter</span>
+                                      </div>
+                                    </ButtonMagnet>
+                                  </NavLink>
+                                  <DrawerClose>
+                                    <ButtonMagnet type="button" className="h-12 px-4">
+                                      <X className="size-5" />
+                                    </ButtonMagnet>
+                                  </DrawerClose>
+                                </div>
+                              ) : (
+                                <div className="space-y-4 text-center">
+                                  <div className="text-sm text-muted-foreground">
+                                    Twitter connected! Registration completed automatically.
+                                  </div>
+                                  <DrawerClose>
+                                    <ButtonMagnet className="w-full h-12">Continue</ButtonMagnet>
+                                  </DrawerClose>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -277,7 +389,7 @@ export function ConnectWalletXellar() {
                         <p className="text-xs text-muted-foreground">
                           {!hasValidInvitation
                             ? "Need an invitation code? Contact support for access."
-                            : "You can close this dialog and connect Twitter anytime."}
+                            : "Registration will complete automatically when you connect Twitter."}
                         </p>
                       </div>
                     </div>

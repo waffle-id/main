@@ -1,6 +1,12 @@
 import { createCookieSessionStorage } from "react-router";
+import type { User, PendingRegistration } from "~/services/auth.server";
 
-export const sessionStorage = createCookieSessionStorage({
+export interface SessionData {
+    user?: User;
+    pendingRegistration?: PendingRegistration;
+}
+
+export const sessionStorage = createCookieSessionStorage<SessionData>({
     cookie: {
         name: "_session",
         sameSite: "lax",

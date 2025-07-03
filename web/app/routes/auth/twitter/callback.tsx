@@ -7,6 +7,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await authenticator.authenticate("twitter", request);
     const session = await sessionStorage.getSession(request.headers.get("Cookie"));
 
+    session.unset("pendingRegistration");
     session.set("user", user);
 
     const cookie = await sessionStorage.commitSession(session);
@@ -17,7 +18,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     });
   } catch (error) {
-    const errorMessage = (error as any)?.message || "Unknown error";
-    return redirect("/?error=auth_failed&details=" + encodeURIComponent(errorMessage));
+    console.error("Twitter auth callback error:", error);
+
+    try {
+      const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+      session.unset("pendingRegistration");
+      const cookie = await sessionStorage.commitSession(session);
+
+      const errorMessage = (error as any)?.message || "Unknown error";
+      return redirect("/?error=auth_failed&details=" + encodeURIComponent(errorMessage), {
+        headers: {
+          "Set-Cookie": cookie,
+        },
+      });
+    } catch (sessionError) {
+      console.error("Session cleanup error:", sessionError);
+      const errorMessage = (error as any)?.message || "Unknown error";
+      return redirect("/?error=auth_failed&details=" + encodeURIComponent(errorMessage));
+    }
   }
 }
