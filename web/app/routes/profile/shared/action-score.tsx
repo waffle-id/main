@@ -2,7 +2,15 @@ import { Share2, Wallet } from "lucide-react";
 import type { JSX } from "react";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 
-export function ActionScore() {
+interface ActionScoreProps {
+  reputationScore?: number;
+  hasInvitationAuthority?: boolean;
+}
+
+export function ActionScore({
+  reputationScore = 1234,
+  hasInvitationAuthority = false,
+}: ActionScoreProps) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-row items-center justify-end gap-8">
@@ -11,7 +19,13 @@ export function ActionScore() {
         <Share2 className="size-6" />
       </div>
       <div className="flex flex-row gap-8 items-center">
-        <p className="font-alt text-5xl">1234</p>
+        <div className="flex flex-col items-end">
+          <p className="font-alt text-5xl">{reputationScore}</p>
+          <p className="text-sm text-gray-600">Reputation Score</p>
+          {hasInvitationAuthority && (
+            <p className="text-xs text-green-600 mt-1">Invitation Authority</p>
+          )}
+        </div>
         <LogoAnimationNoRepeat className="size-32" />
       </div>
     </div>

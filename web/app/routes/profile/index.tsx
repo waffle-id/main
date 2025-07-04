@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
@@ -24,10 +24,11 @@ import { ContentReceived } from "./shared/content-received";
 import { ContentAll } from "./shared/content-all";
 import { ContentGiven } from "./shared/content-given";
 import { ImageHoverRevealText } from "~/components/waffle/image-hover-reveal-text";
+import { ProfileSkeleton } from "./shared/profile-skeleton";
 import Review from "./shared/bottom-sheet/review";
 import Vouch from "./shared/bottom-sheet/vouch";
 import Slash from "./shared/bottom-sheet/slash";
-import { redirect, useParams } from "react-router";
+import { redirect, useParams, useLoaderData } from "react-router";
 import type { Route } from "./+types";
 
 const imageItems = [
@@ -46,22 +47,125 @@ const imageItems = [
   { src: "https://placehold.co/500/880808/FFFFFF/png", r: 5, c: 2, review: "Lorem 7" },
 ];
 
-export async function loader({ params }: Route.LoaderArgs) {
-  const { variant } = params;
+export interface UserProfileData {
+  address?: string;
+  username: string;
+  fullName: string;
+  bio: string;
+  avatarUrl: string;
+  reputationScore: number;
+  hasInvitationAuthority: boolean;
+  userPersonaScores?: any[];
+  isScraped?: boolean;
+}
+
+interface ScraperProfileData {
+  success: boolean;
+  data: {
+    fullName: string;
+    username: string;
+    bio: string;
+    avatarUrl: string;
+    followers: string;
+    url: string;
+  };
+  cached: boolean;
+  lastScraped: string;
+}
+
+export async function loader({ params }: { params: { variant: string; slug: string } }) {
+  const { variant, slug } = params;
 
   if (variant !== "x" && variant !== "w") {
     return redirect("/");
   }
 
-  return {};
+  if (!slug) {
+    return redirect("/");
+  }
+
+  try {
+    const response = await fetch(`https://api.waffle.food/account/${slug}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (response.ok) {
+      const userData: UserProfileData = await response.json();
+      return {
+        userData,
+        error: null,
+        needsScraping: false,
+        slug,
+      };
+    }
+  } catch (error) {
+    console.log("Main API failed or timed out, will try scraper API on client...");
+  }
+
+  return {
+    userData: null,
+    error: null,
+    needsScraping: true,
+    slug,
+  };
 }
 
 export default function Profile() {
   const params = useParams();
+  const loaderData = useLoaderData<typeof loader>();
+  const { userData: initialUserData, error: initialError, needsScraping, slug } = loaderData;
+
+  const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
+  const [error, setError] = React.useState<string | null>(initialError);
+  const [isLoading, setIsLoading] = React.useState(needsScraping);
+
   const TABS = ["received", "given", "all"];
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!needsScraping) return;
+
+    const fetchScrapedData = async () => {
+      try {
+        setIsLoading(true);
+        const scraperResponse = await fetch(`https://scraper.waffle.food/profile/${slug}`);
+
+        if (!scraperResponse.ok) {
+          throw new Error(`User not found: ${scraperResponse.status}`);
+        }
+
+        const scraperData: ScraperProfileData = await scraperResponse.json();
+
+        if (!scraperData.success) {
+          throw new Error("Failed to scrape user profile");
+        }
+
+        const scrapedUserData: UserProfileData = {
+          username: scraperData.data.username,
+          fullName: scraperData.data.fullName,
+          bio: scraperData.data.bio,
+          avatarUrl: scraperData.data.avatarUrl,
+          reputationScore: 1000,
+          hasInvitationAuthority: false,
+          isScraped: true,
+        };
+
+        setUserData(scrapedUserData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching scraped profile:", err);
+        setError(err instanceof Error ? err.message : "Failed to load user profile");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchScrapedData();
+  }, [needsScraping, slug]);
+
+  useEffect(() => {
+    if (!userData || isLoading) return;
+
     gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
     if (!gridRef.current) return;
@@ -105,26 +209,41 @@ export default function Profile() {
           "start"
         );
     });
-  }, []);
+  }, [userData, isLoading]);
+
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="text-red-500 text-xl">Error: {error}</p>
+        <p className="text-gray-600">Failed to load user profile</p>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return <ProfileSkeleton />;
+  }
 
   return (
     <>
-      {/* Cover */}
       <div className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center pointer-events-none z-10">
         {/* <div className=" flex flex-col gap-4 items-center backdrop-blur-lg rounded-lg p-4"> */}
         <p className="text-[8vw] font-bold font-sans m-0">
-          {params.slug!!.length > 15
-            ? `${params.slug?.slice(0, 6)}...${params.slug?.slice(-4)}`
-            : params.slug}
+          {userData.username ||
+            (params.slug!!.length > 15
+              ? `${params.slug?.slice(0, 6)}...${params.slug?.slice(-4)}`
+              : params.slug)}
         </p>
         <CommandLineTypo className="flex flex-row text-xl font-normal m-0 italic items-center gap-2">
           scroll down
           <MoveDown className="size-6" />
         </CommandLineTypo>
-        {/* </div> */}
       </div>
 
-      {/* Grid */}
       <div className="relative z-0 w-full min-h-screen">
         <div ref={gridRef} className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32">
           {imageItems.map(({ src, review, r, c }, i) => (
@@ -150,16 +269,34 @@ export default function Profile() {
       </div>
 
       <div className="relative z-[10000] h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
-        <p className="text-[5vh] max-w-[40ch] leading-snug">use me as a bad example</p>
+        <p className="text-[5vh] max-w-[40ch] leading-snug">
+          {userData.bio || "use me as a bad example"}
+        </p>
         <div className="absolute bottom-0 px-[20px] lg:px-[50px] mb-20 w-full">
           <div className="flex flex-row items-center justify-between">
-            {/* User */}
             <div className="flex flex-row items-center gap-8">
-              <img src="https://placehold.co/10" className="size-32 rounded-full aspect-square" />
-              <CommandLineTypo className="text-3xl font-light">Username</CommandLineTypo>
+              <img
+                src={userData.avatarUrl || "https://placehold.co/10"}
+                className="size-32 rounded-full aspect-square object-cover"
+                alt={`${userData.username}'s avatar`}
+              />
+              <div className="flex flex-col gap-2">
+                <CommandLineTypo className="text-3xl font-light">
+                  {userData.username}
+                </CommandLineTypo>
+                {userData.fullName && <p className="text-lg text-gray-600">{userData.fullName}</p>}
+                {userData.address && (
+                  <p className="text-sm text-gray-500">
+                    {userData.address.slice(0, 6)}...{userData.address.slice(-4)}
+                  </p>
+                )}
+              </div>
             </div>
-            {/* Social - Scores */}
-            <ActionScore />
+
+            <ActionScore
+              reputationScore={userData.reputationScore}
+              hasInvitationAuthority={userData.hasInvitationAuthority}
+            />
           </div>
         </div>
       </div>
