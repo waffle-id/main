@@ -15,11 +15,13 @@ The frontend application for Waffle - a modern, responsive web interface built w
 ## 🚀 Tech Stack
 
 ### Core Framework
+
 - **React Router 7** - Full-stack React framework with SSR
 - **Vite** - Fast build tool and development server
 - **TypeScript** - Type-safe development
 
 ### Styling & UI
+
 - **TailwindCSS** - Utility-first CSS framework
 - **ShadCN/UI** - Modern, accessible UI components
 - **Radix UI** - Headless UI primitives
@@ -29,25 +31,28 @@ The frontend application for Waffle - a modern, responsive web interface built w
 - **Lenis** - Smooth scrolling
 
 ### Web3 Integration
+
 - **Wagmi** - React hooks for Ethereum
 - **Viem** - TypeScript interface for Ethereum
 - **RainbowKit** - Beautiful wallet connection UI
 - **Xellar Kit** - Alternative wallet solution
 
 ### Data & API
+
 - **TanStack Query** - Powerful data synchronization
 - **Axios** - HTTP client for API requests
 - **Remix Auth** - Authentication framework
 - **Twitter API v2** - Twitter integration
 
 ### Development Tools
+
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **Husky** - Git hooks
 
 ## 📁 Project Structure
 
-```
+```text
 web/
 ├── app/                          # React Router application
 │   ├── routes/                   # Application routes
@@ -71,28 +76,33 @@ web/
 ## 🛠️ Development Setup
 
 ### Prerequisites
+
 - **Node.js** v18 or higher
 - **npm** or **yarn** or **pnpm**
 
 ### Installation
 
 1. **Navigate to the web directory**
+
    ```bash
    cd web
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Configure your environment variables
    ```
 
 4. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -102,18 +112,21 @@ web/
 ## 📜 Available Scripts
 
 ### Development
+
 ```bash
 npm run dev          # Start development server with HMR
 npm run typecheck    # Run TypeScript type checking
 ```
 
 ### Building
+
 ```bash
 npm run build        # Create production build
 npm run start        # Start production server
 ```
 
 ### Code Quality
+
 ```bash
 npm run lint         # Run ESLint
 npm run format       # Format code with Prettier
@@ -161,16 +174,19 @@ Configure in `app/components/waffle/waffle-provider.tsx`
 ## 🎨 Styling Guide
 
 ### TailwindCSS Classes
+
 - Use utility classes for styling
 - Custom components in `app/components/waffle/`
 - Design system colors: orange, yellow, and neutral tones
 
 ### Component Architecture
+
 - **Layouts**: Header, footer, and page layouts
 - **ShadCN**: Pre-built accessible components
 - **Waffle**: Custom branded components
 
 ### Animation Guidelines
+
 - Use Framer Motion for page transitions
 - GSAP for complex animations
 - CSS transitions for simple hover effects
@@ -184,6 +200,7 @@ npm run build
 ```
 
 This creates optimized files in the `build/` directory:
+
 - `build/client/` - Static assets
 - `build/server/` - Server-side code
 
@@ -200,6 +217,7 @@ docker run -p 3000:3000 waffle-web
 ### Platform Deployment
 
 The built application can be deployed to:
+
 - **Vercel** (recommended for React Router)
 - **Netlify**
 - **AWS ECS/Fargate**
@@ -218,12 +236,14 @@ npm run test:watch   # Run tests in watch mode
 ## 📊 Performance
 
 ### Optimization Features
+
 - **Code Splitting**: Automatic route-based splitting
 - **Image Optimization**: Responsive images with lazy loading
 - **Bundle Analysis**: Analyze bundle size with `npm run analyze`
 - **Caching**: Efficient caching strategies
 
 ### Monitoring
+
 - Web Vitals tracking
 - Error boundary implementation
 - Performance monitoring integration
