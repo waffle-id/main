@@ -166,7 +166,7 @@ export const ConnectTwitter = forwardRef<ConnectTwitterRef, ConnectTwitterProps>
                           setInvitationCode(e.target.value);
                           setInvitationError("");
                         }}
-                        className={`h-12 text-center text-lg ${
+                        className={`bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max ${
                           invitationError ? "border-red-500" : ""
                         }`}
                         autoFocus
