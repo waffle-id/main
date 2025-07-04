@@ -5,9 +5,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-  build: {
-    rollupOptions: {
-      external: ["@radix-ui/react-tooltip"],
-    },
-  },
+  // build: {
+  //   rollupOptions: {
+  //     external: ["@radix-ui/react-tooltip"],
+  //   },
+  // },
 });
