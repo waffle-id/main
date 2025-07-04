@@ -36,22 +36,28 @@ export function ContentAll() {
             </div>
             <div className="border-b border-gray-400 border-dashed py-3">
               <div className="flex flex-row gap-4 items-center">
-                <img
-                  className="size-10 aspect-square rounded-full"
-                  src="https://placehold.co/10"
-                  alt=""
-                />
-                <p>Lorem</p>
+                <div className="relative size-10 flex-shrink-0">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-red-500 rounded-full"></div>
+                  <img
+                    className="relative z-10 size-10 aspect-square rounded-full p-1"
+                    src={`https://api.dicebear.com/9.x/big-smile/svg?seed=actor${idx}`}
+                    alt=""
+                  />
+                </div>
+                <p>User{String(idx + 1).padStart(3, "0")}</p>
               </div>
             </div>
             <div className="border-b border-gray-400 border-dashed py-3">
               <div className="flex flex-row gap-4 items-center">
-                <img
-                  className="size-10 aspect-square rounded-full"
-                  src="https://placehold.co/10"
-                  alt=""
-                />
-                <p>Lorem</p>
+                <div className="relative size-10 flex-shrink-0">
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full"></div>
+                  <img
+                    className="relative z-10 size-10 aspect-square rounded-full p-1"
+                    src={`https://api.dicebear.com/9.x/big-smile/svg?seed=subject${idx}`}
+                    alt=""
+                  />
+                </div>
+                <p>Subject{String(idx + 1).padStart(3, "0")}</p>
               </div>
             </div>
           </>

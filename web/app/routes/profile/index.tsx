@@ -33,18 +33,54 @@ import type { Route } from "./+types";
 
 const imageItems = [
   {
-    src: "https://placehold.co/500/880808/FFFFFF/png",
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 1,
     c: 4,
     review:
-      "Sugar plum cupcake lemon drops pastry jelly beans cookie ice cream. Biscuit carrot cake bonbon cupcake candy canes liquorice topping. Bonbon oat cake cake donut chocolate oat cake cupcake. Gummi bears cupcake jujubes dragée sweet croissant oat cake jelly brownie. Caramels brownie brownie chupa chups icing gummies. Sesame snaps bear claw cake jelly-o powder oat cake bear claw. Cotton candy lemon drops oat cake gummies biscuit muffin. Oat cake lemon drops jujubes caramels bonbon cotton candy brownie. Sweet dessert jelly beans wafer jujubes carrot cake jujubes marzipan. Danish dessert macaroon icing jelly cheesecake. Gummi bears sweet roll marzipan gummies carrot cake biscuit chupa chups. Tart croissant gummi bears jujubes bear claw. Cake candy soufflé oat cake bear claw gingerbread marshmallow cotton candy.",
+      "This user provided excellent service and was very professional throughout our interaction. Their communication was clear and they delivered exactly what was promised. Would definitely recommend working with them again.",
   },
-  { src: "https://placehold.co/500/880808/FFFFFF/png", r: 1, c: 1, review: "Lorem 2" },
-  { src: "https://placehold.co/500/880808/FFFFFF/png", r: 2, c: 5, review: "Lorem 4" },
-  { src: "https://placehold.co/500/880808/FFFFFF/png", r: 3, c: 7, review: "Lorem 3" },
-  { src: "https://placehold.co/500/880808/FFFFFF/png", r: 3, c: 3, review: "Lorem 5" },
-  { src: "https://placehold.co/500/880808/FFFFFF/png", r: 4, c: 6, review: "Lorem 6" },
-  { src: "https://placehold.co/500/880808/FFFFFF/png", r: 5, c: 2, review: "Lorem 7" },
+  {
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    r: 1,
+    c: 1,
+    review:
+      "Great experience overall! Quick response time and quality work. Very satisfied with the outcome.",
+  },
+  {
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    r: 2,
+    c: 5,
+    review:
+      "Professional and reliable. Completed the task efficiently and exceeded my expectations. Highly recommended!",
+  },
+  {
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    r: 3,
+    c: 7,
+    review:
+      "Amazing work quality and attention to detail. Communication was smooth throughout the entire process.",
+  },
+  {
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    r: 3,
+    c: 3,
+    review:
+      "Very helpful and knowledgeable. Went above and beyond to ensure everything was perfect. Thank you!",
+  },
+  {
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    r: 4,
+    c: 6,
+    review:
+      "Outstanding service! Quick turnaround time and excellent quality. Will definitely work together again.",
+  },
+  {
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    r: 5,
+    c: 2,
+    review:
+      "Friendly, professional, and delivered exactly what was needed. Great communication throughout the project.",
+  },
 ];
 
 export interface UserProfileData {
@@ -262,7 +298,14 @@ export default function Profile() {
               }}
               parentClassName="grid-item"
             >
-              <img src={src} alt="" className="grid-item-img aspect-square w-full" />
+              <div className="relative aspect-square w-full">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full"></div>
+                <img
+                  src={src}
+                  alt=""
+                  className="grid-item-img relative z-10 aspect-square w-full p-2"
+                />
+              </div>
             </ImageHoverRevealText>
           ))}
         </div>
