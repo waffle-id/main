@@ -1,66 +1,161 @@
-import { LogoAnimation } from "../waffle/logo/logo-animation";
 import { LogoAnimationNoRepeat } from "../waffle/logo/logo-animation-no-repeat";
 import { TextStaticAnimation } from "../waffle/logo/text-static-animation";
 
 export function Footer() {
   return (
-    <div className="px-[20px] lg:px-[50px] relative bg-background z-[100000]">
-      <div className="col-start-1 row-start-3 md:col-start-2 relative before:absolute before:top-0 before:h-px before:w-[200vw] before:bg-foreground before:-left-[100vw] after:absolute after:bottom-0 after:h-px after:w-[200vw] after:bg-foreground after:-left-[100vw]">
-        <footer className="text-sm/loose text-gray-950">
-          <div className="mx-auto hidden w-full grid-cols-4 justify-between gap-y-0 md:grid md:grid-cols-4 md:gap-6 md:gap-x-4 lg:gap-8 *:first:border-l-0 *:last:border-r-0">
-            <div className="border-x border-b border-foreground py-10 pl-2 not-md:border-0 md:border-b-0">
-              <div className="flex h-full items-center justify-center">
-                <TextStaticAnimation className="w-full" />
-              </div>
+    <div className="px-[20px] lg:px-[50px] relative bg-gradient-to-br from-background via-orange-25 to-orange-50 z-[100000] overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-10 left-[10%] w-2 h-2 bg-orange-300/30 rounded-full animate-pulse"></div>
+        <div
+          className="absolute top-20 right-[15%] w-1 h-1 bg-yellow-400/40 rounded-full animate-bounce"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-[80%] w-1.5 h-1.5 bg-orange-400/20 rounded-full animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
+
+      <div className="relative">
+        <div className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-orange-200 to-transparent blur-sm opacity-40 animate-pulse"></div>
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-300 via-yellow-400 to-orange-300 rounded-full opacity-70 shadow-sm"></div>
+        <div className="absolute top-1 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full opacity-50"></div>
+
+        <footer className="text-sm/loose text-gray-950 pt-12">
+          <div className="mx-auto w-full grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6 lg:gap-8">
+            <div className="group flex flex-col items-center justify-center bg-gradient-to-br from-white/70 to-orange-50/60 backdrop-blur-md rounded-3xl p-6 border-2 border-orange-200/60 shadow-lg hover:shadow-xl hover:border-orange-300/80 transition-all duration-500 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 to-yellow-100/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <TextStaticAnimation className="w-full relative z-10" />
+              <p className="text-xs text-gray-600 mt-2 text-center relative z-10">
+                Building trust, one waffle at a time ✨
+              </p>
             </div>
-            <div className="border-x border-b border-foreground py-10 pl-2 not-md:border-0 md:border-b-0">
-              <h3 className="font-semibold">Waffle</h3>
-              <ul className="mt-4 grid gap-4">
+
+            <div className="group bg-gradient-to-br from-white/50 to-orange-50/40 backdrop-blur-md rounded-3xl p-6 border-2 border-orange-150/50 hover:border-orange-300/70 hover:bg-gradient-to-br hover:from-white/60 hover:to-orange-50/50 transition-all duration-500 shadow-md hover:shadow-lg hover:-translate-y-0.5">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 to-yellow-100/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <h3 className="font-semibold text-orange-800 mb-4 text-base relative z-10 flex items-center gap-2">
+                <span className="text-xl">🧇</span> Waffle
+              </h3>
+              <ul className="space-y-3 relative z-10">
                 <li>
-                  <a className="hover:underline" href="https://www.refactoringui.com">
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="/about"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
                     About Us
                   </a>
                 </li>
                 <li>
-                  <a className="hover:underline" href="https://headlessui.com">
-                    More
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="/badges"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
+                    Badges
                   </a>
                 </li>
                 <li>
-                  <a className="hover:underline" href="https://heroicons.com">
-                    More
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="/leaderboard"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
+                    Leaderboard
                   </a>
                 </li>
                 <li>
-                  <a className="hover:underline" href="https://heropatterns.com">
-                    More
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="/categories"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
+                    Categories
                   </a>
                 </li>
               </ul>
             </div>
-            <div className="border-x border-b border-foreground py-10 pl-2 not-md:border-0 sm:border-b-0">
-              <h3 className="font-semibold">Community</h3>
-              <ul className="mt-4 grid gap-4">
+
+            <div className="group bg-gradient-to-br from-white/50 to-orange-50/40 backdrop-blur-md rounded-3xl p-6 border-2 border-orange-150/50 hover:border-orange-300/70 hover:bg-gradient-to-br hover:from-white/60 hover:to-orange-50/50 transition-all duration-500 shadow-md hover:shadow-lg hover:-translate-y-0.5">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 to-yellow-100/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <h3 className="font-semibold text-orange-800 mb-4 text-base relative z-10 flex items-center gap-2">
+                <span className="text-xl">🌟</span> Community
+              </h3>
+              <ul className="space-y-3 relative z-10">
                 <li>
-                  <a className="hover:underline" href="https://github.com/tailwindlabs/tailwindcss">
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="https://github.com/waffle-id"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
                     GitHub
                   </a>
                 </li>
                 <li>
-                  <a className="hover:underline" href="https://tailwindcss.com/discord">
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="https://discord.gg/waffle"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
                     Discord
                   </a>
                 </li>
                 <li>
-                  <a className="hover:underline" href="https://x.com/tailwindcss">
-                    X
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="https://x.com/waffle_id"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
+                    X (Twitter)
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className="hover:text-orange-600 transition-all duration-300 flex items-center gap-3 py-1 px-2 rounded-xl hover:bg-orange-100/50 group/link"
+                    href="https://t.me/waffle_community"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm group-hover/link:scale-125 group-hover/link:shadow-md transition-all duration-300"></span>{" "}
+                    Telegram
                   </a>
                 </li>
               </ul>
             </div>
-            <div className="border-x border-foreground py-10 pl-2 not-md:border-0">
-              <div className="flex items-center justify-center">
-                <LogoAnimationNoRepeat className="aspect-square size-52" />
+
+            <div className="group flex flex-col items-center justify-center bg-gradient-to-br from-orange-100/80 to-yellow-100/70 backdrop-blur-md rounded-3xl p-6 border-2 border-orange-250/60 shadow-lg hover:shadow-xl hover:scale-105 hover:border-orange-400/80 transition-all duration-500 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-200/20 to-yellow-200/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <LogoAnimationNoRepeat className="aspect-square size-32 mb-2 relative z-10 drop-shadow-sm" />
+              <p className="text-xs text-orange-700 font-medium relative z-10 flex items-center gap-1">
+                Sweet Reputation <span className="text-yellow-500">🍯</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-gradient-to-r from-transparent via-orange-200/50 to-transparent relative">
+            <div className="absolute top-0 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-orange-300/70 to-transparent"></div>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-gradient-to-r from-white/30 via-orange-50/40 to-white/30 backdrop-blur-sm rounded-2xl p-6 border border-orange-200/50 shadow-sm">
+              <p className="text-xs text-gray-600 flex items-center gap-2">
+                © {new Date().getFullYear()} Waffle. Building decentralized trust with sweetness.
+                <span className="text-orange-400">🧇</span>
+              </p>
+              <div className="flex gap-6 text-xs">
+                <a
+                  href="/privacy"
+                  className="hover:text-orange-600 transition-all duration-300 py-1 px-3 rounded-lg hover:bg-orange-100/50"
+                >
+                  Privacy
+                </a>
+                <a
+                  href="/terms"
+                  className="hover:text-orange-600 transition-all duration-300 py-1 px-3 rounded-lg hover:bg-orange-100/50"
+                >
+                  Terms
+                </a>
+                <a
+                  href="/support"
+                  className="hover:text-orange-600 transition-all duration-300 py-1 px-3 rounded-lg hover:bg-orange-100/50"
+                >
+                  Support
+                </a>
               </div>
             </div>
           </div>
