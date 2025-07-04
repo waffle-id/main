@@ -28,7 +28,6 @@ export default function LeaderboardPage() {
   return (
     <>
       <div className="mt-32 px-[20px] lg:px-[50px]">
-        {/* <p>{JSON.stringify(loc)}</p> */}
         <div className="grid grid-cols-2 ">
           <div className="flex flex-col justify-between mt-24">
             <div className="flex flex-col gap-2">
@@ -37,13 +36,59 @@ export default function LeaderboardPage() {
             </div>
             <TextStaticAnimation className="w-max" />
           </div>
-          <div className="grid grid-cols-3 text-black mt-24">
+          <div className="grid grid-cols-3 gap-8 text-black mt-24">
             {new Array(3).fill("").map((val, idx) => (
-              <div key={idx} className="flex flex-col gap-2 h-full mx-2">
-                <p className="font-alt text-2xl">-{idx + 1}</p>
-                <img src="https://placehold.co/10" className="aspect-[9/16] object-cover" />
-                <p className="text-lg">rei_yan__</p>
-                <p className="text-sm font-semibold mt-4">read more</p>
+              <div key={idx} className="flex flex-col gap-4 h-full">
+                <div className="flex justify-center">
+                  <div
+                    className={`flex items-center justify-center size-12 rounded-full text-white font-bold text-lg ${
+                      idx === 0
+                        ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
+                        : idx === 1
+                        ? "bg-gradient-to-br from-gray-300 to-gray-500"
+                        : "bg-gradient-to-br from-amber-600 to-amber-800"
+                    }`}
+                  >
+                    {idx + 1}
+                  </div>
+                </div>
+
+                <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative size-32">
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full"></div>
+                      <img
+                        src={`https://api.dicebear.com/9.x/big-smile/svg?seed=leaderboard${
+                          idx + 1
+                        }`}
+                        className="relative z-10 size-32 rounded-full p-3"
+                        alt={`Top ${idx + 1} user`}
+                      />
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-xl font-semibold">
+                        user_{String(idx + 1).padStart(3, "0")}
+                      </p>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <Award
+                          className={`size-4 ${
+                            idx === 0
+                              ? "text-yellow-500"
+                              : idx === 1
+                              ? "text-gray-400"
+                              : "text-amber-600"
+                          }`}
+                        />
+                        <p className="text-sm text-gray-600">{2000 - idx * 100} pts</p>
+                      </div>
+                    </div>
+
+                    <button className="cursor-pointer text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                      View Profile
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -79,8 +124,16 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
-                  <div className="flex items-center h-full">
-                    <p>Lorem</p>
+                  <div className="flex flex-row gap-4 items-center">
+                    <div className="relative size-8 flex-shrink-0">
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full"></div>
+                      <img
+                        src={`https://api.dicebear.com/9.x/big-smile/svg?seed=rank${idx + 1}`}
+                        className="relative z-10 size-8 aspect-square rounded-full p-1"
+                        alt=""
+                      />
+                    </div>
+                    <p>User{String(idx + 1).padStart(3, "0")}</p>
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">

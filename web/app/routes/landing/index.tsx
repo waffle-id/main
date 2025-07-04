@@ -60,7 +60,7 @@ export default function Landing() {
             <div className="absolute top-[55%]">
               <div className="absolute inset-0 blur rounded-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] z-0" />
               <p className="relative z-10 text-gray-dark text-xl px-8 py-4 w-max h-max rounded-lg">
-                "Awesome People"
+                "Trustworthy Builder"
               </p>
             </div>
             {/* <p className="text-gray-dark rounded-lg backdrop-blur-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] h-max w-max px-8 py-4 absolute top-[70%] left-[20%]">
@@ -69,7 +69,7 @@ export default function Landing() {
             <div className="absolute top-[70%] left-[20%]">
               <div className="absolute inset-0 blur rounded-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] z-0" />
               <p className="relative z-10 text-gray-dark text-xl px-8 py-4 w-max h-max rounded-lg">
-                "Awesome People"
+                "Reliable Expert"
               </p>
             </div>
             {/* <p className="text-gray-dark rounded-lg backdrop-blur-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] h-max w-max px-8 py-4 absolute top-[85%] left-0">
@@ -78,7 +78,7 @@ export default function Landing() {
             <div className="absolute top-[85%] left-0">
               <div className="absolute inset-0 blur rounded-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] z-0" />
               <p className="relative z-10 text-gray-dark text-xl px-8 py-4 w-max h-max rounded-lg">
-                "Awesome People"
+                "Community Verified"
               </p>
             </div>
           </div>
@@ -93,20 +93,20 @@ export default function Landing() {
           <GradientBG className="absolute h-96 -left-40 blur-lg" />
           <div className="flex flex-col items-center justify-center gap-16">
             <div className="flex flex-col items-center gap-6 rounded-lg backdrop-blur-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] h-max w-1/2 px-8 py-4">
-              <img src="/icons/users.svg" alt="builda reputation" className="size-24" />
+              <img src="/icons/users.svg" alt="build reputation" className="size-24" />
               <p className="text-gray-dark text-xl">Build a reputation that you own</p>
             </div>
             <div className="relative w-1/2 h-max px-8 py-4 rounded-lg overflow-hidden">
               <div className="absolute inset-0 z-0 blur-2xl opacity-60 bg-gradient-to-br from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86]" />
               <div className="relative z-10 flex flex-col items-center gap-6">
-                <img src="/icons/users.svg" alt="build a reputation" className="size-24" />
-                <p className="text-gray-dark text-xl">Build a reputation that you own</p>
+                <img src="/icons/users.svg" alt="decentralized identity" className="size-24" />
+                <p className="text-gray-dark text-xl">Your identity, truly decentralized</p>
               </div>
             </div>
             <div className="relative w-1/2 h-max px-8 py-4 rounded-lg overflow-hidden">
               <div className="absolute inset-0 z-0 blur-2xl opacity-60 bg-gradient-to-br from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86]" />
               <div className="relative z-10 flex flex-col items-center gap-6">
-                <img src="/icons/trust.svg" alt="build a reputation" className="size-24" />
+                <img src="/icons/trust.svg" alt="community trust" className="size-24" />
                 <p className="text-gray-dark text-xl">Let community trust be your portfolio</p>
               </div>
             </div>
@@ -143,15 +143,15 @@ export default function Landing() {
               <p className="text-2xl md:text-3xl font-medium">Waffle</p>
             </h2>
             <h1 className="mt-8 md:mt-12 text-2xl md:text-4xl leading-tight">
-              Waffle <span className="italic font-medium">Waffle</span> cupcake ipsum dolor sit
-              amet. Cupcake ipsum dolor sit amet.
+              Build trust through <span className="italic font-medium">community-driven</span>{" "}
+              reputation scoring that follows you across Web3.
             </h1>
             <CommandLineTypo className="mt-6 md:mt-8 text-xl md:text-3xl leading-tight text-gray-dark">
-              <span>Sound interesting? </span>
-              <span className="text-foreground">Try it yourself</span>.
+              <span>Ready to build your reputation? </span>
+              <span className="text-foreground">Start earning trust today</span>.
             </CommandLineTypo>
-            <ArrowLink className="mt-10 md:mt-20" href="https://t.me/HappyCuanAirdrop">
-              Join now
+            <ArrowLink className="mt-10 md:mt-20" href="/auth/twitter">
+              Get Started
             </ArrowLink>
           </div>
         </div>

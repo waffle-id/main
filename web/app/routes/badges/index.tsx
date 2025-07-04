@@ -26,7 +26,6 @@ export default function BadgesPage() {
         <div className="grid grid-cols-3 text-black gap-y-12">
           {badges.map((val, idx) => (
             <div key={idx} className="flex flex-col gap-2 h-full mx-2">
-              <p className="font-alt text-2xl">-{idx + 1}</p>
               <div className="aspect-square p-12 flex items-center justify-center">
                 <img src={val.images} className="aspect-square object-contain h-3/4" />
               </div>

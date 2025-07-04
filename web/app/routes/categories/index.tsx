@@ -27,8 +27,6 @@ export default function CategoriesPage() {
           {categories.map((val, idx) => (
             <NavLink key={idx} to={`/leaderboard/${val.title.split(" ").join("-").toLowerCase()}`}>
               <div className="flex flex-col gap-2 h-full mx-2">
-                <p className="font-alt text-2xl">-{idx + 1}</p>
-
                 <div
                   className={cn(
                     "relative aspect-square p-12 flex items-center justify-center",

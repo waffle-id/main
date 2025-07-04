@@ -5,7 +5,7 @@ export default [
     /* ------------------------------- Main pages ------------------------------- */
     index("routes/landing/index.tsx"),
     route("/categories", "routes/categories/index.tsx"),
-    route("/badges", "routes/badges.tsx"),
+    route("/badges", "routes/badges/index.tsx"),
     route("/leaderboard/:categories?", "routes/leaderboard/index.tsx"),
 
     /* ------------------------------- User pages ------------------------------- */

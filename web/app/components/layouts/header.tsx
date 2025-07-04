@@ -54,7 +54,9 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
       )}
     >
       <div className="flex flex-nowrap items-center justify-between w-full gap-4 overflow-hidden">
-        <LogoAnimation className="h-14 w-max aspect-square" />
+        <NavLink to={"/"} prefetch="intent">
+          <LogoAnimation className="h-14 w-max aspect-square" />
+        </NavLink>
 
         {/* <nav className="flex flex-row gap-4 md:gap-8 lg:gap-12 items-center"> */}
         {/* {LINKS_HEADER.map((link, i) => (
