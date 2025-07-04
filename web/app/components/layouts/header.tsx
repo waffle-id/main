@@ -64,8 +64,8 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
               {link.text}
             </NavLink>
           ))} */}
-        {/* <ConnectWalletXellar /> */}
-        <ConnectWalletRainbow />
+        <ConnectWalletXellar />
+        {/* <ConnectWalletRainbow /> */}
         {/* </nav> */}
       </div>
     </div>

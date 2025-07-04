@@ -165,33 +165,39 @@ export function ConnectWalletRainbow() {
                           </DropdownMenuItem>
                         </NavLink>
 
-                        <NavLink to={`/profile/w/${address}`}>
-                          <DropdownMenuItem className="py-4">
-                            My Profile
-                            <DropdownMenuShortcut>
-                              <User className="size-5" />
-                            </DropdownMenuShortcut>
-                          </DropdownMenuItem>
-                        </NavLink>
-
-                        {/* {address && <ConnectTwitter address={address} />} */}
-                        {twitterUser ? (
+                        {twitterUser && (
                           <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
                             <DropdownMenuItem className="py-4">
                               <div className="flex flex-col">
-                                <span className="text-sm font-medium">{twitterUser?.name}</span>
+                                <span className="text-sm">My Profile</span>
                                 <span className="text-xs text-muted-foreground">
                                   @{twitterUser?.screen_name}
                                 </span>
                               </div>
                               <DropdownMenuShortcut>
-                                <Twitter className="size-4" />
+                                <User className="size-5" />
                               </DropdownMenuShortcut>
                             </DropdownMenuItem>
                           </NavLink>
-                        ) : (
+                        )}
+
+                        {!twitterUser && (
+                          <DropdownMenuItem className="py-4 opacity-50 cursor-not-allowed" disabled>
+                            <div className="flex flex-col">
+                              <span className="text-sm">My Profile</span>
+                              <span className="text-xs text-muted-foreground">
+                                Connect Twitter first ↓
+                              </span>
+                            </div>
+                            <DropdownMenuShortcut>
+                              <User className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        )}
+
+                        {!twitterUser && (
                           <DropdownMenuItem
-                            className="py-4"
+                            className="py-4 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800"
                             onClick={() => {
                               setDropdownOpenControl(false);
                               setTimeout(() => {
@@ -199,9 +205,14 @@ export function ConnectWalletRainbow() {
                               }, 200);
                             }}
                           >
-                            Connect Twitter
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">Connect Twitter</span>
+                              <span className="text-xs text-orange-600">
+                                Required for profile access
+                              </span>
+                            </div>
                             <DropdownMenuShortcut>
-                              <Twitter className="size-4" />
+                              <Twitter className="size-4 text-orange-600" />
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
                         )}

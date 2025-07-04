@@ -3,7 +3,18 @@ import { useAccount, useDisconnect } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
 import { FIXED_CHAIN } from "~/constants/wagmi";
 import { useEffect, useState } from "react";
-import { ChevronDown, Hash, House, LogOut, RefreshCcw, User, Twitter, X } from "lucide-react";
+import {
+  ChevronDown,
+  Hash,
+  House,
+  LogOut,
+  RefreshCcw,
+  User,
+  Twitter,
+  X,
+  Award,
+  BadgeCheck,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -232,26 +243,87 @@ export function ConnectWalletXellar() {
                       </DropdownMenuItem>
                     </NavLink>
 
-                    {twitterUser ? (
-                      <DropdownMenuItem className="py-4" disabled>
+                    <NavLink to="/leaderboard">
+                      <DropdownMenuItem className="py-4">
+                        Leaderboards
+                        <DropdownMenuShortcut>
+                          <Award className="size-5" />
+                        </DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </NavLink>
+
+                    <NavLink to="/badges">
+                      <DropdownMenuItem className="py-4">
+                        Badges
+                        <DropdownMenuShortcut>
+                          <BadgeCheck className="size-5" />
+                        </DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </NavLink>
+
+                    {twitterUser && (
+                      <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
+                        <DropdownMenuItem className="py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm">My Profile</span>
+                            <span className="text-xs text-muted-foreground">
+                              @{twitterUser?.screen_name}
+                            </span>
+                          </div>
+                          <DropdownMenuShortcut>
+                            <User className="size-5" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </NavLink>
+                    )}
+
+                    {!twitterUser && (
+                      <DropdownMenuItem className="py-4 opacity-50 cursor-not-allowed" disabled>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium">{twitterUser.name}</span>
+                          <span className="text-sm">My Profile</span>
                           <span className="text-xs text-muted-foreground">
-                            @{twitterUser.screen_name}
+                            Connect Twitter first ↓
                           </span>
                         </div>
                         <DropdownMenuShortcut>
-                          <Twitter className="size-4" />
+                          <User className="size-5" />
                         </DropdownMenuShortcut>
                       </DropdownMenuItem>
-                    ) : !hasValidInvitation ? (
-                      <DropdownMenuItem className="py-4" onClick={handleConnectTwitterClick}>
-                        Connect Twitter
+                    )}
+
+                    {!twitterUser && !hasValidInvitation && (
+                      <DropdownMenuItem
+                        className="py-4 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800"
+                        onClick={handleConnectTwitterClick}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Connect Twitter</span>
+                          <span className="text-xs text-orange-600">
+                            Required for profile access
+                          </span>
+                        </div>
                         <DropdownMenuShortcut>
-                          <Twitter className="size-4" />
+                          <Twitter className="size-4 text-orange-600" />
                         </DropdownMenuShortcut>
                       </DropdownMenuItem>
-                    ) : null}
+                    )}
+
+                    {!twitterUser && hasValidInvitation && (
+                      <NavLink to={getTwitterAuthUrl()}>
+                        <DropdownMenuItem className="py-4 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">Connect Twitter</span>
+                            <span className="text-xs text-orange-600">
+                              Required for profile access
+                            </span>
+                          </div>
+                          <DropdownMenuShortcut>
+                            <Twitter className="size-4 text-orange-600" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </NavLink>
+                    )}
+
                     {twitterUser && (
                       <Form action="/auth/logout" method="post">
                         <DropdownMenuItem className="py-4" asChild>
@@ -264,15 +336,6 @@ export function ConnectWalletXellar() {
                         </DropdownMenuItem>
                       </Form>
                     )}
-
-                    <NavLink to={`/profile/w/${address}`}>
-                      <DropdownMenuItem className="py-4">
-                        My Profile
-                        <DropdownMenuShortcut>
-                          <User className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </NavLink>
 
                     <DropdownMenuItem className="py-4" onClick={handleDisconnect}>
                       Disconnect Wallet
