@@ -460,7 +460,9 @@ export default function Profile() {
       <div className="px-[20px] lg:px-[50px] py-24 relative z-20 bg-background text-black">
         <div className="flex flex-col gap-12">
           <div className="flex flex-row items-center gap-4 justify-end">
-            <div className={hasToken ? "" : "pointer-events-none opacity-50"}>
+            <div
+              className={hasLoggedIn ? "" : "pointer-events-none opacity-50"}
+            >
               <Review user={userData} />
               <Vouch />
               <Slash />
