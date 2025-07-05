@@ -8,10 +8,10 @@ COPY . .
 RUN npm run build-alt
 
 # Production stage
-FROM nginx:alpine
+# FROM nginx:alpine
 
 # Copy built static files
-COPY --from=builder /app/dist /app/builder
+# COPY --from=builder /app/dist /app/builder
 
 # Copy custom nginx config if needed
 # COPY nginx.conf /etc/nginx/nginx.conf
