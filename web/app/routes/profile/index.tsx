@@ -31,58 +31,6 @@ import Slash from "./shared/bottom-sheet/slash";
 import { redirect, useParams, useLoaderData } from "react-router";
 import type { Route } from "./+types";
 
-const imageItems = [
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 1,
-    c: 4,
-    review:
-      "This user provided excellent service and was very professional throughout our interaction. Their communication was clear and they delivered exactly what was promised. Would definitely recommend working with them again.",
-  },
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 1,
-    c: 1,
-    review:
-      "Great experience overall! Quick response time and quality work. Very satisfied with the outcome.",
-  },
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 2,
-    c: 5,
-    review:
-      "Professional and reliable. Completed the task efficiently and exceeded my expectations. Highly recommended!",
-  },
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 3,
-    c: 7,
-    review:
-      "Amazing work quality and attention to detail. Communication was smooth throughout the entire process.",
-  },
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 3,
-    c: 3,
-    review:
-      "Very helpful and knowledgeable. Went above and beyond to ensure everything was perfect. Thank you!",
-  },
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 4,
-    c: 6,
-    review:
-      "Outstanding service! Quick turnaround time and excellent quality. Will definitely work together again.",
-  },
-  {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
-    r: 5,
-    c: 2,
-    review:
-      "Friendly, professional, and delivered exactly what was needed. Great communication throughout the project.",
-  },
-];
-
 export interface UserProfileData {
   address?: string;
   username: string;
@@ -110,6 +58,58 @@ interface ScraperProfileData {
 }
 
 export async function loader({ params }: { params: { variant: string; slug: string } }) {
+  const imageItems = [
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 1,
+      c: 4,
+      review:
+        "This user provided excellent service and was very professional throughout our interaction. Their communication was clear and they delivered exactly what was promised. Would definitely recommend working with them again.",
+    },
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 1,
+      c: 1,
+      review:
+        "Great experience overall! Quick response time and quality work. Very satisfied with the outcome.",
+    },
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 2,
+      c: 5,
+      review:
+        "Professional and reliable. Completed the task efficiently and exceeded my expectations. Highly recommended!",
+    },
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 3,
+      c: 7,
+      review:
+        "Amazing work quality and attention to detail. Communication was smooth throughout the entire process.",
+    },
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 3,
+      c: 3,
+      review:
+        "Very helpful and knowledgeable. Went above and beyond to ensure everything was perfect. Thank you!",
+    },
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 4,
+      c: 6,
+      review:
+        "Outstanding service! Quick turnaround time and excellent quality. Will definitely work together again.",
+    },
+    {
+      src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+      r: 5,
+      c: 2,
+      review:
+        "Friendly, professional, and delivered exactly what was needed. Great communication throughout the project.",
+    },
+  ];
+
   const { variant, slug } = params;
 
   if (variant !== "x" && variant !== "w") {
@@ -132,6 +132,7 @@ export async function loader({ params }: { params: { variant: string; slug: stri
         error: null,
         needsScraping: false,
         slug,
+        imagesItemsLoader: imageItems,
       };
     }
   } catch (error) {
@@ -143,13 +144,20 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     error: null,
     needsScraping: true,
     slug,
+    imagesItemsLoader: imageItems,
   };
 }
 
 export default function Profile() {
   const params = useParams();
   const loaderData = useLoaderData<typeof loader>();
-  const { userData: initialUserData, error: initialError, needsScraping, slug } = loaderData;
+  const {
+    userData: initialUserData,
+    error: initialError,
+    needsScraping,
+    slug,
+    imagesItemsLoader,
+  } = loaderData;
 
   const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
   const [error, setError] = React.useState<string | null>(initialError);
@@ -282,7 +290,7 @@ export default function Profile() {
 
       <div className="relative z-0 w-full min-h-screen">
         <div ref={gridRef} className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32">
-          {imageItems.map(({ src, review, r, c }, i) => (
+          {imagesItemsLoader?.map(({ src, review, r, c }, i) => (
             <ImageHoverRevealText
               key={i}
               review={review}
@@ -300,11 +308,7 @@ export default function Profile() {
             >
               <div className="relative aspect-square w-full">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full"></div>
-                <img
-                  src={src}
-                  alt=""
-                  className="grid-item-img relative z-10 aspect-square w-full p-2"
-                />
+                <img src={src} alt="" className="grid-item-img relative aspect-square w-full p-2" />
               </div>
             </ImageHoverRevealText>
           ))}
