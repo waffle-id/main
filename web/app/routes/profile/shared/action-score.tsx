@@ -48,7 +48,7 @@ export function ActionScore({
   );
 }
 
-function IconX({ className, onClick }: JSX.IntrinsicElements["svg"]) {
+export function IconX({ className, onClick }: JSX.IntrinsicElements["svg"]) {
   return (
     <svg role="img" viewBox="0 0 24 24" className={className} onClick={onClick}>
       <title>X</title>

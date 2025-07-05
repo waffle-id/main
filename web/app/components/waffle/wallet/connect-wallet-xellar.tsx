@@ -13,18 +13,24 @@ import {
   Twitter,
   Award,
   BadgeCheck,
+  Wallet,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/shadcn/dropdown-menu";
 import { NavLink, Form } from "react-router";
 import { ConnectTwitter, type ConnectTwitterRef } from "./shared/connect-twitter";
 import { useWaffleProvider } from "../waffle-provider";
 import { useWalletAuth } from "~/hooks/useWalletAuth";
+import { IconX } from "~/routes/profile/shared/action-score";
 
 export function ConnectWalletXellar() {
   const { isConnected, chain, address } = useAccount();
@@ -373,33 +379,49 @@ export function ConnectWalletXellar() {
                       </NavLink>
 
                       {twitterUser ? (
-                        <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
-                          <DropdownMenuItem className="py-4 cursor-pointer">
-                            <div className="flex flex-col">
-                              <span className="text-sm">My Profile</span>
-                              <span className="text-xs text-muted-foreground">
-                                @{twitterUser.screen_name}
-                              </span>
-                            </div>
-                            <DropdownMenuShortcut>
-                              <User className="size-5" />
-                            </DropdownMenuShortcut>
-                          </DropdownMenuItem>
-                        </NavLink>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="py-4">
+                            My Profile
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-[200px]">
+                              <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  @{twitterUser.screen_name}
+                                  <IconX />
+                                </DropdownMenuItem>
+                              </NavLink>
+                              <NavLink to={`/profile/w/${address}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                  <Wallet className="size-4" />
+                                </DropdownMenuItem>
+                              </NavLink>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
                       ) : authStatus?.username ? (
-                        <NavLink to={`/profile/x/${authStatus.username}`}>
-                          <DropdownMenuItem className="py-4 cursor-pointer">
-                            <div className="flex flex-col">
-                              <span className="text-sm">My Profile</span>
-                              <span className="text-xs text-muted-foreground">
-                                @{authStatus.username}
-                              </span>
-                            </div>
-                            <DropdownMenuShortcut>
-                              <User className="size-5" />
-                            </DropdownMenuShortcut>
-                          </DropdownMenuItem>
-                        </NavLink>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="py-4">
+                            My Profile
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-[200px]">
+                              <NavLink to={`/profile/x/${authStatus.username}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  @{authStatus.username}
+                                  <IconX />
+                                </DropdownMenuItem>
+                              </NavLink>
+                              <NavLink to={`/profile/w/${address}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                  <Wallet className="size-4" />
+                                </DropdownMenuItem>
+                              </NavLink>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
                       ) : null}
 
                       {authStatus?.needsTwitterRegistration && (
