@@ -12,7 +12,7 @@ import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { Client } from "@gradio/client";
-import {  } from "react";
+import {} from "react";
 import { useWriteContract } from "wagmi";
 import { ABI } from "~/constants/ABI";
 import { CA } from "~/constants/CA";
@@ -61,10 +61,8 @@ const sentimentScores: Record<Sentiment, number> = {
 export default function Review({ user }: ReviewProps) {
   let client: Client | null = null;
   const { writeContractAsync, isPending } = useWriteContract();
-const RATE = ["neutral", "negative", "positive"] as const;
-type RateType = (typeof RATE)[number];
-
-export default function Review() {
+  const RATE = ["neutral", "negative", "positive"] as const;
+  type RateType = (typeof RATE)[number];
   const [isOpen, setIsOpen] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [title, setTitle] = useState("");
@@ -264,7 +262,10 @@ export default function Review() {
             />
           </div>
 
-          <ButtonMagnet className="self-center w-max px-16" onClick={handlSubmit}>
+          <ButtonMagnet
+            className="self-center w-max px-16"
+            onClick={handlSubmit}
+          >
             Submit
           </ButtonMagnet>
         </div>
