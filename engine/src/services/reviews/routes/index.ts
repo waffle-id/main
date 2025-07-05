@@ -17,14 +17,24 @@ import { findByUsernameFullData } from "@/services/account/controller/find";
 import { update as updateUser } from "@/services/account/controller/save";
 const router = Router();
 
+interface ReviewRequestBody {
+  comment?: string;
+  txHash?: string;
+  personas?: { name: string; weight: number }[];
+  rating?: ReviewRating;
+  overallPersona?: string; // can be kept for future use
+}
+
+export type ReviewRating = "positive" | "neutral" | "negative";
+
 router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
   try {
     const { revieweeUsername } = req.params;
-    const { comment, txHash, personas, overallPersona } = req.body;
+    const { comment, txHash, personas, overallPersona, rating } = req.body;
     const { id, address, username } = (req as any).user;
     console.log(`username is: ${username}`);
 
-    if (!comment || !txHash || !personas || !overallPersona) {
+    if (!comment || !txHash || !overallPersona || !rating) {
       const error = Error("Bad requests");
       (error as any).statusCode = 400;
       throw error;
@@ -48,7 +58,7 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
       (error as any).statusCode = 400;
       throw error;
     }
-    await createReview(txHash, comment, username, revieweeUsername);
+    await createReview(txHash, comment, username, revieweeUsername, rating);
 
     const baseScore = 10;
 
@@ -58,10 +68,10 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
       (error as any).statusCode = 404;
       throw error;
     }
-    if (overallPersona.toLowerCase() === "risky") {
-      reviewee.reputationScore = (reviewee.reputationScore as any) - 1;
-    } else {
+    if (rating === "positive") {
       reviewee.reputationScore = (reviewee.reputationScore as any) + 1;
+    } else if (rating === "negative") {
+      reviewee.reputationScore = (reviewee.reputationScore as any) - 1;
     }
     await updateUser(reviewee);
 
@@ -84,7 +94,8 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
         });
       }
       existingPersonaScore.score =
-        (existingPersonaScore.score as any) + baseScore * persona.weight;
+        (existingPersonaScore.score as any) +
+        (baseScore * persona.weight) / 100;
       await updatePersonaScore(existingPersonaScore);
     }
     res.status(201).json({
