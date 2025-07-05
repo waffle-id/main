@@ -123,8 +123,8 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     executablePath,
     headless: true,
     args: chromeArgs,
-    timeout: 60000,
-    protocolTimeout: 300000,
+    timeout: 0,
+    // protocolTimeout: 300000,
   });
   const page = await browser.newPage();
 
@@ -391,8 +391,8 @@ export async function scrapeTwitterAvatar(username: string): Promise<string | nu
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    timeout: 60000,
-    protocolTimeout: 300000,
+    timeout: 0,
+    // protocolTimeout: 300000,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -526,8 +526,8 @@ export async function scrapeTwitterBioAndAvatar(
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    protocolTimeout: 300000,
-    timeout: 60000,
+    // protocolTimeout: 300000,
+    timeout: 0,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
