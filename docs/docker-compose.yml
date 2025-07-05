@@ -7,7 +7,7 @@ services:
     container_name: waffle-docs
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "4000:3000"
     environment:
       - NODE_ENV=production
     networks:

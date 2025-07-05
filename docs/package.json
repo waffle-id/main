@@ -5,7 +5,7 @@
   "main": "README.md",
   "scripts": {
     "install": "echo 'Installation complete - use setup.sh for GitBook setup'",
-    "serve": "serve dist/ -p 3000",
+    "serve": "serve dist/ -p 8080",
     "build": "gitbook build",
     "serve-alt": "docsify serve . --port 3000",
     "build-alt": "node scripts/build-docs.js",
