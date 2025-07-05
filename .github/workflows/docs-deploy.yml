@@ -5,7 +5,7 @@ on:
     branches:
     - main
     paths:
-    - "engine/**"
+    - "docs/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
