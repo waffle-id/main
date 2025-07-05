@@ -50,6 +50,7 @@
     "wagmi": "^2.15.6"
   },
   "devDependencies": {
+    "@gradio/client": "^1.15.4",
     "@react-router/dev": "^7.5.3",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",

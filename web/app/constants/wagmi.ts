@@ -3,6 +3,7 @@ import { defaultConfig } from "@xellar/kit";
 import { monadTestnet, liskSepolia } from "viem/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { injected, metaMask } from "wagmi/connectors";
+import { getPublicClient } from "@wagmi/core";
 
 export const FIXED_CHAIN = monadTestnet.id;
 
@@ -26,3 +27,5 @@ export const WAGMI_RAINBOW_CONFIG = getDefaultConfig({
   // connectors: [injected(), metaMask()],
   ssr: true,
 });
+
+export const publicClient = getPublicClient(WAGMI_XELLAR_CONFIG);

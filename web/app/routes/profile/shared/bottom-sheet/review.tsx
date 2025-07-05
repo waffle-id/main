@@ -2,16 +2,170 @@ import { PencilRuler } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/shadcn/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "~/components/shadcn/drawer";
 import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
+import { Client } from "@gradio/client";
+import {  } from "react";
+import { useWriteContract } from "wagmi";
+import { ABI } from "~/constants/ABI";
+import { CA } from "~/constants/CA";
+import { publicClient } from "~/constants/wagmi";
+import type { UserProfileData } from "../..";
 
+type ReviewProps = {
+  user: UserProfileData;
+};
+
+type Sentiment = "negative" | "neutral" | "positive";
+
+type ReviewAIResponse = {
+  quality: {
+    level: "low" | "medium" | "high";
+    feedback: string;
+  };
+  persona: {
+    overall: string;
+    score_distribution: Array<{
+      persona: string;
+      score: number;
+    }>;
+  };
+  reputation_impact: {
+    score: number;
+    should_award_point: boolean;
+    explanation: string;
+  };
+  web3_insights: {
+    technical_depth: number;
+    collaboration_signals: number;
+    risk_signals: number;
+    credibility_level: "low" | "medium" | "high";
+  };
+  summary: string;
+  highlights: string[];
+};
+
+const sentimentScores: Record<Sentiment, number> = {
+  negative: 1,
+  neutral: 2,
+  positive: 3,
+};
+
+export default function Review({ user }: ReviewProps) {
+  let client: Client | null = null;
+  const { writeContractAsync, isPending } = useWriteContract();
 const RATE = ["neutral", "negative", "positive"] as const;
 type RateType = (typeof RATE)[number];
 
 export default function Review() {
   const [isOpen, setIsOpen] = useState(false);
+  const [sentiment, setSentiment] = useState<Sentiment | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [qualityLevel, setQualityLevel] = useState<
+    "low" | "medium" | "high" | null
+  >(null);
+  const [aiFeedback, setAiFeedback] = useState("");
+  const [checking, setChecking] = useState(false);
+
+  const isFormValid =
+    sentiment !== null &&
+    title.trim().length > 0 &&
+    description.trim().length > 0 &&
+    qualityLevel !== "low" &&
+    qualityLevel !== null &&
+    !checking;
+
+  const handleSubmit = async () => {
+    console.log("Here submitting");
+    if (!isFormValid) return;
+
+    try {
+      if (!publicClient) {
+        console.error("❌ publicClient is not available");
+        return;
+      }
+      const txHash = await writeContractAsync({
+        abi: ABI,
+        address: CA,
+        functionName: "submitUsernameReview",
+        args: [
+          user.username, // from props
+          sentimentScores[sentiment!], // uint8
+          description.trim(), // comment
+        ],
+      });
+
+      console.log(`TxHash: ${txHash}`);
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      if (receipt.status !== "success") {
+        console.warn("⚠️ Transaction reverted onchain");
+        return;
+      }
+
+      // ✅ Only reset if successful
+      setTitle("");
+      setDescription("");
+      setSentiment(null);
+      setQualityLevel(null);
+      setAiFeedback("");
+      setIsOpen(false);
+    } catch (err) {
+      console.error("❌ Contract error:", err);
+    }
+  };
+
+  useEffect(() => {
+    const trimmedTitle = title.trim();
+    const trimmedDesc = description.trim();
+
+    // Don't even try to debounce if both are not filled
+    if (trimmedTitle.length === 0 || trimmedDesc.length === 0) {
+      setQualityLevel(null);
+      setAiFeedback("");
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setChecking(true);
+      try {
+        if (!client) {
+          client = await Client.connect("RVMV/review-analyzer");
+        }
+
+        const aiResponse = await client.predict("/predict", {
+          title: trimmedTitle,
+          description: trimmedDesc,
+        });
+
+        const results = aiResponse.data as ReviewAIResponse[];
+        const result = results[0];
+
+        console.log(result);
+        setQualityLevel(result.quality.level);
+        setAiFeedback(result.quality.feedback);
+      } catch (err) {
+        console.error("AI analysis failed", err);
+        setQualityLevel(null);
+        setAiFeedback("Could not analyze review.");
+      } finally {
+        setChecking(false);
+      }
+    }, 500); // Wait 500ms after last keystroke
+
+    return () => clearTimeout(timeout); // Cleanup on each change
+  }, [title, description]);
 
   const [formData, setFormData] = useState<{
     title: string;
