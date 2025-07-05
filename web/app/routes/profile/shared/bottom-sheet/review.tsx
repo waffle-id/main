@@ -1,7 +1,12 @@
 import { PencilRuler } from "lucide-react";
 import { useState } from "react";
 import { Button } from "~/components/shadcn/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "~/components/shadcn/drawer";
 import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
@@ -12,6 +17,7 @@ import { ABI } from "~/constants/ABI";
 import { CA } from "~/constants/CA";
 import { publicClient } from "~/constants/wagmi";
 import type { UserProfileData } from "../..";
+import { addReview } from "~/routes/api/review/add-review";
 
 type ReviewProps = {
   user: UserProfileData;
@@ -59,7 +65,9 @@ export default function Review({ user }: ReviewProps) {
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [qualityLevel, setQualityLevel] = useState<"low" | "medium" | "high" | null>(null);
+  const [qualityLevel, setQualityLevel] = useState<
+    "low" | "medium" | "high" | null
+  >(null);
   const [aiFeedback, setAiFeedback] = useState("");
   const [checking, setChecking] = useState(false);
 
@@ -101,6 +109,15 @@ export default function Review({ user }: ReviewProps) {
         console.warn("⚠️ Transaction reverted onchain");
         return;
       }
+
+      await addReview({
+        revieweeUsername: user.username,
+        comment: description,
+        txHash: txHash,
+        rating: sentiment,
+        personas: [], // Default value first, not used yet,
+        overallPersona: "helpful",
+      });
 
       // ✅ Only reset if successful
       setTitle("");
@@ -177,7 +194,9 @@ export default function Review({ user }: ReviewProps) {
             <ButtonMagnet
               color="red"
               className={`w-full ${
-                sentiment === "negative" ? "bg-red-500 text-white hover:text-white" : ""
+                sentiment === "negative"
+                  ? "bg-red-500 text-white hover:text-white"
+                  : ""
               }`}
               onClick={() => setSentiment("negative")}
             >
@@ -186,7 +205,9 @@ export default function Review({ user }: ReviewProps) {
 
             <ButtonMagnet
               className={`w-full ${
-                sentiment === "neutral" ? "bg-yellow-500 text-white hover:text-white" : "w-full"
+                sentiment === "neutral"
+                  ? "bg-yellow-500 text-white hover:text-white"
+                  : "w-full"
               }`}
               onClick={() => setSentiment("neutral")}
             >
@@ -196,7 +217,9 @@ export default function Review({ user }: ReviewProps) {
             <ButtonMagnet
               color="green"
               className={`w-full ${
-                sentiment === "positive" ? "bg-green-500 text-white hover:text-white" : ""
+                sentiment === "positive"
+                  ? "bg-green-500 text-white hover:text-white"
+                  : ""
               }`}
               onClick={() => setSentiment("positive")}
             >
@@ -247,7 +270,9 @@ export default function Review({ user }: ReviewProps) {
                     : "bg-green-500"
                 }`}
               />
-              <span className="text-sm text-black/70 capitalize">{qualityLevel} quality</span>
+              <span className="text-sm text-black/70 capitalize">
+                {qualityLevel} quality
+              </span>
             </div>
           )}
 
