@@ -264,4 +264,4 @@ npm run test:watch   # Run tests in watch mode
 
 ---
 
-Built with ❤️ using React Router and the modern web stack
+Built with ❤️ using React Router and the modern web stack.
