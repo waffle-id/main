@@ -1,47 +1,30 @@
-# Multi-stage Dockerfile for Waffle Documentation
+# Build stage
 FROM node:22-alpine AS builder
 
-# Set working directory
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci --only=production
-
-# Copy source files
 COPY . .
-
-# Build documentation
-RUN npm run build-alt
+RUN npm run build
 
 # Production stage
-FROM nginx:alpine AS production
+FROM nginx:alpine
 
-# Copy built documentation
+# Copy built static files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy custom nginx config if needed
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-# Create nginx user and set permissions
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx && \
-    chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d
+# Fix permissions for nginx user
+RUN mkdir -p /var/cache/nginx/client_temp /run && \
+    chown -R nginx:nginx /var/cache/nginx /run
 
-# Switch to non-root user
 USER nginx
 
-# Expose port
 EXPOSE 8080
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
