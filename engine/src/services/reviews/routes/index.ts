@@ -41,23 +41,23 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
     }
 
     // Can't review self
-    if (username === revieweeUsername) {
-      const error = Error("You can't review yourself");
-      (error as any).statusCode = 400;
-      throw error;
-    }
+    // if (username === revieweeUsername) {
+    //   const error = Error("You can't review yourself");
+    //   (error as any).statusCode = 400;
+    //   throw error;
+    // }
 
     // Check if reviewer has reviewed the target, if yes, throw
-    const existingReview = await findByRevieweeUsernameAndReviewerUsername(
-      revieweeUsername,
-      username
-    );
-    console.log(`review is: ${existingReview}`);
-    if (existingReview) {
-      const error = Error("You can't review this person anymore");
-      (error as any).statusCode = 400;
-      throw error;
-    }
+    // const existingReview = await findByRevieweeUsernameAndReviewerUsername(
+    //   revieweeUsername,
+    //   username
+    // );
+    // console.log(`review is: ${existingReview}`);
+    // if (existingReview) {
+    //   const error = Error("You can't review this person anymore");
+    //   (error as any).statusCode = 400;
+    //   throw error;
+    // }
     await createReview(txHash, comment, username, revieweeUsername, rating);
 
     const baseScore = 10;
