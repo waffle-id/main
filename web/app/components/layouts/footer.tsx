@@ -71,37 +71,25 @@ export function Footer() {
               </h3>
               <ul className="space-y-3 relative z-10">
                 <li>
-                  <a
-                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
-                    href="https://github.com/waffle-id"
-                  >
+                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     GitHub
                   </a>
                 </li>
                 <li>
-                  <a
-                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
-                    href="https://discord.gg/waffle"
-                  >
+                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     Discord
                   </a>
                 </li>
                 <li>
-                  <a
-                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
-                    href="https://x.com/waffle_id"
-                  >
+                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     X (Twitter)
                   </a>
                 </li>
                 <li>
-                  <a
-                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
-                    href="https://t.me/waffle_community"
-                  >
+                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     Telegram
                   </a>
