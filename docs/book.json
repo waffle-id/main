@@ -1,0 +1,47 @@
+{
+  "root": "./",
+  "title": "Waffle Documentation",
+  "description": "Complete documentation for Waffle - a decentralized reputation and review platform",
+  "author": "Waffle Team",
+  "language": "en",
+  "gitbook": ">=3.0.0",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  },
+  "plugins": [
+    "search",
+    "sharing",
+    "fontsettings",
+    "livereload",
+    "highlight",
+    "anchors",
+    "edit-link",
+    "github",
+    "prism",
+    "-highlight"
+  ],
+  "pluginsConfig": {
+    "github": {
+      "url": "https://github.com/waffle-id/main"
+    },
+    "edit-link": {
+      "base": "https://github.com/waffle-id/main/edit/main/docs",
+      "label": "Edit This Page"
+    },
+    "sharing": {
+      "facebook": true,
+      "twitter": true,
+      "google": false,
+      "weibo": false,
+      "instapaper": false,
+      "vk": false,
+      "all": ["facebook", "twitter", "linkedin"]
+    }
+  },
+  "variables": {
+    "version": "1.0.0",
+    "api_url": "https://api.waffle.food",
+    "github_url": "https://github.com/waffle-id/main"
+  }
+}

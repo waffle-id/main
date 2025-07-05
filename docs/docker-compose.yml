@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  # Waffle Documentation
+  waffle-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waffle-docs
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.waffle-docs.rule=Host(`docs.waffle.food`)"
+      - "traefik.http.routers.waffle-docs.tls=true"
+      - "traefik.http.routers.waffle-docs.tls.certresolver=letsencrypt"
+    networks:
+      - waffle-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Reverse Proxy with SSL (Optional)
+  traefik:
+    image: traefik:v2.10
+    container_name: waffle-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${SSL_EMAIL:-admin@waffle.food}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik_letsencrypt:/letsencrypt"
+    networks:
+      - waffle-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.waffle.food`)"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+volumes:
+  traefik_letsencrypt:
+
+networks:
+  waffle-network:
+    driver: bridge

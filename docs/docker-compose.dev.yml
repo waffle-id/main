@@ -1,0 +1,26 @@
+# Simple docker-compose for local development
+version: "3.8"
+
+services:
+  waffle-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waffle-docs-dev
+    ports:
+      - "3000:8080"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source for live reloading (optional)
+      - .:/app:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    name: waffle-docs-network
