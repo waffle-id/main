@@ -17,7 +17,12 @@ import {
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 import { ActionScore } from "./shared/action-score";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "~/components/shadcn/tabs";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 
 import { ContentReceived } from "./shared/content-received";
@@ -31,6 +36,8 @@ import Slash from "./shared/bottom-sheet/slash";
 import { redirect, useParams, useLoaderData } from "react-router";
 import type { Route } from "./+types";
 
+const hasToken =
+  typeof window !== "undefined" && !!localStorage.getItem("waffle_auth_token");
 export interface UserProfileData {
   address?: string;
   username: string;
@@ -66,49 +73,63 @@ interface ImageItems {
 
 const imageItems = [
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 1,
     c: 4,
     review:
       "This user provided excellent service and was very professional throughout our interaction. Their communication was clear and they delivered exactly what was promised. Would definitely recommend working with them again.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 1,
     c: 1,
     review:
       "Great experience overall! Quick response time and quality work. Very satisfied with the outcome.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 2,
     c: 5,
     review:
       "Professional and reliable. Completed the task efficiently and exceeded my expectations. Highly recommended!",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 3,
     c: 7,
     review:
       "Amazing work quality and attention to detail. Communication was smooth throughout the entire process.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 3,
     c: 3,
     review:
       "Very helpful and knowledgeable. Went above and beyond to ensure everything was perfect. Thank you!",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 4,
     c: 6,
     review:
       "Outstanding service! Quick turnaround time and excellent quality. Will definitely work together again.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+      Math.floor(Math.random() * 100) + 1
+    }`,
     r: 5,
     c: 2,
     review:
@@ -116,7 +137,11 @@ const imageItems = [
   },
 ];
 
-export async function loader({ params }: { params: { variant: string; slug: string } }) {
+export async function loader({
+  params,
+}: {
+  params: { variant: string; slug: string };
+}) {
   const { variant, slug } = params;
 
   if (variant !== "x" && variant !== "w") {
@@ -148,7 +173,9 @@ export async function loader({ params }: { params: { variant: string; slug: stri
   }
 
   // review
-  const reviewResult = await fetch(`https://api.waffle.food/reviews?revieweeUsername=${slug}`);
+  const reviewResult = await fetch(
+    `https://api.waffle.food/reviews?revieweeUsername=${slug}`
+  );
   const newImagesItems: ImageItems[] = [];
 
   // if (reviewResult.ok) {
@@ -183,7 +210,9 @@ export async function loader({ params }: { params: { variant: string; slug: stri
       };
     }
   } catch (error) {
-    console.log("Main API failed or timed out, will try scraper API on client...");
+    console.log(
+      "Main API failed or timed out, will try scraper API on client..."
+    );
   }
 
   return {
@@ -208,9 +237,12 @@ export default function Profile() {
     userReview,
   } = loaderData;
 
-  const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
+  const [userData, setUserData] = React.useState<UserProfileData | null>(
+    initialUserData
+  );
   const [error, setError] = React.useState<string | null>(initialError);
   const [isLoading, setIsLoading] = React.useState(needsScraping);
+  const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean | null>(null);
 
   const TABS = ["received", "given", "all"];
   const gridRef = useRef<HTMLDivElement>(null);
@@ -219,7 +251,15 @@ export default function Profile() {
     setUserData(initialUserData);
     setError(initialError);
     setIsLoading(needsScraping);
-  }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
+    const token = localStorage.getItem("waffle_auth_token");
+    setHasLoggedIn(!!token);
+  }, [
+    params.variant,
+    params.slug,
+    initialUserData,
+    initialError,
+    needsScraping,
+  ]);
 
   useEffect(() => {
     if (!needsScraping) return;
@@ -255,7 +295,9 @@ export default function Profile() {
         setError(null);
       } catch (err) {
         console.error("Error fetching scraped profile:", err);
-        setError(err instanceof Error ? err.message : "Failed to load user profile");
+        setError(
+          err instanceof Error ? err.message : "Failed to load user profile"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -346,7 +388,10 @@ export default function Profile() {
       </div>
 
       <div className="relative z-0 w-full min-h-screen">
-        <div ref={gridRef} className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32">
+        <div
+          ref={gridRef}
+          className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32"
+        >
           {imagesItemsLoader.map(({ src, review, r, c }, i) => (
             <ImageHoverRevealText
               key={i}
@@ -392,7 +437,9 @@ export default function Profile() {
                 <CommandLineTypo className="text-3xl font-light">
                   {userData.username}
                 </CommandLineTypo>
-                {userData.fullName && <p className="text-lg text-gray-600">{userData.fullName}</p>}
+                {userData.fullName && (
+                  <p className="text-lg text-gray-600">{userData.fullName}</p>
+                )}
                 {userData.address && (
                   <p className="text-sm text-gray-500">
                     {userData.address.slice(0, 6)}...
@@ -413,9 +460,11 @@ export default function Profile() {
       <div className="px-[20px] lg:px-[50px] py-24 relative z-20 bg-background text-black">
         <div className="flex flex-col gap-12">
           <div className="flex flex-row items-center gap-4 justify-end">
-            <Review user={userData} />
-            <Vouch />
-            <Slash />
+            <div className={hasToken ? "" : "pointer-events-none opacity-50"}>
+              <Review user={userData} />
+              <Vouch />
+              <Slash />
+            </div>
           </div>
           <Tabs defaultValue={TABS[0]}>
             <TabsList className="w-full mb-5 flex flex-wrap gap-2">
