@@ -83,6 +83,10 @@ export default function Review({ user }: ReviewProps) {
     if (!isFormValid) return;
 
     try {
+      if (!publicClient) {
+        console.error("❌ publicClient is not available");
+        return;
+      }
       const txHash = await writeContractAsync({
         abi: ABI,
         address: CA,
