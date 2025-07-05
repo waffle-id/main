@@ -44,7 +44,7 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="px-[20px] lg:px-[50px] h-screen">
+      <div className="px-[20px] lg:px-[50px] min-h-screen">
         <div className="relative grid grid-cols-3 gap-x-12 items-center">
           <GradientBG className="absolute h-3/5 -left-96 blur-lg" />
           <p className="text-8xl text-yelight-dark">
@@ -89,7 +89,7 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="px-[20px] lg:px-[50px]">
+      <div className="px-[20px] lg:px-[50px] min-h-screen">
         <div className="relative grid grid-cols-2">
           <GradientBG className="absolute h-96 -left-40 blur-lg" />
           <div className="flex flex-col items-center justify-center gap-16">
