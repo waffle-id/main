@@ -1,4 +1,4 @@
-name: 🐳 [BE] Build & Deploy
+name: 🐳 [DOCS] Build & Deploy
 
 on:
   push:
