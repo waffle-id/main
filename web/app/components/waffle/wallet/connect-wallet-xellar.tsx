@@ -1,5 +1,5 @@
 import { ConnectButton, useConnectModal } from "@xellar/kit";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
 import { FIXED_CHAIN } from "~/constants/wagmi";
 import { useEffect, useState, useRef } from "react";
@@ -31,6 +31,7 @@ import { ConnectTwitter, type ConnectTwitterRef } from "./shared/connect-twitter
 import { useWaffleProvider } from "../waffle-provider";
 import { useWalletAuth } from "~/hooks/useWalletAuth";
 import { IconX } from "~/routes/profile/shared/action-score";
+import { monadTestnet } from "viem/chains";
 
 export function ConnectWalletXellar() {
   const { isConnected, chain, address } = useAccount();
@@ -38,6 +39,7 @@ export function ConnectWalletXellar() {
   const { twitterUser, setTwitterUser } = useWaffleProvider();
   const { disconnect } = useDisconnect();
   const { loginWithWallet, checkAuthStatus, isLoading } = useWalletAuth();
+  const { switchChain } = useSwitchChain();
 
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
   const [authStatus, setAuthStatus] = useState<{
@@ -258,7 +260,10 @@ export function ConnectWalletXellar() {
 
               if (isWrongNetwork) {
                 return (
-                  <ButtonMagnet className="w-full sm:max-w-xs">
+                  <ButtonMagnet
+                    className="w-full sm:max-w-xs"
+                    onClick={() => switchChain?.({ chainId: monadTestnet.id })}
+                  >
                     <div className="flex flex-row items-center gap-2">
                       <RefreshCcw className="size-5" />
                       <span className="text-sm">Switch Network</span>
