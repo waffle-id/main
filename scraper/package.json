@@ -14,18 +14,14 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.8.0",
-    "better-sqlite3": "^9.2.2",
     "drizzle-orm": "^0.29.0",
     "hono": "^4.0.0",
     "puppeteer": "^21.0.0",
     "puppeteer-core": "^24.11.2",
     "puppeteer-extra": "^3.3.6",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
     "tsx": "^4.20.3"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.8",
     "@types/bun": "latest",
     "@types/node": "^20.0.0",
     "drizzle-kit": "^0.20.0",

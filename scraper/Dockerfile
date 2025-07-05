@@ -1,6 +1,7 @@
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
+# Install system dependencies (mainly for Chromium/Puppeteer)
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-sandbox \
@@ -40,17 +41,13 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     wget \
     xdg-utils \
-    python3 \
-    python3-pip \
-    build-essential \
-    make \
-    g++ \
-    curl \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-COPY package.json bun.lock ./
+# Copy package files
+COPY package.json ./
 
+# Install dependencies (regenerate lockfile to exclude better-sqlite3)
 RUN bun install
 
 COPY . .
