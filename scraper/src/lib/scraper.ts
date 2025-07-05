@@ -90,14 +90,41 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     "--disable-web-security",
     "--disable-features=VizDisplayCompositor",
     "--remote-debugging-port=0",
+    "--memory-pressure-off",
+    "--max_old_space_size=4096",
+    "--disable-background-networking",
+    "--disable-background-media-suspend",
+    "--disable-renderer-backgrounding",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-client-side-phishing-detection",
+    "--disable-default-apps",
+    "--disable-hang-monitor",
+    "--disable-popup-blocking",
+    "--disable-prompt-on-repost",
+    "--disable-sync",
+    "--disable-domain-reliability",
+    "--disable-features=AudioServiceOutOfProcess",
+    "--disable-features=MediaRouter",
+    "--disable-print-preview",
+    "--disable-voice-input",
+    "--disable-wake-on-wifi",
+    "--enable-features=NetworkService,NetworkServiceLogging",
+    "--force-color-profile=srgb",
+    "--metrics-recording-only",
+    "--use-mock-keychain",
+    "--enable-automation",
+    "--password-store=basic",
+    "--use-mock-keychain",
+    "--no-service-autorun",
+    "--disable-component-update",
   ];
 
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
     args: chromeArgs,
-    timeout: 30000,
-    protocolTimeout: 180000,
+    timeout: 60000,
+    protocolTimeout: 300000,
   });
   const page = await browser.newPage();
 
@@ -109,7 +136,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     );
 
     console.log("Navigating to:", url);
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     console.log("Page loaded, waiting for content...");
 
@@ -364,8 +391,8 @@ export async function scrapeTwitterAvatar(username: string): Promise<string | nu
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    timeout: 30000,
-    protocolTimeout: 180000,
+    timeout: 60000,
+    protocolTimeout: 300000,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -499,8 +526,8 @@ export async function scrapeTwitterBioAndAvatar(
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    protocolTimeout: 180000,
-    timeout: 30000,
+    protocolTimeout: 300000,
+    timeout: 60000,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
