@@ -1,12 +1,7 @@
 import { PencilRuler } from "lucide-react";
 import { useState } from "react";
 import { Button } from "~/components/shadcn/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "~/components/shadcn/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
 import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
@@ -65,9 +60,7 @@ export default function Review({ user }: ReviewProps) {
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [qualityLevel, setQualityLevel] = useState<
-    "low" | "medium" | "high" | null
-  >(null);
+  const [qualityLevel, setQualityLevel] = useState<"low" | "medium" | "high" | null>(null);
   const [aiFeedback, setAiFeedback] = useState("");
   const [checking, setChecking] = useState(false);
 
@@ -194,9 +187,7 @@ export default function Review({ user }: ReviewProps) {
             <ButtonMagnet
               color="red"
               className={`w-full ${
-                sentiment === "negative"
-                  ? "bg-red-500 text-white hover:text-white"
-                  : ""
+                sentiment === "negative" ? "bg-red-500 text-white hover:text-white" : ""
               }`}
               onClick={() => setSentiment("negative")}
             >
@@ -205,9 +196,7 @@ export default function Review({ user }: ReviewProps) {
 
             <ButtonMagnet
               className={`w-full ${
-                sentiment === "neutral"
-                  ? "bg-yellow-500 text-white hover:text-white"
-                  : "w-full"
+                sentiment === "neutral" ? "bg-yellow-500 text-white hover:text-white" : "w-full"
               }`}
               onClick={() => setSentiment("neutral")}
             >
@@ -217,9 +206,7 @@ export default function Review({ user }: ReviewProps) {
             <ButtonMagnet
               color="green"
               className={`w-full ${
-                sentiment === "positive"
-                  ? "bg-green-500 text-white hover:text-white"
-                  : ""
+                sentiment === "positive" ? "bg-green-500 text-white hover:text-white" : ""
               }`}
               onClick={() => setSentiment("positive")}
             >
@@ -245,18 +232,20 @@ export default function Review({ user }: ReviewProps) {
           </div>
           <div className="flex flex-col gap-2">
             <p>Description</p>
-            <Textarea
-              placeholder="Description"
-              className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              // value={form.message}
-              // onChange={(e) =>
-              //   setForm((prev) => {
-              //     return { ...prev, message: e.target.value };
-              //   })
-              // }
-            />
+            <div className="overflow-y-auto max-h-[10vh]">
+              <Textarea
+                placeholder="Description"
+                className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                // value={form.message}
+                // onChange={(e) =>
+                //   setForm((prev) => {
+                //     return { ...prev, message: e.target.value };
+                //   })
+                // }
+              />
+            </div>
           </div>
 
           {qualityLevel && (
@@ -270,9 +259,7 @@ export default function Review({ user }: ReviewProps) {
                     : "bg-green-500"
                 }`}
               />
-              <span className="text-sm text-black/70 capitalize">
-                {qualityLevel} quality
-              </span>
+              <span className="text-sm text-black/70 capitalize">{qualityLevel} quality</span>
             </div>
           )}
 

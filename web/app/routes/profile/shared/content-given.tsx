@@ -87,7 +87,7 @@ export function ContentGiven({ listData }: ContentGivenProps) {
                     // @ts-ignore
                     src={val.reviewerAccount.avatarUrl}
                     alt=""
-                    className="relative z-10 size-24 aspect-square rounded-full"
+                    className="relative z-10 size-24 aspect-square rounded-full object-cover"
                   />
                 </div>
                 <div className="flex flex-col gap-4">
