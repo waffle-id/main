@@ -30,8 +30,10 @@ EXPOSE 8080
 
 # CMD ["pm2", "start", "'npm run serve'", "--name", "docs"]
 
-RUN pm2 start "npm run serve" --name docs
+# RUN pm2 start "npm run serve" --name docs
 
-CMD sleep infinity
+CMD ["npm", "run", "serve"]
+
+# CMD sleep infinity
 
 
