@@ -7,16 +7,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await authenticator.authenticate("twitter", request);
     const session = await sessionStorage.getSession(request.headers.get("Cookie"));
 
-    session.unset("pendingRegistration");
+    if (user.address && user.referralCode) {
+      session.set("pendingRegistration", {
+        address: user.address,
+        referralCode: user.referralCode,
+      });
+    } else {
+      session.unset("pendingRegistration");
+    }
+
     session.set("user", user);
 
     const cookie = await sessionStorage.commitSession(session);
 
-    return redirect("/", {
-      headers: {
-        "Set-Cookie": cookie,
-      },
-    });
+    if (user.isRegistered) {
+      return redirect("/", {
+        headers: {
+          "Set-Cookie": cookie,
+        },
+      });
+    } else {
+      return redirect("/auth/complete-registration", {
+        headers: {
+          "Set-Cookie": cookie,
+        },
+      });
+    }
   } catch (error) {
     console.error("Twitter auth callback error:", error);
 

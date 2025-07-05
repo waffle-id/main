@@ -6,6 +6,7 @@ export type User = {
     email?: string;
     address?: string;
     isRegistered?: boolean;
+    referralCode?: string;
 };
 
 export type PendingRegistration = {

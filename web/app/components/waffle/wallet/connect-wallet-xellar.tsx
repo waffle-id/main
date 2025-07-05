@@ -59,6 +59,7 @@ export function ConnectWalletXellar() {
       await fetch("/auth/logout", { method: "POST" });
 
       localStorage.removeItem("waffle_wallet_address");
+
       localStorage.removeItem("waffle_referral_code");
       localStorage.removeItem("waffle_auth_token");
 
@@ -74,6 +75,7 @@ export function ConnectWalletXellar() {
 
       disconnect();
       localStorage.removeItem("waffle_wallet_address");
+
       localStorage.removeItem("waffle_referral_code");
       localStorage.removeItem("waffle_auth_token");
       setAuthStatus(null);

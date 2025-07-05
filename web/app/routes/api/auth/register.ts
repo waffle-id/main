@@ -16,7 +16,6 @@ export async function action({ request }: ActionFunctionArgs) {
             }, { status: 400 });
         }
 
-        // Create a user object matching the Twitter User interface
         const user = {
             id: parseInt(twitterId),
             screen_name: username,

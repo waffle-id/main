@@ -1,4 +1,3 @@
-// import { ConnectButton, useConnectModal } from "@xellar/kit";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useSwitchChain, useDisconnect } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
@@ -42,6 +41,7 @@ export function ConnectWalletRainbow() {
       await fetch("/auth/logout", { method: "POST" });
 
       localStorage.removeItem("waffle_wallet_address");
+
       localStorage.removeItem("waffle_referral_code");
       localStorage.removeItem("waffle_auth_token");
 
@@ -53,6 +53,7 @@ export function ConnectWalletRainbow() {
 
       disconnect();
       localStorage.removeItem("waffle_wallet_address");
+
       localStorage.removeItem("waffle_referral_code");
       localStorage.removeItem("waffle_auth_token");
       setTwitterUser(null);
@@ -64,6 +65,7 @@ export function ConnectWalletRainbow() {
       localStorage.setItem("waffle_wallet_address", address);
     } else {
       localStorage.removeItem("waffle_wallet_address");
+
       setTwitterUser(null);
       console.log("🚪 Rainbow wallet auto-disconnected, cleared states");
     }

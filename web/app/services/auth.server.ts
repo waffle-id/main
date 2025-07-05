@@ -10,6 +10,7 @@ export type User = {
   email?: string;
   address?: string;
   isRegistered?: boolean;
+  referralCode?: string;
 };
 
 export type PendingRegistration = {
@@ -344,43 +345,37 @@ authenticator.use(
         if (pendingRegistration?.address && pendingRegistration?.referralCode) {
           address = pendingRegistration.address;
           referralCode = pendingRegistration.referralCode;
-          console.log("Using session data for registration");
+          console.log("Found session data for registration, storing for completion flow");
         } else if (persistentRegistration?.address && persistentRegistration?.referralCode) {
           address = persistentRegistration.address;
           referralCode = persistentRegistration.referralCode;
-          console.log("Using persistent data for registration");
+          console.log("Found persistent data for registration, storing for completion flow");
 
           removePendingRegistration(userAgent);
         }
 
-        if (!address || !referralCode) {
-          console.error("Missing registration data:", {
-            sessionRegistration: pendingRegistration,
-            persistentRegistration,
-            hasAddress: !!address,
-            hasReferralCode: !!referralCode,
-          });
-          throw new Error("Wallet address and referral code are required for registration");
-        }
-
-        const authResult = await handleUserAuthentication(
-          {
+        if (address && referralCode) {
+          console.log("Creating partial user for new registration flow, keeping registration data");
+          return {
             id: Number(id),
             screen_name: username,
             name: result.data.name,
             profile_image_url: result.data.profile_image_url?.replace("_normal", "") ?? "",
-          },
-          address,
-          referralCode
-        );
-
-        if (!authResult.success) {
-          throw new Error(authResult.error || "Authentication failed");
+            isRegistered: false,
+            address,
+            referralCode,
+          };
         }
 
-        console.log("User authentication successful");
+        console.log("No registration data found, creating partial user for Twitter-only auth");
 
-        return authResult.user!;
+        return {
+          id: Number(id),
+          screen_name: username,
+          name: result.data.name,
+          profile_image_url: result.data.profile_image_url?.replace("_normal", "") ?? "",
+          isRegistered: false,
+        };
       } catch (error) {
         console.error("Error in Twitter2Strategy verify function:", error);
         throw error;
