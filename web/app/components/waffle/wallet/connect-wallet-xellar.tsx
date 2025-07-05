@@ -2,7 +2,7 @@ import { ConnectButton, useConnectModal } from "@xellar/kit";
 import { useAccount, useDisconnect } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
 import { FIXED_CHAIN } from "~/constants/wagmi";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
   Hash,
@@ -11,160 +11,228 @@ import {
   RefreshCcw,
   User,
   Twitter,
-  X,
   Award,
   BadgeCheck,
+  Wallet,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/shadcn/dropdown-menu";
-import { Button } from "~/components/shadcn/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerFooter,
-  DrawerClose,
-} from "~/components/shadcn/drawer";
-import { Input } from "~/components/shadcn/input";
 import { NavLink, Form } from "react-router";
-import { useOptionalUser } from "~/utils/auth";
+import { ConnectTwitter, type ConnectTwitterRef } from "./shared/connect-twitter";
+import { useWaffleProvider } from "../waffle-provider";
+import { useWalletAuth } from "~/hooks/useWalletAuth";
+import { IconX } from "~/routes/profile/shared/action-score";
 
 export function ConnectWalletXellar() {
   const { isConnected, chain, address } = useAccount();
   const { open: openModalXellar } = useConnectModal();
-  const twitterUser = useOptionalUser();
+  const { twitterUser, setTwitterUser } = useWaffleProvider();
   const { disconnect } = useDisconnect();
+  const { loginWithWallet, checkAuthStatus, isLoading } = useWalletAuth();
 
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
-  const [isInvitationDrawerOpen, setIsInvitationDrawerOpen] = useState(false);
-  const [invitationCode, setInvitationCode] = useState("");
-  const [hasValidInvitation, setHasValidInvitation] = useState(false);
-  const [invitationError, setInvitationError] = useState("");
-  const [validatedInvitationCode, setValidatedInvitationCode] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
+  const [authStatus, setAuthStatus] = useState<{
+    canLoginWithWallet: boolean;
+    needsTwitterRegistration: boolean;
+    username?: string;
+    isRegistered: boolean;
+  } | null>(null);
+  const [lastCheckedAddress, setLastCheckedAddress] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const connectXRef = useRef<ConnectTwitterRef>(null);
 
-  const validateReferralCode = async (code: string) => {
+  const handleDisconnect = async () => {
     try {
-      const response = await fetch(
-        `https://api.waffle.food/referral-codes/${encodeURIComponent(code)}`
-      );
-      const data = await response.json();
+      disconnect();
 
-      if (response.ok && data._id && !data.isExpired) {
-        return { isValid: true, data };
+      await fetch("/auth/logout", { method: "POST" });
+
+      localStorage.removeItem("waffle_wallet_address");
+      localStorage.removeItem("waffle_referral_code");
+      localStorage.removeItem("waffle_auth_token");
+
+      setAuthStatus(null);
+      setIsAuthenticated(false);
+      setLastCheckedAddress(null);
+
+      setTwitterUser(null);
+
+      console.log("🚪 Disconnected wallet and cleared session states");
+    } catch (error) {
+      console.error("Error during disconnect:", error);
+
+      disconnect();
+      localStorage.removeItem("waffle_wallet_address");
+      localStorage.removeItem("waffle_referral_code");
+      localStorage.removeItem("waffle_auth_token");
+      setAuthStatus(null);
+      setIsAuthenticated(false);
+      setLastCheckedAddress(null);
+      setTwitterUser(null);
+    }
+  };
+
+  const handleWalletLogin = async () => {
+    if (!address) return;
+
+    console.log("🔐 Starting wallet login for address:", address);
+
+    try {
+      const result = await loginWithWallet(address);
+
+      if (result.success) {
+        console.log("✅ Wallet login successful:", result.user);
+
+        if (result.token) {
+          localStorage.setItem("waffle_auth_token", result.token);
+        }
+
+        setIsAuthenticated(true);
+
+        if (result.user && (result.user as any).username) {
+          console.log("👤 Creating user object from wallet login:", result.user);
+          const userFromAuth = {
+            id: (result.user as any).id || 0,
+            screen_name: (result.user as any).username,
+            name: (result.user as any).username,
+            profile_image_url: "",
+            address: (result.user as any).address,
+            isRegistered: true,
+          };
+          setTwitterUser(userFromAuth);
+        }
+
+        console.log("🔄 Refreshing auth status after successful login");
+        setTimeout(async () => {
+          await refreshAuthStatus();
+        }, 100);
+      } else if (result.needsTwitterRegistration) {
+        console.log("🐦 User needs Twitter registration");
+        connectXRef.current?.handleConnectTwitterClick();
       } else {
-        return {
-          isValid: false,
-          error: data.message || "Invalid or expired referral code",
-        };
+        console.error("❌ Login failed:", result.error);
       }
     } catch (error) {
-      console.error("Error validating referral code:", error);
-      return {
-        isValid: false,
-        error: "Failed to validate referral code. Please try again.",
-      };
+      console.error("💥 Wallet login error:", error);
     }
   };
 
-  const handleInvitationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = invitationCode.trim();
+  const refreshAuthStatus = async () => {
+    if (!address) return;
 
-    if (!code) {
-      setInvitationError("Please enter a referral code");
-      return;
+    console.log("🔄 Refreshing auth status after state change");
+
+    setLastCheckedAddress(null);
+
+    const status = await checkAuthStatus(address);
+    console.log("📊 Refreshed auth status result:", status);
+    setAuthStatus(status);
+
+    const existingToken = localStorage.getItem("waffle_auth_token");
+    if (status.isRegistered && status.canLoginWithWallet && existingToken) {
+      console.log("🎫 User has valid auth token and is registered, marking as authenticated");
+      setIsAuthenticated(true);
+    } else if (!status.canLoginWithWallet || !existingToken) {
+      console.log("🚫 User not authenticated or no valid token found");
+      setIsAuthenticated(false);
     }
 
-    setIsValidating(true);
-    setInvitationError("");
-
-    const result = await validateReferralCode(code);
-
-    setIsValidating(false);
-
-    if (result.isValid) {
-      setHasValidInvitation(true);
-      setInvitationError("");
-      setValidatedInvitationCode(code);
-      setInvitationCode("");
-      localStorage.setItem("waffle_referral_code", code);
-      console.log("Valid referral code:", result.data);
-    } else {
-      setInvitationError(result.error || "Invalid referral code. Please try again.");
-    }
-  };
-
-  const handleConnectTwitterClick = () => {
-    if (!hasValidInvitation) {
-      setIsInvitationDrawerOpen(true);
-    }
-  };
-
-  const handleDrawerClose = () => {
-    setIsInvitationDrawerOpen(false);
-    setInvitationCode("");
-    setInvitationError("");
-  };
-
-  const handleDisconnect = () => {
-    disconnect();
-
-    localStorage.removeItem("waffle_wallet_address");
-    localStorage.removeItem("waffle_referral_code");
-    setHasValidInvitation(false);
-    setValidatedInvitationCode("");
+    setLastCheckedAddress(address);
   };
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && address !== lastCheckedAddress) {
+      if (lastCheckedAddress && address !== lastCheckedAddress) {
+        console.log("🔄 Address changed, clearing previous user data");
+        setTwitterUser(null);
+        setAuthStatus(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem("waffle_auth_token");
+      }
+
       localStorage.setItem("waffle_wallet_address", address);
-    } else {
+
+      console.log("🔍 Checking auth status for address:", address);
+
+      const existingToken = localStorage.getItem("waffle_auth_token");
+      if (existingToken) {
+        console.log("🎫 Found existing auth token, user is already authenticated");
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+
+      checkAuthStatus(address).then((status) => {
+        console.log("📊 Auth status result:", status);
+        setAuthStatus(status);
+
+        if (status.isRegistered && status.canLoginWithWallet && existingToken) {
+          console.log("✅ User is registered with valid token, marking as authenticated");
+          setIsAuthenticated(true);
+        } else if (!status.canLoginWithWallet || !existingToken) {
+          console.log("❌ User not authenticated or no valid token");
+          setIsAuthenticated(false);
+        }
+      });
+      setLastCheckedAddress(address);
+    } else if (!isConnected) {
       localStorage.removeItem("waffle_wallet_address");
+      setAuthStatus(null);
+      setLastCheckedAddress(null);
+      setIsAuthenticated(false);
+      setTwitterUser(null);
+      console.log("🚪 Wallet disconnected, cleared all states");
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, lastCheckedAddress]);
 
   useEffect(() => {
-    const storedReferralCode = localStorage.getItem("waffle_referral_code");
-    if (storedReferralCode) {
-      // Validate stored referral code on mount
-      validateReferralCode(storedReferralCode)
-        .then((result) => {
-          if (result.isValid) {
-            setHasValidInvitation(true);
-            setValidatedInvitationCode(storedReferralCode);
-            console.log("Stored referral code is valid:", result.data);
-          } else {
-            // Remove invalid stored code
-            localStorage.removeItem("waffle_referral_code");
-            setHasValidInvitation(false);
-            setValidatedInvitationCode("");
-            console.log("Stored referral code is invalid, removed from storage");
-          }
-        })
-        .catch((error) => {
-          console.error("Error validating stored referral code:", error);
-          // Keep the stored code but don't mark as valid
-          setValidatedInvitationCode(storedReferralCode);
-        });
+    const existingToken = localStorage.getItem("waffle_auth_token");
+    if (existingToken) {
+      console.log("🎫 Found existing auth token on mount");
+      setIsAuthenticated(true);
     }
   }, []);
 
-  const getTwitterAuthUrl = () => {
-    const storedAddress = localStorage.getItem("waffle_wallet_address") || address || "";
-    const storedReferralCode =
-      localStorage.getItem("waffle_referral_code") || validatedInvitationCode;
-    return `/auth/twitter?address=${encodeURIComponent(
-      storedAddress
-    )}&referralCode=${encodeURIComponent(storedReferralCode)}`;
-  };
+  useEffect(() => {
+    const handleTwitterRegistrationSuccess = () => {
+      console.log("🎉 Twitter registration completed, refreshing auth status");
+      refreshAuthStatus();
+    };
+
+    window.addEventListener("twitterRegistrationSuccess", handleTwitterRegistrationSuccess);
+
+    const handleWindowFocus = () => {
+      if (authStatus?.needsTwitterRegistration && address) {
+        console.log("👀 Window focused, checking if Twitter registration completed");
+        setTimeout(() => {
+          refreshAuthStatus();
+        }, 1000);
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      window.removeEventListener("twitterRegistrationSuccess", handleTwitterRegistrationSuccess);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [authStatus?.needsTwitterRegistration, address]);
+
+  useEffect(() => {
+    if (twitterUser && authStatus?.needsTwitterRegistration && address) {
+      console.log("🎯 Twitter user updated after registration, refreshing auth status");
+      refreshAuthStatus();
+    }
+  }, [twitterUser, authStatus?.needsTwitterRegistration, address]);
 
   useEffect(() => {
     if (isConnected && chain?.id !== FIXED_CHAIN) {
@@ -175,309 +243,266 @@ export function ConnectWalletXellar() {
   }, [chain]);
 
   return (
-    <ConnectButton.Custom>
-      {() => (
-        <div>
-          {(() => {
-            if (!isConnected) {
-              return (
-                <ButtonMagnet onClick={openModalXellar} className="w-full sm:w-auto">
-                  Connect Wallet
-                </ButtonMagnet>
-              );
-            }
+    <>
+      <ConnectButton.Custom>
+        {() => (
+          <div>
+            {(() => {
+              if (!isConnected) {
+                return (
+                  <ButtonMagnet onClick={openModalXellar} className="w-full sm:w-auto">
+                    Connect Wallet
+                  </ButtonMagnet>
+                );
+              }
 
-            if (isWrongNetwork) {
-              return (
-                <ButtonMagnet className="w-full sm:max-w-xs">
-                  <div className="flex flex-row items-center gap-2">
-                    <RefreshCcw className="size-5" />
-                    <span className="text-sm">Switch Network</span>
-                  </div>
-                </ButtonMagnet>
-              );
-            }
-
-            return (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div>
-                      <ButtonMagnet>
-                        <div className="flex flex-row items-center gap-4">
-                          {isWrongNetwork ? (
-                            "Wrong Network"
-                          ) : (
-                            <>
-                              {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                              <ChevronDown className="size-4 transition-transform" />
-                            </>
-                          )}
-                        </div>
-                      </ButtonMagnet>
+              if (isWrongNetwork) {
+                return (
+                  <ButtonMagnet className="w-full sm:max-w-xs">
+                    <div className="flex flex-row items-center gap-2">
+                      <RefreshCcw className="size-5" />
+                      <span className="text-sm">Switch Network</span>
                     </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="w-48 z-[100002]">
-                    {isWrongNetwork && (
-                      <DropdownMenuItem className="py-4">
-                        Change Network
-                        <DropdownMenuShortcut>
-                          <RefreshCcw className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    )}
-                    <NavLink to="/">
-                      <DropdownMenuItem className="py-4">
-                        Home
-                        <DropdownMenuShortcut>
-                          <House className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </NavLink>
-                    <NavLink to="/categories">
-                      <DropdownMenuItem className="py-4">
-                        Categories
-                        <DropdownMenuShortcut>
-                          <Hash className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </NavLink>
+                  </ButtonMagnet>
+                );
+              }
 
-                    <NavLink to="/leaderboard">
-                      <DropdownMenuItem className="py-4">
-                        Leaderboards
-                        <DropdownMenuShortcut>
-                          <Award className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </NavLink>
+              if (authStatus?.canLoginWithWallet && !isAuthenticated) {
+                console.log(
+                  "🔵 Rendering Sign to Login button - canLogin:",
+                  authStatus?.canLoginWithWallet,
+                  "isAuth:",
+                  isAuthenticated
+                );
+                return (
+                  <ButtonMagnet
+                    onClick={handleWalletLogin}
+                    className="w-full sm:w-auto"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing..." : "Sign to Login"}
+                  </ButtonMagnet>
+                );
+              }
 
-                    <NavLink to="/badges">
-                      <DropdownMenuItem className="py-4">
-                        Badges
-                        <DropdownMenuShortcut>
-                          <BadgeCheck className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </NavLink>
+              console.log(
+                "🟢 Rendering dropdown menu - canLogin:",
+                authStatus?.canLoginWithWallet,
+                "isAuth:",
+                isAuthenticated,
+                "authStatus:",
+                authStatus
+              );
 
-                    {twitterUser && (
-                      <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
-                        <DropdownMenuItem className="py-4">
+              return (
+                <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div>
+                        <ButtonMagnet>
+                          <div className="flex flex-row items-center gap-4">
+                            {isWrongNetwork ? (
+                              "Wrong Network"
+                            ) : (
+                              <>
+                                {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                <ChevronDown className="size-4 transition-transform" />
+                              </>
+                            )}
+                          </div>
+                        </ButtonMagnet>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="w-48 z-[100002]">
+                      {isWrongNetwork && (
+                        <DropdownMenuItem className="py-4 cursor-pointer">
+                          Change Network
+                          <DropdownMenuShortcut>
+                            <RefreshCcw className="size-5" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      )}
+
+                      {authStatus?.canLoginWithWallet && !isAuthenticated && (
+                        <DropdownMenuItem
+                          className="py-4 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 cursor-pointer"
+                          onClick={handleWalletLogin}
+                          disabled={isLoading}
+                        >
                           <div className="flex flex-col">
-                            <span className="text-sm">My Profile</span>
-                            <span className="text-xs text-muted-foreground">
-                              @{twitterUser?.screen_name}
+                            <span className="text-sm font-medium">
+                              {isLoading ? "Signing..." : "Sign to Login"}
+                            </span>
+                            <span className="text-xs text-blue-600">
+                              Quick access with wallet signature
                             </span>
                           </div>
                           <DropdownMenuShortcut>
-                            <User className="size-5" />
+                            <User className="size-4 text-blue-600" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      )}
+
+                      <NavLink to="/">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
+                          Home
+                          <DropdownMenuShortcut>
+                            <House className="size-5" />
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
                       </NavLink>
-                    )}
+                      <NavLink to="/categories">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
+                          Categories
+                          <DropdownMenuShortcut>
+                            <Hash className="size-5" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </NavLink>
 
-                    {!twitterUser && (
-                      <DropdownMenuItem className="py-4 opacity-50 cursor-not-allowed" disabled>
-                        <div className="flex flex-col">
-                          <span className="text-sm">My Profile</span>
-                          <span className="text-xs text-muted-foreground">
-                            Connect Twitter first ↓
-                          </span>
-                        </div>
-                        <DropdownMenuShortcut>
-                          <User className="size-5" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    )}
+                      <NavLink to="/leaderboard">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
+                          Leaderboards
+                          <DropdownMenuShortcut>
+                            <Award className="size-5" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </NavLink>
 
-                    {!twitterUser && !hasValidInvitation && (
-                      <DropdownMenuItem
-                        className="py-4 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800"
-                        onClick={handleConnectTwitterClick}
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">Connect Twitter</span>
-                          <span className="text-xs text-orange-600">
-                            Required for profile access
-                          </span>
-                        </div>
-                        <DropdownMenuShortcut>
-                          <Twitter className="size-4 text-orange-600" />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    )}
+                      <NavLink to="/badges">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
+                          Badges
+                          <DropdownMenuShortcut>
+                            <BadgeCheck className="size-5" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </NavLink>
 
-                    {!twitterUser && hasValidInvitation && (
-                      <NavLink to={getTwitterAuthUrl()}>
-                        <DropdownMenuItem className="py-4 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800">
+                      {twitterUser ? (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="py-4">
+                            My Profile
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-[200px]">
+                              <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  @{twitterUser.screen_name}
+                                  <IconX />
+                                </DropdownMenuItem>
+                              </NavLink>
+                              <NavLink to={`/profile/w/${address}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                  <Wallet className="size-4" />
+                                </DropdownMenuItem>
+                              </NavLink>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                      ) : authStatus?.username ? (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="py-4">
+                            My Profile
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-[200px]">
+                              <NavLink to={`/profile/x/${authStatus.username}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  @{authStatus.username}
+                                  <IconX />
+                                </DropdownMenuItem>
+                              </NavLink>
+                              <NavLink to={`/profile/w/${address}`}>
+                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                  <Wallet className="size-4" />
+                                </DropdownMenuItem>
+                              </NavLink>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                      ) : null}
+
+                      {authStatus?.needsTwitterRegistration && (
+                        <DropdownMenuItem
+                          className="py-4 bg-red-50 border border-red-200 hover:bg-red-100 text-red-800 cursor-pointer"
+                          onClick={() => {
+                            connectXRef.current?.handleConnectTwitterClick();
+                          }}
+                        >
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium">Connect Twitter</span>
-                            <span className="text-xs text-orange-600">
-                              Required for profile access
+                            <span className="text-sm font-medium">⚠️ Connect Twitter</span>
+                            <span className="text-xs text-red-600">
+                              Required for wallet registration
                             </span>
                           </div>
                           <DropdownMenuShortcut>
-                            <Twitter className="size-4 text-orange-600" />
+                            <Twitter className="size-4 text-red-600" />
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
-                      </NavLink>
-                    )}
+                      )}
 
-                    {twitterUser && (
-                      <Form action="/auth/logout" method="post">
-                        <DropdownMenuItem className="py-4" asChild>
-                          <button type="submit" className="w-full text-left">
-                            [DEV] Logout Twitter
-                            <DropdownMenuShortcut>
-                              <LogOut className="size-4" />
-                            </DropdownMenuShortcut>
-                          </button>
-                        </DropdownMenuItem>
-                      </Form>
-                    )}
-
-                    <DropdownMenuItem className="py-4" onClick={handleDisconnect}>
-                      Disconnect Wallet
-                      <DropdownMenuShortcut>
-                        <LogOut className="size-5" />
-                      </DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Drawer open={isInvitationDrawerOpen} onOpenChange={handleDrawerClose}>
-                  <DrawerContent className="min-h-[50vh] max-h-[80vh]">
-                    <div className="flex flex-col h-full">
-                      <DrawerHeader className="text-center flex-shrink-0">
-                        <DrawerTitle className="text-xl font-semibold">
-                          {hasValidInvitation ? "Connect Your Twitter" : "Invitation Required"}
-                        </DrawerTitle>
-                        <DrawerDescription className="text-base mt-2">
-                          {hasValidInvitation
-                            ? "Great! Now you can connect your Twitter account to access full features. Registration will complete automatically."
-                            : "You need a valid invitation code to access full features and connect your Twitter account."}
-                        </DrawerDescription>
-                      </DrawerHeader>
-
-                      <div className="flex-1 flex items-center justify-center px-6 py-8">
-                        <div className="w-full max-w-sm">
-                          {!hasValidInvitation ? (
-                            <form onSubmit={handleInvitationSubmit} className="space-y-6">
-                              <div className="space-y-3">
-                                <label
-                                  htmlFor="invitation-code"
-                                  className="text-sm font-medium block"
-                                >
-                                  Invitation Code
-                                </label>
-                                <Input
-                                  id="invitation-code"
-                                  type="text"
-                                  placeholder="Enter your invitation code"
-                                  value={invitationCode}
-                                  onChange={(e) => {
-                                    setInvitationCode(e.target.value);
-                                    setInvitationError("");
-                                  }}
-                                  className={`h-12 text-center text-lg ${
-                                    invitationError ? "border-red-500" : ""
-                                  }`}
-                                  disabled={isValidating}
-                                  autoFocus
-                                />
-                                {invitationError && (
-                                  <p className="text-sm text-red-500 text-center">
-                                    {invitationError}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="flex gap-3 pt-4">
-                                <ButtonMagnet
-                                  type="submit"
-                                  className="flex-1 h-12"
-                                  disabled={isValidating}
-                                >
-                                  {isValidating ? "Verifying..." : "Verify Code"}
-                                </ButtonMagnet>
-                                <DrawerClose>
-                                  <ButtonMagnet
-                                    type="button"
-                                    className="h-12 px-4"
-                                    disabled={isValidating}
-                                  >
-                                    <X className="size-5" />
-                                  </ButtonMagnet>
-                                </DrawerClose>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="space-y-6 text-center">
-                              <div className="text-green-600 text-lg font-medium">
-                                ✓ Invitation Code Verified!
-                              </div>{" "}
-                              {!twitterUser ? (
-                                <div className="flex gap-3">
-                                  <NavLink to={getTwitterAuthUrl()} className="flex-1">
-                                    <ButtonMagnet className="w-full h-12">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Twitter className="size-5" />
-                                        <span>Connect Twitter</span>
-                                      </div>
-                                    </ButtonMagnet>
-                                  </NavLink>
-                                  <DrawerClose>
-                                    <ButtonMagnet type="button" className="h-12 px-4">
-                                      <X className="size-5" />
-                                    </ButtonMagnet>
-                                  </DrawerClose>
-                                </div>
-                              ) : (
-                                <div className="space-y-4 text-center">
-                                  <div className="text-sm text-muted-foreground">
-                                    Twitter connected! Registration completed automatically.
-                                  </div>
-                                  <DrawerClose>
-                                    <ButtonMagnet className="w-full h-12">Continue</ButtonMagnet>
-                                  </DrawerClose>
-                                </div>
-                              )}
+                      {!authStatus?.needsTwitterRegistration &&
+                        !authStatus?.username &&
+                        !twitterUser && (
+                          <DropdownMenuItem className="py-4 opacity-50 cursor-not-allowed" disabled>
+                            <div className="flex flex-col">
+                              <span className="text-sm">My Profile</span>
+                              <span className="text-xs text-muted-foreground">
+                                No profile data available
+                              </span>
                             </div>
-                          )}
-                        </div>
-                      </div>
+                            <DropdownMenuShortcut>
+                              <User className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        )}
 
-                      <div className="flex-shrink-0 px-6 pb-6 text-center">
-                        <p className="text-xs text-muted-foreground">
-                          {!hasValidInvitation
-                            ? "Need an invitation code? Contact support for access."
-                            : "Registration will complete automatically when you connect Twitter."}
-                        </p>
-                      </div>
+                      {twitterUser && process.env.NODE_ENV !== "production" && (
+                        <Form action="/auth/logout" method="post">
+                          <DropdownMenuItem className="py-4 cursor-pointer" asChild>
+                            <button type="submit" className="w-full text-left">
+                              [DEV] Logout Twitter
+                              <DropdownMenuShortcut>
+                                <LogOut className="size-4" />
+                              </DropdownMenuShortcut>
+                            </button>
+                          </DropdownMenuItem>
+                        </Form>
+                      )}
+
+                      <DropdownMenuItem className="py-4 cursor-pointer" onClick={handleDisconnect}>
+                        Disconnect Wallet
+                        <DropdownMenuShortcut>
+                          <LogOut className="size-5" />
+                        </DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Alternative simple button (commented out for reference)
+                  <ButtonMagnet className="w-full sm:max-w-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+                      <span className="text-sm truncate">
+                        <span className="hidden sm:inline">
+                          {chain?.name} ~ {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                        </span>
+                        <span className="inline sm:hidden">
+                          {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                        </span>
+                      </span>
                     </div>
-                  </DrawerContent>
-                </Drawer>
+                  </ButtonMagnet>
+                  */}
+                </>
+              );
+            })()}
+          </div>
+        )}
+      </ConnectButton.Custom>
 
-                {/* Alternative simple button (commented out for reference)
-                <ButtonMagnet className="w-full sm:max-w-xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
-                    <span className="text-sm truncate">
-                      <span className="hidden sm:inline">
-                        {chain?.name} ~ {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                      </span>
-                      <span className="inline sm:hidden">
-                        {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                      </span>
-                    </span>
-                  </div>
-                </ButtonMagnet>
-                */}
-              </>
-            );
-          })()}
-        </div>
-      )}
-    </ConnectButton.Custom>
+      <ConnectTwitter ref={connectXRef} address={address!!} twitterUser={twitterUser} />
+    </>
   );
 }

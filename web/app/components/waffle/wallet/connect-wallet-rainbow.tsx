@@ -30,18 +30,33 @@ import { useWaffleProvider } from "../waffle-provider";
 export function ConnectWalletRainbow() {
   const { isConnected, chain, address } = useAccount();
   const { disconnect } = useDisconnect();
-  const { twitterUser } = useWaffleProvider();
+  const { twitterUser, setTwitterUser } = useWaffleProvider();
 
   const connectXRef = useRef<ConnectTwitterRef>(null);
   const [dropdownOpenControl, setDropdownOpenControl] = useState(false);
 
-  const handleDisconnect = () => {
-    disconnect();
+  const handleDisconnect = async () => {
+    try {
+      disconnect();
 
-    localStorage.removeItem("waffle_wallet_address");
-    localStorage.removeItem("waffle_referral_code");
-    // setHasValidInvitation(false);
-    // setValidatedInvitationCode("");
+      await fetch("/auth/logout", { method: "POST" });
+
+      localStorage.removeItem("waffle_wallet_address");
+      localStorage.removeItem("waffle_referral_code");
+      localStorage.removeItem("waffle_auth_token");
+
+      setTwitterUser(null);
+
+      console.log("🚪 Rainbow wallet disconnected and cleared all states");
+    } catch (error) {
+      console.error("Error during Rainbow disconnect:", error);
+
+      disconnect();
+      localStorage.removeItem("waffle_wallet_address");
+      localStorage.removeItem("waffle_referral_code");
+      localStorage.removeItem("waffle_auth_token");
+      setTwitterUser(null);
+    }
   };
 
   useEffect(() => {
@@ -49,8 +64,10 @@ export function ConnectWalletRainbow() {
       localStorage.setItem("waffle_wallet_address", address);
     } else {
       localStorage.removeItem("waffle_wallet_address");
+      setTwitterUser(null);
+      console.log("🚪 Rainbow wallet auto-disconnected, cleared states");
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, setTwitterUser]);
 
   return (
     <>

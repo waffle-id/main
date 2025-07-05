@@ -21,6 +21,7 @@ import "./assets/styles/index.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { XellarKitProvider } from "@xellar/kit";
 import { WaffleProvider } from "./components/waffle/waffle-provider";
+import { Toaster } from "sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,6 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans">
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>

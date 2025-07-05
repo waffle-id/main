@@ -18,6 +18,12 @@ export default [
     route("/auth/twitter/callback", "routes/auth/twitter/callback.tsx"),
     route("/auth/logout", "routes/auth/logout.tsx"),
 
+    /* ------------------------------ API routes ----------------------------- */
+    route("/api/auth/check-user", "routes/api/auth/check-user.ts"),
+    route("/api/auth/nonce", "routes/api/auth/nonce.ts"),
+    route("/api/auth/login", "routes/api/auth/login.ts"),
+    route("/api/auth/register", "routes/api/auth/register.ts"),
+
     /* ------------------------ Debug/Development routes ------------------------ */
     route("/debug/env", "routes/debug/env.tsx"),
 

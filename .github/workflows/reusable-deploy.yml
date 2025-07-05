@@ -73,6 +73,7 @@ jobs:
       if: inputs.module == 'engine'
       run: |
         sed -i "s|place_mongo_uri|${{ secrets.MONGO_URI }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
+        sed -i "s|place_jwt_secret_here|${{ secrets.JWT_SECRET }}|g" ${{ inputs.nomad-directory }}/${{ inputs.nomad-job }}
 
     - name: Frontend Config Nomad
       if: inputs.module == 'web'

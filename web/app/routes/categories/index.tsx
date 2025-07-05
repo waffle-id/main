@@ -101,7 +101,6 @@ const FALLBACK_CATEGORIES = [
 export default function CategoriesPage() {
   const loaderData = useLoaderData<typeof loader>();
   const { categories: apiCategories } = loaderData;
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   // Use API data if available, otherwise use fallback
   const categories =
@@ -120,16 +119,16 @@ export default function CategoriesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-orange-25 to-orange-50">
       {/* Hero Section */}
-      <div className="relative pt-32 pb-16 px-[20px] lg:px-[50px] overflow-hidden">
+      <div className="relative pt-44 pb-16 px-[20px] lg:px-[50px] overflow-hidden">
         {/* Background Elements */}
-        <div className="absolute inset-0 opacity-10">
+        {/* <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-64 h-64 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
           <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
           <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
-        </div>
+        </div> */}
 
-        <div className="relative z-10 max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-orange-700 font-medium mb-6 border border-orange-200">
+        <div className="relative max-w-7xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-white/80 px-4 py-2 rounded-full text-sm text-orange-700 font-medium mb-6 border border-orange-200">
             <Target className="w-4 h-4" />
             Explore Categories
           </div>
@@ -178,21 +177,19 @@ export default function CategoriesPage() {
                   key={idx}
                   to={`/leaderboard/${category.title.split(" ").join("-").toLowerCase()}`}
                   className="group"
-                  onMouseEnter={() => setHoveredCard(idx)}
-                  onMouseLeave={() => setHoveredCard(null)}
                 >
                   <div
                     className={cn(
                       "relative h-full p-8 rounded-3xl border border-gray-200/50 backdrop-blur-sm transition-all duration-300 overflow-hidden",
-                      "hover:shadow-2xl hover:-translate-y-2 hover:border-gray-300",
-                      category.bgPattern || "bg-gradient-to-br from-gray-50 to-gray-100",
-                      hoveredCard === idx && "scale-105"
+                      "hover:-translate-y-2 hover:border-gray-300",
+                      category.bgPattern || "bg-gradient-to-br from-gray-50 to-gray-100"
+                      // "group-hover:scale-105"
                     )}
                   >
                     {/* Background Gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300",
+                        "absolute inset-0 opacity-0 transition-opacity duration-300",
                         `bg-gradient-to-br ${category.color || "from-gray-400 to-gray-600"}`
                       )}
                     />
@@ -211,8 +208,8 @@ export default function CategoriesPage() {
                       <div
                         className={cn(
                           "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300",
-                          `bg-gradient-to-br ${category.color || "from-gray-400 to-gray-600"}`,
-                          "group-hover:scale-110 group-hover:rotate-3"
+                          `bg-gradient-to-br ${category.color || "from-gray-400 to-gray-600"}`
+                          // "group-hover:scale-110 group-hover:rotate-3"
                         )}
                       >
                         <IconComponent className="w-8 h-8 text-white" />
@@ -236,15 +233,15 @@ export default function CategoriesPage() {
                           {category.participants?.toLocaleString() || "0"} members
                         </div>
 
-                        <div className="flex items-center gap-1 text-orange-600 font-medium text-sm group-hover:gap-2 transition-all duration-300">
+                        <div className="flex items-center gap-1 text-orange-600 font-medium text-sm  transition-all duration-300">
                           Explore
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                          <ArrowRight className="w-4 h-4 transition-transform duration-300" />
                         </div>
                       </div>
                     </div>
 
                     {/* Hover Effect Pattern */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300">
+                    <div className="absolute inset-0 opacity-0 transition-opacity duration-300">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -262,7 +259,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* Call to Action */}
-      <div className="px-[20px] lg:px-[50px] pb-20">
+      <div className="px-[20px] lg:px-[50px] pb-32">
         <div className="max-w-4xl mx-auto text-center bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-gray-200/50">
           <div className="flex justify-center mb-6">
             <div className="p-4 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl">

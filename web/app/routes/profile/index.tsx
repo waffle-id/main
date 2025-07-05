@@ -17,12 +17,7 @@ import {
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 import { ActionScore } from "./shared/action-score";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "~/components/shadcn/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 // import { ContentGiven } from "./shared/content-given";
 import { ContentReceived } from "./shared/content-received";
@@ -38,63 +33,49 @@ import type { Route } from "./+types";
 
 const imageItems = [
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 1,
     c: 4,
     review:
       "This user provided excellent service and was very professional throughout our interaction. Their communication was clear and they delivered exactly what was promised. Would definitely recommend working with them again.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 1,
     c: 1,
     review:
       "Great experience overall! Quick response time and quality work. Very satisfied with the outcome.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 2,
     c: 5,
     review:
       "Professional and reliable. Completed the task efficiently and exceeded my expectations. Highly recommended!",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 3,
     c: 7,
     review:
       "Amazing work quality and attention to detail. Communication was smooth throughout the entire process.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 3,
     c: 3,
     review:
       "Very helpful and knowledgeable. Went above and beyond to ensure everything was perfect. Thank you!",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 4,
     c: 6,
     review:
       "Outstanding service! Quick turnaround time and excellent quality. Will definitely work together again.",
   },
   {
-    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${
-      Math.floor(Math.random() * 100) + 1
-    }`,
+    src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
     r: 5,
     c: 2,
     review:
@@ -128,24 +109,40 @@ interface ScraperProfileData {
   lastScraped: string;
 }
 
-export async function loader({
-  params,
-}: {
-  params: { variant: string; slug: string };
-}) {
+export async function loader({ params }: { params: { variant: string; slug: string } }) {
   const { variant, slug } = params;
 
   if (variant !== "x" && variant !== "w") {
     return redirect("/");
   }
 
-  if (!slug) {
+  if (!slug || !slug.startsWith("0x")) {
     return redirect("/");
+  }
+
+  if (variant === "w" && slug.startsWith("0x")) {
+    const walletUserData: UserProfileData = {
+      address: slug,
+      username: `${slug.slice(0, 6)}...${slug.slice(-4)}`,
+      fullName: `Wallet ${slug.slice(0, 6)}...${slug.slice(-4)}`,
+      bio: "Wallet address profile - connect to see more details",
+      avatarUrl: `https://api.dicebear.com/9.x/identicon/svg?seed=${slug}`,
+      reputationScore: 1000,
+      hasInvitationAuthority: false,
+    };
+
+    return {
+      userData: walletUserData,
+      error: null,
+      needsScraping: false,
+      slug,
+      imagesItemsLoader: imageItems,
+    };
   }
 
   try {
     const response = await fetch(`https://api.waffle.food/account/${slug}`, {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(3000),
     });
 
     if (response.ok) {
@@ -155,12 +152,11 @@ export async function loader({
         error: null,
         needsScraping: false,
         slug,
+        imagesItemsLoader: imageItems,
       };
     }
   } catch (error) {
-    console.log(
-      "Main API failed or timed out, will try scraper API on client..."
-    );
+    console.log("Main API failed or timed out, will try scraper API on client...");
   }
 
   return {
@@ -168,6 +164,7 @@ export async function loader({
     error: null,
     needsScraping: true,
     slug,
+    imagesItemsLoader: imageItems,
   };
 }
 
@@ -179,11 +176,10 @@ export default function Profile() {
     error: initialError,
     needsScraping,
     slug,
+    imagesItemsLoader,
   } = loaderData;
 
-  const [userData, setUserData] = React.useState<UserProfileData | null>(
-    initialUserData
-  );
+  const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
   const [error, setError] = React.useState<string | null>(initialError);
   const [isLoading, setIsLoading] = React.useState(needsScraping);
 
@@ -191,14 +187,18 @@ export default function Profile() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setUserData(initialUserData);
+    setError(initialError);
+    setIsLoading(needsScraping);
+  }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
+
+  useEffect(() => {
     if (!needsScraping) return;
 
     const fetchScrapedData = async () => {
       try {
         setIsLoading(true);
-        const scraperResponse = await fetch(
-          `https://scraper.waffle.food/profile/${slug}`
-        );
+        const scraperResponse = await fetch(`https://scraper.waffle.food/profile/${slug}`);
 
         if (!scraperResponse.ok) {
           throw new Error(`User not found: ${scraperResponse.status}`);
@@ -224,9 +224,7 @@ export default function Profile() {
         setError(null);
       } catch (err) {
         console.error("Error fetching scraped profile:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load user profile"
-        );
+        setError(err instanceof Error ? err.message : "Failed to load user profile");
       } finally {
         setIsLoading(false);
       }
@@ -317,11 +315,8 @@ export default function Profile() {
       </div>
 
       <div className="relative z-0 w-full min-h-screen">
-        <div
-          ref={gridRef}
-          className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32"
-        >
-          {imageItems.map(({ src, review, r, c }, i) => (
+        <div ref={gridRef} className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32">
+          {imagesItemsLoader.map(({ src, review, r, c }, i) => (
             <ImageHoverRevealText
               key={i}
               review={review}
@@ -339,11 +334,7 @@ export default function Profile() {
             >
               <div className="relative aspect-square w-full">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full"></div>
-                <img
-                  src={src}
-                  alt=""
-                  className="grid-item-img relative z-10 aspect-square w-full p-2"
-                />
+                <img src={src} alt="" className="grid-item-img relative aspect-square w-full p-2" />
               </div>
             </ImageHoverRevealText>
           ))}
@@ -366,9 +357,7 @@ export default function Profile() {
                 <CommandLineTypo className="text-3xl font-light">
                   {userData.username}
                 </CommandLineTypo>
-                {userData.fullName && (
-                  <p className="text-lg text-gray-600">{userData.fullName}</p>
-                )}
+                {userData.fullName && <p className="text-lg text-gray-600">{userData.fullName}</p>}
                 {userData.address && (
                   <p className="text-sm text-gray-500">
                     {userData.address.slice(0, 6)}...

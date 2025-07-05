@@ -22,7 +22,7 @@ export default function DefaultLayout() {
 
   useEffect(() => {
     setTwitterUser(user ?? null);
-  }, []);
+  }, [user, setTwitterUser]);
 
   return (
     <div className="overflow-x-hidden">

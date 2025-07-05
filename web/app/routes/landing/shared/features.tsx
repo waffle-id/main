@@ -77,14 +77,6 @@ export function FeaturesBanner() {
         filter="url(#blurFilter)"
         mask="url(#roundedMask)"
       />
-      {/* <rect
-        x="0.5"
-        y="0.5"
-        width="296"
-        height="534"
-        rx="16.5"
-        stroke="url(#paint1_linear_69_221)"
-      /> */}
       <mask
         id="mask0_69_221"
         style={{ maskType: "alpha" }}

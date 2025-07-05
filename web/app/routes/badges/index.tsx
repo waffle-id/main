@@ -4,6 +4,7 @@ import { useLoaderData } from "react-router";
 import { Badge } from "~/components/shadcn/badge";
 import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animation";
 import { Award, Star, Trophy, Target, Users, Zap, Shield, Heart, Crown, Code } from "lucide-react";
+import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 
 export async function loader() {
   try {
@@ -150,7 +151,7 @@ export default function BadgesPage() {
 
         <div className="flex items-center justify-center">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-full blur-3xl opacity-60"></div>
+            {/* <div className="absolute inset-0 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-full opacity-60"></div> */}
             <TextStaticAnimation className="relative z-10 w-[500px] h-[500px]" />
           </div>
         </div>
@@ -185,11 +186,11 @@ export default function BadgesPage() {
           return (
             <div
               key={idx}
-              className="group relative bg-gradient-to-br from-white to-orange-50/30 backdrop-blur-sm rounded-3xl p-8 border-2 border-orange-200/50 shadow-lg hover:shadow-2xl hover:border-orange-300 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+              className="group relative bg-gradient-to-br from-white to-orange-50/30 rounded-3xl p-8 border-2 border-orange-200/50 shadow-lg transition-all duration-500 overflow-hidden"
             >
               {/* Background Effects */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 to-yellow-100/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-300/20 to-yellow-400/20 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700"></div>
+              {/* <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 to-yellow-100/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div> */}
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-300/20 to-yellow-400/20 rounded-full transition-transform duration-700"></div>
 
               {/* Rarity Indicator */}
               <div
@@ -202,12 +203,12 @@ export default function BadgesPage() {
                 {/* Badge Image Container */}
                 <div className="relative group/badge">
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${rarityStyle} rounded-full shadow-lg transition-all duration-500 group-hover/badge:scale-110 group-hover/badge:rotate-12`}
+                    className={`absolute inset-0 bg-gradient-to-br ${rarityStyle} rounded-full shadow-lg`}
                   ></div>
                   <div className="relative bg-white rounded-full p-6 shadow-inner">
                     <img
                       src={badge.images}
-                      className="size-20 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
+                      className="size-20 object-contain"
                       alt={badge.title}
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -233,7 +234,7 @@ export default function BadgesPage() {
 
                 {/* Badge Info */}
                 <div className="text-center space-y-3">
-                  <h3 className="text-2xl font-bold text-gray-800 group-hover:text-orange-600 transition-colors duration-300">
+                  <h3 className="text-2xl font-bold text-gray-800 group-hover:text-orange-600">
                     {badge.title}
                   </h3>
                   <p className="text-gray-600 leading-relaxed">{badge.desc}</p>
@@ -253,15 +254,15 @@ export default function BadgesPage() {
                 </div>
 
                 {/* Earn Button */}
-                <button className="group/btn w-full bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95">
-                  <span className="flex items-center justify-center gap-2">
+                <ButtonMagnet className="w-full">
+                  <div className="flex flex-row items-center justify-center gap-2">
                     <Award className="size-4" />
                     Earn This Badge
                     <span className="text-xs group-hover/btn:translate-x-1 transition-transform duration-300">
                       →
                     </span>
-                  </span>
-                </button>
+                  </div>
+                </ButtonMagnet>
               </div>
             </div>
           );
@@ -269,7 +270,7 @@ export default function BadgesPage() {
       </div>
 
       {/* Call to Action */}
-      <div className="text-center py-16 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-3xl border-2 border-orange-200/50 mb-16">
+      <div className="text-center pt-16 pb-32 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-3xl border-2 border-orange-200/50 mb-16">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex justify-center mb-4">
             <div className="flex -space-x-2">
@@ -288,9 +289,7 @@ export default function BadgesPage() {
             Join the community, contribute meaningfully, and unlock exclusive badges that represent
             your journey in Web3.
           </p>
-          <button className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            Start Your Journey
-          </button>
+          <ButtonMagnet>Start Your Journey</ButtonMagnet>
         </div>
       </div>
     </div>

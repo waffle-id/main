@@ -30,7 +30,133 @@ if (!clientID || !clientSecret) {
   throw new Error("CLIENT_ID and CLIENT_SECRET must be provided");
 }
 
-// Function to register user with backend API
+export async function checkUserExists(address: string): Promise<{
+  exists: boolean;
+  username?: string;
+  address?: string;
+  error?: string;
+}> {
+  try {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Checking if user exists for address:", address);
+    }
+
+    const response = await fetch("https://api.waffle.food/account/check", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ address }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("User check failed:", data);
+      return {
+        exists: false,
+        error: data.message || "Failed to check user",
+      };
+    }
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("User check result:", data);
+    }
+    return {
+      exists: data.success,
+      username: data.username,
+      address: data.address,
+    };
+  } catch (error) {
+    console.error("Error checking user existence:", error);
+    return {
+      exists: false,
+      error: "Network error during user check",
+    };
+  }
+}
+
+export async function getNonce(address: string): Promise<{
+  success: boolean;
+  nonce?: string;
+  error?: string;
+}> {
+  try {
+    console.log("Getting nonce for address:", address);
+
+    const response = await fetch(`https://api.waffle.food/account/nonce/${address}`, {
+      method: "GET",
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to get nonce:", data);
+      return {
+        success: false,
+        error: data.message || "Failed to get nonce",
+      };
+    }
+
+    console.log("Nonce retrieved successfully");
+    return {
+      success: true,
+      nonce: data.nonce,
+    };
+  } catch (error) {
+    console.error("Error getting nonce:", error);
+    return {
+      success: false,
+      error: "Network error getting nonce",
+    };
+  }
+}
+
+export async function loginUserWithWallet(
+  address: string,
+  signature: string
+): Promise<{
+  success: boolean;
+  token?: string;
+  user?: any;
+  error?: string;
+}> {
+  try {
+    console.log("Attempting to login user with wallet signature:", { address });
+
+    const response = await fetch("https://api.waffle.food/account/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ address, signature }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Wallet login failed:", data);
+      return {
+        success: false,
+        error: data.message || "Login failed",
+      };
+    }
+
+    console.log("Wallet login successful:", data);
+    return {
+      success: true,
+      token: data.token,
+      user: data.user,
+    };
+  } catch (error) {
+    console.error("Error during wallet login:", error);
+    return {
+      success: false,
+      error: "Network error during login",
+    };
+  }
+}
+
 export async function registerUserWithBackend(
   user: User,
   address: string,
@@ -83,13 +209,98 @@ export async function registerUserWithBackend(
   }
 }
 
+export async function handleUserAuthentication(
+  twitterUser: {
+    id: number;
+    screen_name: string;
+    name: string;
+    profile_image_url: string;
+  },
+  address: string,
+  referralCode?: string
+): Promise<{
+  success: boolean;
+  user?: User;
+  token?: string;
+  error?: string;
+  requiresTwitterRegistration?: boolean;
+}> {
+  try {
+    const userCheck = await checkUserExists(address);
+
+    if (userCheck.error) {
+      return {
+        success: false,
+        error: userCheck.error,
+      };
+    }
+
+    if (userCheck.exists && userCheck.username) {
+      console.log("User exists, attempting direct login");
+
+      return {
+        success: true,
+        user: {
+          id: twitterUser.id,
+          screen_name: twitterUser.screen_name,
+          name: twitterUser.name,
+          profile_image_url: twitterUser.profile_image_url,
+          address: address,
+          isRegistered: true,
+        },
+      };
+    }
+
+    if (!referralCode) {
+      return {
+        success: false,
+        error: "Referral code is required for new user registration",
+        requiresTwitterRegistration: true,
+      };
+    }
+
+    console.log("User doesn't exist, proceeding with registration");
+
+    const registrationResult = await registerUserWithBackend(twitterUser, address, referralCode);
+
+    if (!registrationResult.success) {
+      return {
+        success: false,
+        error: registrationResult.error,
+        requiresTwitterRegistration: true,
+      };
+    }
+
+    return {
+      success: true,
+      token: registrationResult.token,
+      user: {
+        id: twitterUser.id,
+        screen_name: twitterUser.screen_name,
+        name: twitterUser.name,
+        profile_image_url: twitterUser.profile_image_url,
+        address: address,
+        isRegistered: true,
+      },
+    };
+  } catch (error) {
+    console.error("Error in user authentication flow:", error);
+    return {
+      success: false,
+      error: "Authentication flow failed",
+    };
+  }
+}
+
 authenticator.use(
   new Twitter2Strategy(
     {
       clientID: clientID,
       clientSecret: clientSecret,
-      callbackURL: "http://127.0.0.1:5173/auth/twitter/callback",
-      // callbackURL: "https://waffle.food/auth/twitter/callback",
+      callbackURL:
+        process.env.NODE_ENV === "production"
+          ? "https://waffle.food/auth/twitter/callback"
+          : "http://127.0.0.1:5173/auth/twitter/callback",
       scopes: ["users.read", "tweet.read"],
     },
     async ({ request, tokens }) => {
@@ -152,7 +363,7 @@ authenticator.use(
           throw new Error("Wallet address and referral code are required for registration");
         }
 
-        const registrationResult = await registerUserWithBackend(
+        const authResult = await handleUserAuthentication(
           {
             id: Number(id),
             screen_name: username,
@@ -163,20 +374,13 @@ authenticator.use(
           referralCode
         );
 
-        if (!registrationResult.success) {
-          throw new Error(registrationResult.error || "Backend registration failed");
+        if (!authResult.success) {
+          throw new Error(authResult.error || "Authentication failed");
         }
 
-        console.log("Backend registration successful");
+        console.log("User authentication successful");
 
-        return {
-          id: Number(id),
-          screen_name: username,
-          name: result.data.name,
-          profile_image_url: result.data.profile_image_url?.replace("_normal", "") ?? "",
-          address: address,
-          isRegistered: true,
-        };
+        return authResult.user!;
       } catch (error) {
         console.error("Error in Twitter2Strategy verify function:", error);
         throw error;

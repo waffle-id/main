@@ -17,7 +17,7 @@ export function ProfileSkeleton() {
           {Array.from({ length: 7 }).map((_, i) => (
             <div
               key={i}
-              className="bg-gray-300 animate-pulse aspect-square rounded-lg"
+              className="bg-gray-300 animate-pulse aspect-square rounded-full"
               style={{
                 gridRow: Math.floor(i / 2) + 1,
                 gridColumn: (i % 8) + 1,

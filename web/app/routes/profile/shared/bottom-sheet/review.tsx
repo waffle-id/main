@@ -1,5 +1,6 @@
 import { PencilRuler } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "~/components/shadcn/button";
 import {
   Drawer,
@@ -11,7 +12,7 @@ import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { Client } from "@gradio/client";
-import { useEffect } from "react";
+import {  } from "react";
 import { useWriteContract } from "wagmi";
 import { ABI } from "~/constants/ABI";
 import { CA } from "~/constants/CA";
@@ -60,6 +61,10 @@ const sentimentScores: Record<Sentiment, number> = {
 export default function Review({ user }: ReviewProps) {
   let client: Client | null = null;
   const { writeContractAsync, isPending } = useWriteContract();
+const RATE = ["neutral", "negative", "positive"] as const;
+type RateType = (typeof RATE)[number];
+
+export default function Review() {
   const [isOpen, setIsOpen] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [title, setTitle] = useState("");
@@ -162,6 +167,23 @@ export default function Review({ user }: ReviewProps) {
     return () => clearTimeout(timeout); // Cleanup on each change
   }, [title, description]);
 
+  const [formData, setFormData] = useState<{
+    title: string;
+    desc: string;
+    rate: RateType;
+  }>({
+    title: "",
+    desc: "",
+    rate: "neutral",
+  });
+
+  function handlSubmit() {
+    if (formData.title == "" && formData.desc == "") {
+      toast.error("Fill all the field!");
+    } else {
+    }
+  }
+
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <ButtonMagnet className="px-8 py-2" onClick={() => setIsOpen(true)}>
@@ -180,38 +202,35 @@ export default function Review({ user }: ReviewProps) {
           </DrawerHeader>
 
           <div className="flex flex-row items-center gap-4 w-full">
-            {/* <Button className="text-red-500 border-re" variant="outline">Negative</Button> */}
             <ButtonMagnet
               color="red"
-              className={`w-full ${
-                sentiment === "negative"
-                  ? "bg-red-500 text-white hover:text-white"
-                  : ""
-              }`}
-              onClick={() => setSentiment("negative")}
+              className="w-full"
+              onClick={() =>
+                setFormData((prev) => {
+                  return { ...prev, rate: "negative" };
+                })
+              }
             >
               Negative
             </ButtonMagnet>
-
             <ButtonMagnet
-              className={`w-full ${
-                sentiment === "neutral"
-                  ? "bg-yellow-500 text-white hover:text-white"
-                  : "w-full"
-              }`}
-              onClick={() => setSentiment("neutral")}
+              className="w-full"
+              onClick={() =>
+                setFormData((prev) => {
+                  return { ...prev, rate: "negative" };
+                })
+              }
             >
               Neutral
             </ButtonMagnet>
-
             <ButtonMagnet
+              className="w-full"
               color="green"
-              className={`w-full ${
-                sentiment === "positive"
-                  ? "bg-green-500 text-white hover:text-white"
-                  : ""
-              }`}
-              onClick={() => setSentiment("positive")}
+              onClick={() =>
+                setFormData((prev) => {
+                  return { ...prev, rate: "negative" };
+                })
+              }
             >
               Positive
             </ButtonMagnet>
@@ -223,14 +242,12 @@ export default function Review({ user }: ReviewProps) {
               placeholder="Title"
               className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              // value={form.from}
-              // onChange={(e) =>
-              //   setForm((prev) => {
-              //     return { ...prev, from: e.target.value };
-              //   })
-              // }
+              value={formData.title}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return { ...prev, title: formData.title };
+                })
+              }
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -238,39 +255,16 @@ export default function Review({ user }: ReviewProps) {
             <Textarea
               placeholder="Description"
               className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              // value={form.message}
-              // onChange={(e) =>
-              //   setForm((prev) => {
-              //     return { ...prev, message: e.target.value };
-              //   })
-              // }
+              value={formData.desc}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return { ...prev, title: formData.desc };
+                })
+              }
             />
           </div>
 
-          {qualityLevel && (
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  qualityLevel === "low"
-                    ? "bg-red-500"
-                    : qualityLevel === "medium"
-                    ? "bg-yellow-400"
-                    : "bg-green-500"
-                }`}
-              />
-              <span className="text-sm text-black/70 capitalize">
-                {qualityLevel} quality
-              </span>
-            </div>
-          )}
-
-          <ButtonMagnet
-            disabled={!isFormValid}
-            className="self-center w-max px-16"
-            onClick={handleSubmit}
-          >
+          <ButtonMagnet className="self-center w-max px-16" onClick={handlSubmit}>
             Submit
           </ButtonMagnet>
         </div>

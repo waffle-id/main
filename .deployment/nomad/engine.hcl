@@ -7,6 +7,8 @@ variables {
   build_number  = "run_number"
   mode          = "mode_env"
   mongo_uri     = "place_mongo_uri"
+  jwt_secret    = "place_jwt_secret_here"
+  jwt_expiry    = "12h"
 }
 
 job "job-waffle-engine-prod" {
@@ -45,6 +47,8 @@ job "job-waffle-engine-prod" {
         MODE    = "${var.mode}"
         BUILD_NUMBER = "${var.build_number}"
         MONGO_URI = "${var.mongo_uri}"
+        JWT_SECRET = "${var.jwt_secret}"
+        JWT_EXPIRY = "${var.jwt_expiry}"
       }
 
       driver = "docker"

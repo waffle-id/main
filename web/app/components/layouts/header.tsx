@@ -48,7 +48,7 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
   return (
     <div
       className={cn(
-        "absolute lg:fixed left-0 w-full py-6 px-4 sm:px-6 md:px-10 z-[100001] rounded-b-lg transition-all duration-300",
+        "absolute lg:fixed left-0 w-full py-6 px-4 sm:px-6 md:px-10 z-50 rounded-b-lg transition-all duration-300",
         scrolling && "backdrop-blur-md bg-white/80 border-b border-orange-200/50 shadow-sm",
         className
       )}

@@ -9,6 +9,7 @@ import type { Route } from "./+types";
 import { Separator } from "~/components/waffle/separator";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
+import { BadgeCheck } from "lucide-react";
 // import { PodiumLeaderboards } from "~/components/waffle/podium";
 
 export function meta({}: Route.MetaArgs) {
@@ -43,7 +44,7 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="px-[20px] lg:px-[50px] h-screen">
+      <div className="px-[20px] lg:px-[50px] min-h-screen">
         <div className="relative grid grid-cols-3 gap-x-12 items-center">
           <GradientBG className="absolute h-3/5 -left-96 blur-lg" />
           <p className="text-8xl text-yelight-dark">
@@ -88,13 +89,16 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="px-[20px] lg:px-[50px]">
+      <div className="px-[20px] lg:px-[50px] min-h-screen">
         <div className="relative grid grid-cols-2">
           <GradientBG className="absolute h-96 -left-40 blur-lg" />
           <div className="flex flex-col items-center justify-center gap-16">
-            <div className="flex flex-col items-center gap-6 rounded-lg backdrop-blur-lg bg-linear-170 from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86] h-max w-1/2 px-8 py-4">
-              <img src="/icons/users.svg" alt="build reputation" className="size-24" />
-              <p className="text-gray-dark text-xl">Build a reputation that you own</p>
+            <div className="relative w-1/2 h-max px-8 py-4 rounded-lg overflow-hidden">
+              <div className="absolute inset-0 z-0 blur-2xl opacity-60 bg-gradient-to-br from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86]" />
+              <div className="relative z-10 flex flex-col items-center gap-6">
+                <BadgeCheck className="size-24" />
+                <p className="text-gray-dark text-xl">Build a reputation that you own</p>
+              </div>
             </div>
             <div className="relative w-1/2 h-max px-8 py-4 rounded-lg overflow-hidden">
               <div className="absolute inset-0 z-0 blur-2xl opacity-60 bg-gradient-to-br from-[#FFF7F1] via-[#FFF7F1] to-[#FFDD86]" />
