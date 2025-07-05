@@ -35,9 +35,7 @@
     "docsify-cli": "^4.4.4",
     "http-server": "^14.1.1",
     "gh-pages": "^6.1.1",
-    "markdownlint-cli": "^0.39.0"
-  },
-  "optionalDependencies": {
+    "markdownlint-cli": "^0.39.0",
     "gitbook-cli": "^2.3.2"
   },
   "engines": {
