@@ -427,7 +427,7 @@ export default function Profile() {
             </TabsList>
             <TabsContent value={TABS[0]} className="flex flex-col gap-10">
               {/* @ts-ignore */}
-              <ContentGiven listData={userReview.reviews} />
+              <ContentGiven listData={userReview ? userReview.reviews : []} />
             </TabsContent>
             <TabsContent value={TABS[1]} className="flex flex-col gap-10">
               <ContentReceived />
