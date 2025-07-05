@@ -9,3 +9,5 @@ README.md
 database.sqlite
 database.sqlite-shm
 database.sqlite-wal
+bun.lock.old
+package-lock.json

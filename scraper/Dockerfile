@@ -45,10 +45,10 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/*
 
 # Copy package files
-COPY package.json bun.lock ./
+COPY package.json ./
 
-# Install dependencies
-RUN bun install --frozen-lockfile
+# Install dependencies (regenerate lockfile to exclude better-sqlite3)
+RUN bun install
 
 COPY . .
 
