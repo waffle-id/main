@@ -82,10 +82,7 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
         (error as any).statusCode = 404;
         throw error;
       }
-      let existingPersonaScore = await findByUsernameAndPersonaName(
-        revieweeUsername,
-        persona.name
-      );
+      let existingPersonaScore = await findByUsernameAndPersonaName(revieweeUsername, persona.name);
       if (!existingPersonaScore) {
         existingPersonaScore = await createPersonaScore({
           username: revieweeUsername,
@@ -94,8 +91,7 @@ router.post("/:revieweeUsername", authMiddleware, async (req, res, next) => {
         });
       }
       existingPersonaScore.score =
-        (existingPersonaScore.score as any) +
-        (baseScore * persona.weight) / 100;
+        (existingPersonaScore.score as any) + (baseScore * persona.weight) / 100;
       await updatePersonaScore(existingPersonaScore);
     }
     res.status(201).json({
@@ -113,9 +109,7 @@ router.get("/", async (req, res, next) => {
     const { revieweeUsername, reviewerUsername } = req.query;
 
     if (!revieweeUsername && !reviewerUsername) {
-      const error = Error(
-        "Either revieweeUsername or reviewerUsername is required"
-      );
+      const error = Error("Either revieweeUsername or reviewerUsername is required");
       (error as any).statusCode = 400;
       throw error;
     }

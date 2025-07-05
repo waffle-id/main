@@ -114,7 +114,7 @@ router.post("/login", async (req, res, next) => {
         username: user.username,
       },
       CONFIG.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1w" }
     );
     res.status(200).json({
       token,
@@ -189,7 +189,7 @@ router.post("/register", async (req, res, next) => {
         username: user.username,
       },
       CONFIG.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1w" }
     );
 
     res.status(200).json({
