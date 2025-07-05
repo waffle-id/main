@@ -8,6 +8,7 @@ const ReviewSchema: Schema = new Schema(
     revieweeUsername: { type: String, required: true },
     comment: { type: String, require: true },
     txHash: { type: String, require: true },
+    rating: { type: String, require: true },
   },
   {
     timestamps: true,
