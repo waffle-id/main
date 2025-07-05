@@ -41,7 +41,7 @@ router.get("/:username", async (req, res, next) => {
     }
     const userPersonaScores = await findAllByUsername(username);
     const response = {
-      ...(user.toObject?.() ?? user), // for Mongoose documents
+      ...(user.toObject?.() ?? user),
       userPersonaScores,
     };
 
@@ -222,7 +222,6 @@ router.post("/register-scraper", async (req, res, next) => {
 
     let user;
     if (existingUser != null) {
-      // Update existing user with new scraped data
       const updatedData = {
         ...existingUser,
         fullName: fullName || existingUser.fullName,
@@ -232,7 +231,6 @@ router.post("/register-scraper", async (req, res, next) => {
       user = await update(updatedData);
       console.log(`🔄 Updated existing user: ${username}`);
     } else {
-      // Create new user with scraped data
       user = await create({
         username,
         address: "",

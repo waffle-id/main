@@ -447,6 +447,7 @@ app.post("/profile/:username/avatar-to-db", async (c) => {
 
     const avatarData: TwitterBioAvatar = {
       username,
+      fullName: null,
       bio: null,
       avatarUrl,
       url: `https://x.com/${username}`,
