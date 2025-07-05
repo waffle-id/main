@@ -4,6 +4,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
+RUN npm i -g pm2
 COPY . .
 RUN npm run build-alt
 
@@ -27,5 +28,10 @@ EXPOSE 8080
 # HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 #     CMD curl -f http://localhost:8080/health || exit 1
 
-CMD ["npm", "run", "serve"]
+# CMD ["pm2", "start", "'npm run serve'", "--name", "docs"]
+
+RUN pm2 start "npm run serve" --name docs
+
+CMD sleep infinity
+
 
