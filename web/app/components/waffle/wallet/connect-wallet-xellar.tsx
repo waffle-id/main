@@ -24,30 +24,201 @@ import {
 import { NavLink, Form } from "react-router";
 import { ConnectTwitter, type ConnectTwitterRef } from "./shared/connect-twitter";
 import { useWaffleProvider } from "../waffle-provider";
+import { useWalletAuth } from "~/hooks/useWalletAuth";
 
 export function ConnectWalletXellar() {
   const { isConnected, chain, address } = useAccount();
   const { open: openModalXellar } = useConnectModal();
-  const { twitterUser } = useWaffleProvider();
+  const { twitterUser, setTwitterUser } = useWaffleProvider();
   const { disconnect } = useDisconnect();
+  const { loginWithWallet, checkAuthStatus, isLoading } = useWalletAuth();
 
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
+  const [authStatus, setAuthStatus] = useState<{
+    canLoginWithWallet: boolean;
+    needsTwitterRegistration: boolean;
+    username?: string;
+    isRegistered: boolean;
+  } | null>(null);
+  const [lastCheckedAddress, setLastCheckedAddress] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const connectXRef = useRef<ConnectTwitterRef>(null);
 
-  const handleDisconnect = () => {
-    disconnect();
+  const handleDisconnect = async () => {
+    try {
+      disconnect();
 
-    localStorage.removeItem("waffle_wallet_address");
-    localStorage.removeItem("waffle_referral_code");
+      await fetch("/auth/logout", { method: "POST" });
+
+      localStorage.removeItem("waffle_wallet_address");
+      localStorage.removeItem("waffle_referral_code");
+      localStorage.removeItem("waffle_auth_token");
+
+      setAuthStatus(null);
+      setIsAuthenticated(false);
+      setLastCheckedAddress(null);
+
+      setTwitterUser(null);
+
+      console.log("🚪 Disconnected wallet and cleared session states");
+    } catch (error) {
+      console.error("Error during disconnect:", error);
+
+      disconnect();
+      localStorage.removeItem("waffle_wallet_address");
+      localStorage.removeItem("waffle_referral_code");
+      localStorage.removeItem("waffle_auth_token");
+      setAuthStatus(null);
+      setIsAuthenticated(false);
+      setLastCheckedAddress(null);
+      setTwitterUser(null);
+    }
+  };
+
+  const handleWalletLogin = async () => {
+    if (!address) return;
+
+    console.log("🔐 Starting wallet login for address:", address);
+
+    try {
+      const result = await loginWithWallet(address);
+
+      if (result.success) {
+        console.log("✅ Wallet login successful:", result.user);
+
+        if (result.token) {
+          localStorage.setItem("waffle_auth_token", result.token);
+        }
+
+        setIsAuthenticated(true);
+
+        if (result.user && (result.user as any).username) {
+          console.log("👤 Creating user object from wallet login:", result.user);
+          const userFromAuth = {
+            id: (result.user as any).id || 0,
+            screen_name: (result.user as any).username,
+            name: (result.user as any).username,
+            profile_image_url: "",
+            address: (result.user as any).address,
+            isRegistered: true,
+          };
+          setTwitterUser(userFromAuth);
+        }
+
+        console.log("🔄 Refreshing auth status after successful login");
+        setTimeout(async () => {
+          await refreshAuthStatus();
+        }, 100);
+      } else if (result.needsTwitterRegistration) {
+        console.log("🐦 User needs Twitter registration");
+        connectXRef.current?.handleConnectTwitterClick();
+      } else {
+        console.error("❌ Login failed:", result.error);
+      }
+    } catch (error) {
+      console.error("💥 Wallet login error:", error);
+    }
+  };
+
+  const refreshAuthStatus = async () => {
+    if (!address) return;
+
+    console.log("🔄 Refreshing auth status after state change");
+
+    setLastCheckedAddress(null);
+
+    const status = await checkAuthStatus(address);
+    console.log("📊 Refreshed auth status result:", status);
+    setAuthStatus(status);
+
+    const existingToken = localStorage.getItem("waffle_auth_token");
+    if (status.isRegistered && status.canLoginWithWallet && existingToken) {
+      console.log("🎫 User has valid auth token and is registered, marking as authenticated");
+      setIsAuthenticated(true);
+    } else if (!status.canLoginWithWallet || !existingToken) {
+      console.log("🚫 User not authenticated or no valid token found");
+      setIsAuthenticated(false);
+    }
+
+    setLastCheckedAddress(address);
   };
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && address !== lastCheckedAddress) {
       localStorage.setItem("waffle_wallet_address", address);
-    } else {
+
+      console.log("🔍 Checking auth status for address:", address);
+
+      const existingToken = localStorage.getItem("waffle_auth_token");
+      if (existingToken) {
+        console.log("🎫 Found existing auth token, user is already authenticated");
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+
+      checkAuthStatus(address).then((status) => {
+        console.log("📊 Auth status result:", status);
+        setAuthStatus(status);
+
+        if (status.isRegistered && status.canLoginWithWallet && existingToken) {
+          console.log("✅ User is registered with valid token, marking as authenticated");
+          setIsAuthenticated(true);
+        } else if (!status.canLoginWithWallet || !existingToken) {
+          console.log("❌ User not authenticated or no valid token");
+          setIsAuthenticated(false);
+        }
+      });
+      setLastCheckedAddress(address);
+    } else if (!isConnected) {
       localStorage.removeItem("waffle_wallet_address");
+      setAuthStatus(null);
+      setLastCheckedAddress(null);
+      setIsAuthenticated(false);
+      setTwitterUser(null);
+      console.log("🚪 Wallet disconnected, cleared all states");
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, lastCheckedAddress]);
+
+  useEffect(() => {
+    const existingToken = localStorage.getItem("waffle_auth_token");
+    if (existingToken) {
+      console.log("🎫 Found existing auth token on mount");
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleTwitterRegistrationSuccess = () => {
+      console.log("🎉 Twitter registration completed, refreshing auth status");
+      refreshAuthStatus();
+    };
+
+    window.addEventListener("twitterRegistrationSuccess", handleTwitterRegistrationSuccess);
+
+    const handleWindowFocus = () => {
+      if (authStatus?.needsTwitterRegistration && address) {
+        console.log("👀 Window focused, checking if Twitter registration completed");
+        setTimeout(() => {
+          refreshAuthStatus();
+        }, 1000);
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      window.removeEventListener("twitterRegistrationSuccess", handleTwitterRegistrationSuccess);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [authStatus?.needsTwitterRegistration, address]);
+
+  useEffect(() => {
+    if (twitterUser && authStatus?.needsTwitterRegistration && address) {
+      console.log("🎯 Twitter user updated after registration, refreshing auth status");
+      refreshAuthStatus();
+    }
+  }, [twitterUser, authStatus?.needsTwitterRegistration, address]);
 
   useEffect(() => {
     if (isConnected && chain?.id !== FIXED_CHAIN) {
@@ -82,6 +253,33 @@ export function ConnectWalletXellar() {
                 );
               }
 
+              if (authStatus?.canLoginWithWallet && !isAuthenticated) {
+                console.log(
+                  "🔵 Rendering Sign to Login button - canLogin:",
+                  authStatus?.canLoginWithWallet,
+                  "isAuth:",
+                  isAuthenticated
+                );
+                return (
+                  <ButtonMagnet
+                    onClick={handleWalletLogin}
+                    className="w-full sm:w-auto"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing..." : "Sign to Login"}
+                  </ButtonMagnet>
+                );
+              }
+
+              console.log(
+                "🟢 Rendering dropdown menu - canLogin:",
+                authStatus?.canLoginWithWallet,
+                "isAuth:",
+                isAuthenticated,
+                "authStatus:",
+                authStatus
+              );
+
               return (
                 <>
                   <DropdownMenu>
@@ -103,15 +301,36 @@ export function ConnectWalletXellar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="center" className="w-48 z-[100002]">
                       {isWrongNetwork && (
-                        <DropdownMenuItem className="py-4">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
                           Change Network
                           <DropdownMenuShortcut>
                             <RefreshCcw className="size-5" />
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
                       )}
+
+                      {authStatus?.canLoginWithWallet && !isAuthenticated && (
+                        <DropdownMenuItem
+                          className="py-4 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 cursor-pointer"
+                          onClick={handleWalletLogin}
+                          disabled={isLoading}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">
+                              {isLoading ? "Signing..." : "Sign to Login"}
+                            </span>
+                            <span className="text-xs text-blue-600">
+                              Quick access with wallet signature
+                            </span>
+                          </div>
+                          <DropdownMenuShortcut>
+                            <User className="size-4 text-blue-600" />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      )}
+
                       <NavLink to="/">
-                        <DropdownMenuItem className="py-4">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
                           Home
                           <DropdownMenuShortcut>
                             <House className="size-5" />
@@ -119,7 +338,7 @@ export function ConnectWalletXellar() {
                         </DropdownMenuItem>
                       </NavLink>
                       <NavLink to="/categories">
-                        <DropdownMenuItem className="py-4">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
                           Categories
                           <DropdownMenuShortcut>
                             <Hash className="size-5" />
@@ -128,7 +347,7 @@ export function ConnectWalletXellar() {
                       </NavLink>
 
                       <NavLink to="/leaderboard">
-                        <DropdownMenuItem className="py-4">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
                           Leaderboards
                           <DropdownMenuShortcut>
                             <Award className="size-5" />
@@ -137,7 +356,7 @@ export function ConnectWalletXellar() {
                       </NavLink>
 
                       <NavLink to="/badges">
-                        <DropdownMenuItem className="py-4">
+                        <DropdownMenuItem className="py-4 cursor-pointer">
                           Badges
                           <DropdownMenuShortcut>
                             <BadgeCheck className="size-5" />
@@ -145,13 +364,13 @@ export function ConnectWalletXellar() {
                         </DropdownMenuItem>
                       </NavLink>
 
-                      {twitterUser && (
+                      {twitterUser ? (
                         <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
-                          <DropdownMenuItem className="py-4">
+                          <DropdownMenuItem className="py-4 cursor-pointer">
                             <div className="flex flex-col">
                               <span className="text-sm">My Profile</span>
                               <span className="text-xs text-muted-foreground">
-                                @{twitterUser?.screen_name}
+                                @{twitterUser.screen_name}
                               </span>
                             </div>
                             <DropdownMenuShortcut>
@@ -159,44 +378,60 @@ export function ConnectWalletXellar() {
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
                         </NavLink>
-                      )}
+                      ) : authStatus?.username ? (
+                        <NavLink to={`/profile/x/${authStatus.username}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer">
+                            <div className="flex flex-col">
+                              <span className="text-sm">My Profile</span>
+                              <span className="text-xs text-muted-foreground">
+                                @{authStatus.username}
+                              </span>
+                            </div>
+                            <DropdownMenuShortcut>
+                              <User className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        </NavLink>
+                      ) : null}
 
-                      {!twitterUser && (
-                        <DropdownMenuItem className="py-4 opacity-50 cursor-not-allowed" disabled>
-                          <div className="flex flex-col">
-                            <span className="text-sm">My Profile</span>
-                            <span className="text-xs text-muted-foreground">
-                              Connect Twitter first ↓
-                            </span>
-                          </div>
-                          <DropdownMenuShortcut>
-                            <User className="size-5" />
-                          </DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      )}
-
-                      {!twitterUser && (
+                      {authStatus?.needsTwitterRegistration && (
                         <DropdownMenuItem
-                          className="py-4 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800"
+                          className="py-4 bg-red-50 border border-red-200 hover:bg-red-100 text-red-800 cursor-pointer"
                           onClick={() => {
                             connectXRef.current?.handleConnectTwitterClick();
                           }}
                         >
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium">Connect Twitter</span>
-                            <span className="text-xs text-orange-600">
-                              Required for profile access
+                            <span className="text-sm font-medium">⚠️ Connect Twitter</span>
+                            <span className="text-xs text-red-600">
+                              Required for wallet registration
                             </span>
                           </div>
                           <DropdownMenuShortcut>
-                            <Twitter className="size-4 text-orange-600" />
+                            <Twitter className="size-4 text-red-600" />
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
                       )}
 
-                      {twitterUser && (
+                      {!authStatus?.needsTwitterRegistration &&
+                        !authStatus?.username &&
+                        !twitterUser && (
+                          <DropdownMenuItem className="py-4 opacity-50 cursor-not-allowed" disabled>
+                            <div className="flex flex-col">
+                              <span className="text-sm">My Profile</span>
+                              <span className="text-xs text-muted-foreground">
+                                No profile data available
+                              </span>
+                            </div>
+                            <DropdownMenuShortcut>
+                              <User className="size-5" />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        )}
+
+                      {twitterUser && process.env.NODE_ENV !== "production" && (
                         <Form action="/auth/logout" method="post">
-                          <DropdownMenuItem className="py-4" asChild>
+                          <DropdownMenuItem className="py-4 cursor-pointer" asChild>
                             <button type="submit" className="w-full text-left">
                               [DEV] Logout Twitter
                               <DropdownMenuShortcut>
@@ -207,7 +442,7 @@ export function ConnectWalletXellar() {
                         </Form>
                       )}
 
-                      <DropdownMenuItem className="py-4" onClick={handleDisconnect}>
+                      <DropdownMenuItem className="py-4 cursor-pointer" onClick={handleDisconnect}>
                         Disconnect Wallet
                         <DropdownMenuShortcut>
                           <LogOut className="size-5" />
@@ -237,7 +472,6 @@ export function ConnectWalletXellar() {
         )}
       </ConnectButton.Custom>
 
-      {/* Connect Twitter Drawer */}
       <ConnectTwitter ref={connectXRef} address={address!!} twitterUser={twitterUser} />
     </>
   );

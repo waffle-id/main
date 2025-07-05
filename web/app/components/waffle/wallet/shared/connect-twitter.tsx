@@ -184,7 +184,7 @@ export const ConnectTwitter = forwardRef<ConnectTwitterRef, ConnectTwitterProps>
                       >
                         {isValidating ? "Validating..." : "Verify Code"}
                       </ButtonMagnet>
-                      <DrawerClose asChild>
+                      <DrawerClose>
                         <ButtonMagnet color="red" className="h-12 px-4">
                           <X className="size-5" />
                         </ButtonMagnet>
@@ -207,7 +207,7 @@ export const ConnectTwitter = forwardRef<ConnectTwitterRef, ConnectTwitterProps>
                             </div>
                           </ButtonMagnet>
                         </NavLink>
-                        <DrawerClose asChild>
+                        <DrawerClose>
                           <ButtonMagnet type="button" className="h-12 px-4">
                             <X className="size-5" />
                           </ButtonMagnet>
