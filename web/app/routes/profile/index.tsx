@@ -187,6 +187,12 @@ export default function Profile() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setUserData(initialUserData);
+    setError(initialError);
+    setIsLoading(needsScraping);
+  }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
+
+  useEffect(() => {
     if (!needsScraping) return;
 
     const fetchScrapedData = async () => {
