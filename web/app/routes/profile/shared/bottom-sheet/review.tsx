@@ -92,6 +92,8 @@ export default function Review({ user }: ReviewProps) {
         hash: txHash,
       });
 
+      console.log("receipt", receipt);
+
       if (receipt.status !== "success") {
         console.warn("⚠️ Transaction reverted onchain");
         return;
