@@ -11,20 +11,21 @@ RUN npm run build-alt
 FROM nginx:alpine
 
 # Copy built static files
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /app/builder
 
 # Copy custom nginx config if needed
 # COPY nginx.conf /etc/nginx/nginx.conf
 
 # Fix permissions for nginx user
-RUN mkdir -p /var/cache/nginx/client_temp /run && \
-    chown -R nginx:nginx /var/cache/nginx /run
+# RUN mkdir -p /var/cache/nginx/client_temp /run && \
+#     chown -R nginx:nginx /var/cache/nginx /run
 
-USER nginx
+# USER nginx
 
-EXPOSE 8080
+EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:8080/health || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "serve"]
+

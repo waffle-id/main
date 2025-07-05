@@ -5,7 +5,7 @@
   "main": "README.md",
   "scripts": {
     "install": "echo 'Installation complete - use setup.sh for GitBook setup'",
-    "serve": "gitbook serve",
+    "serve": "serve dist/ -p 3000",
     "build": "gitbook build",
     "serve-alt": "docsify serve . --port 3000",
     "build-alt": "node scripts/build-docs.js",
@@ -33,10 +33,10 @@
   "license": "MIT",
   "devDependencies": {
     "docsify-cli": "^4.4.4",
-    "http-server": "^14.1.1",
     "gh-pages": "^6.1.1",
-    "markdownlint-cli": "^0.39.0",
-    "gitbook-cli": "^2.3.2"
+    "gitbook-cli": "^2.3.2",
+    "http-server": "^14.1.1",
+    "markdownlint-cli": "^0.39.0"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -52,5 +52,8 @@
       "github",
       "prism"
     ]
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
   }
 }
