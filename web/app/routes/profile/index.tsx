@@ -120,9 +120,29 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     return redirect("/");
   }
 
+  if (variant === "w" && slug.startsWith("0x")) {
+    const walletUserData: UserProfileData = {
+      address: slug,
+      username: `${slug.slice(0, 6)}...${slug.slice(-4)}`,
+      fullName: `Wallet ${slug.slice(0, 6)}...${slug.slice(-4)}`,
+      bio: "Wallet address profile - connect to see more details",
+      avatarUrl: `https://api.dicebear.com/9.x/identicon/svg?seed=${slug}`,
+      reputationScore: 1000,
+      hasInvitationAuthority: false,
+    };
+
+    return {
+      userData: walletUserData,
+      error: null,
+      needsScraping: false,
+      slug,
+      imagesItemsLoader: imageItems,
+    };
+  }
+
   try {
     const response = await fetch(`https://api.waffle.food/account/${slug}`, {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(3000),
     });
 
     if (response.ok) {
@@ -165,6 +185,12 @@ export default function Profile() {
 
   const TABS = ["received", "given", "all"];
   const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setUserData(initialUserData);
+    setError(initialError);
+    setIsLoading(needsScraping);
+  }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
 
   useEffect(() => {
     if (!needsScraping) return;
