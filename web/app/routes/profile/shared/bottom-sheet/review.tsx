@@ -1,13 +1,34 @@
 import { PencilRuler } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "~/components/shadcn/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
 import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 
+const RATE = ["neutral", "negative", "positive"] as const;
+type RateType = (typeof RATE)[number];
+
 export default function Review() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const [formData, setFormData] = useState<{
+    title: string;
+    desc: string;
+    rate: RateType;
+  }>({
+    title: "",
+    desc: "",
+    rate: "neutral",
+  });
+
+  function handlSubmit() {
+    if (formData.title == "" && formData.desc == "") {
+      toast.error("Fill all the field!");
+    } else {
+    }
+  }
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -27,12 +48,36 @@ export default function Review() {
           </DrawerHeader>
 
           <div className="flex flex-row items-center gap-4 w-full">
-            {/* <Button className="text-red-500 border-re" variant="outline">Negative</Button> */}
-            <ButtonMagnet color="red" className="w-full">
+            <ButtonMagnet
+              color="red"
+              className="w-full"
+              onClick={() =>
+                setFormData((prev) => {
+                  return { ...prev, rate: "negative" };
+                })
+              }
+            >
               Negative
             </ButtonMagnet>
-            <ButtonMagnet className="w-full">Neutral</ButtonMagnet>
-            <ButtonMagnet className="w-full" color="green">
+            <ButtonMagnet
+              className="w-full"
+              onClick={() =>
+                setFormData((prev) => {
+                  return { ...prev, rate: "negative" };
+                })
+              }
+            >
+              Neutral
+            </ButtonMagnet>
+            <ButtonMagnet
+              className="w-full"
+              color="green"
+              onClick={() =>
+                setFormData((prev) => {
+                  return { ...prev, rate: "negative" };
+                })
+              }
+            >
               Positive
             </ButtonMagnet>
           </div>
@@ -43,12 +88,12 @@ export default function Review() {
               placeholder="Title"
               className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
               type="text"
-              // value={form.from}
-              // onChange={(e) =>
-              //   setForm((prev) => {
-              //     return { ...prev, from: e.target.value };
-              //   })
-              // }
+              value={formData.title}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return { ...prev, title: formData.title };
+                })
+              }
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -56,16 +101,18 @@ export default function Review() {
             <Textarea
               placeholder="Description"
               className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
-              // value={form.message}
-              // onChange={(e) =>
-              //   setForm((prev) => {
-              //     return { ...prev, message: e.target.value };
-              //   })
-              // }
+              value={formData.desc}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return { ...prev, title: formData.desc };
+                })
+              }
             />
           </div>
 
-          <ButtonMagnet className="self-center w-max px-16">Submit</ButtonMagnet>
+          <ButtonMagnet className="self-center w-max px-16" onClick={handlSubmit}>
+            Submit
+          </ButtonMagnet>
         </div>
       </DrawerContent>
     </Drawer>
