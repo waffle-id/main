@@ -1,18 +1,12 @@
 import { PencilRuler } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Button } from "~/components/shadcn/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "~/components/shadcn/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
 import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { Client } from "@gradio/client";
-import {} from "react";
+import { useEffect } from "react";
 import { useWriteContract } from "wagmi";
 import { ABI } from "~/constants/ABI";
 import { CA } from "~/constants/CA";
@@ -61,15 +55,11 @@ const sentimentScores: Record<Sentiment, number> = {
 export default function Review({ user }: ReviewProps) {
   let client: Client | null = null;
   const { writeContractAsync, isPending } = useWriteContract();
-  const RATE = ["neutral", "negative", "positive"] as const;
-  type RateType = (typeof RATE)[number];
   const [isOpen, setIsOpen] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [qualityLevel, setQualityLevel] = useState<
-    "low" | "medium" | "high" | null
-  >(null);
+  const [qualityLevel, setQualityLevel] = useState<"low" | "medium" | "high" | null>(null);
   const [aiFeedback, setAiFeedback] = useState("");
   const [checking, setChecking] = useState(false);
 
@@ -165,23 +155,6 @@ export default function Review({ user }: ReviewProps) {
     return () => clearTimeout(timeout); // Cleanup on each change
   }, [title, description]);
 
-  const [formData, setFormData] = useState<{
-    title: string;
-    desc: string;
-    rate: RateType;
-  }>({
-    title: "",
-    desc: "",
-    rate: "neutral",
-  });
-
-  function handlSubmit() {
-    if (formData.title == "" && formData.desc == "") {
-      toast.error("Fill all the field!");
-    } else {
-    }
-  }
-
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <ButtonMagnet className="px-8 py-2" onClick={() => setIsOpen(true)}>
@@ -200,35 +173,32 @@ export default function Review({ user }: ReviewProps) {
           </DrawerHeader>
 
           <div className="flex flex-row items-center gap-4 w-full">
+            {/* <Button className="text-red-500 border-re" variant="outline">Negative</Button> */}
             <ButtonMagnet
               color="red"
-              className="w-full"
-              onClick={() =>
-                setFormData((prev) => {
-                  return { ...prev, rate: "negative" };
-                })
-              }
+              className={`w-full ${
+                sentiment === "negative" ? "bg-red-500 text-white hover:text-white" : ""
+              }`}
+              onClick={() => setSentiment("negative")}
             >
               Negative
             </ButtonMagnet>
+
             <ButtonMagnet
-              className="w-full"
-              onClick={() =>
-                setFormData((prev) => {
-                  return { ...prev, rate: "negative" };
-                })
-              }
+              className={`w-full ${
+                sentiment === "neutral" ? "bg-yellow-500 text-white hover:text-white" : "w-full"
+              }`}
+              onClick={() => setSentiment("neutral")}
             >
               Neutral
             </ButtonMagnet>
+
             <ButtonMagnet
-              className="w-full"
               color="green"
-              onClick={() =>
-                setFormData((prev) => {
-                  return { ...prev, rate: "negative" };
-                })
-              }
+              className={`w-full ${
+                sentiment === "positive" ? "bg-green-500 text-white hover:text-white" : ""
+              }`}
+              onClick={() => setSentiment("positive")}
             >
               Positive
             </ButtonMagnet>
@@ -240,12 +210,14 @@ export default function Review({ user }: ReviewProps) {
               placeholder="Title"
               className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
               type="text"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData((prev) => {
-                  return { ...prev, title: formData.title };
-                })
-              }
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              // value={form.from}
+              // onChange={(e) =>
+              //   setForm((prev) => {
+              //     return { ...prev, from: e.target.value };
+              //   })
+              // }
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -253,18 +225,36 @@ export default function Review({ user }: ReviewProps) {
             <Textarea
               placeholder="Description"
               className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
-              value={formData.desc}
-              onChange={(e) =>
-                setFormData((prev) => {
-                  return { ...prev, title: formData.desc };
-                })
-              }
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              // value={form.message}
+              // onChange={(e) =>
+              //   setForm((prev) => {
+              //     return { ...prev, message: e.target.value };
+              //   })
+              // }
             />
           </div>
 
+          {qualityLevel && (
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-4 h-4 rounded-full ${
+                  qualityLevel === "low"
+                    ? "bg-red-500"
+                    : qualityLevel === "medium"
+                    ? "bg-yellow-400"
+                    : "bg-green-500"
+                }`}
+              />
+              <span className="text-sm text-black/70 capitalize">{qualityLevel} quality</span>
+            </div>
+          )}
+
           <ButtonMagnet
+            disabled={!isFormValid}
             className="self-center w-max px-16"
-            onClick={handlSubmit}
+            onClick={handleSubmit}
           >
             Submit
           </ButtonMagnet>
