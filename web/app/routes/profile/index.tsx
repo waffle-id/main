@@ -19,7 +19,7 @@ import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-n
 import { ActionScore } from "./shared/action-score";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
-// import { ContentGiven } from "./shared/content-given";
+
 import { ContentReceived } from "./shared/content-received";
 import { ContentAll } from "./shared/content-all";
 import { ContentGiven } from "./shared/content-given";
@@ -227,7 +227,9 @@ export default function Profile() {
     const fetchScrapedData = async () => {
       try {
         setIsLoading(true);
-        const scraperResponse = await fetch(`https://scraper.waffle.food/profile/${slug}`);
+        const scraperResponse = await fetch(
+          `https://scraper.waffle.food/profile/${slug}/optimized`
+        );
 
         if (!scraperResponse.ok) {
           throw new Error(`User not found: ${scraperResponse.status}`);

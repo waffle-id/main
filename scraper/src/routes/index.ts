@@ -1,21 +1,24 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { scrapeTwitterProfile, scrapeTwitterAvatar, type TwitterProfile } from "../lib/scraper";
-import { db } from "../lib/database";
-import type { ScrapedProfileRow } from "../lib/schema";
+import {
+  scrapeTwitterProfile,
+  scrapeTwitterAvatar,
+  scrapeTwitterBioAndAvatar,
+  getOrScrapeUserProfile,
+  type TwitterProfile,
+  type TwitterBioAvatar,
+  type ExistingUserProfile,
+} from "../lib/scraper";
+import {
+  registerScrapedProfile,
+  registerBioAndAvatar,
+  checkProfileExists,
+} from "../services/register-service";
 
 const app = new Hono();
 
-app.use(
-  "*",
-  cors()
-  // cors({
-  //   origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:4173"],
-  //   allowMethods: ["GET", "POST", "PUT", "DELETE"],
-  //   allowHeaders: ["Content-Type", "Authorization"],
-  // })
-);
+app.use("*", cors());
 app.use("*", logger());
 
 app.get("/health", (c) => {
@@ -140,38 +143,7 @@ app.get("/profile/:username", async (c) => {
   }
 
   try {
-    console.log(`Checking for existing profile: ${username}`);
-
-    db.debugDatabase();
-
-    const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
-    console.log(`Profile check result:`, existingProfile ? "found" : "not found");
-
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-    if (existingProfile) {
-      console.log("if existingProfile");
-      const lastScraped = new Date(existingProfile.last_scraped * 1000);
-
-      if (lastScraped > oneDayAgo) {
-        return c.json({
-          success: true,
-          data: {
-            fullName: existingProfile.full_name,
-            username: existingProfile.username,
-            bio: existingProfile.bio,
-            avatarUrl: existingProfile.avatar_url,
-            followers: existingProfile.followers,
-            url: existingProfile.url,
-          },
-          cached: true,
-          lastScraped: existingProfile.last_scraped,
-        });
-      }
-    }
-
-    console.log("else existingProfile");
+    console.log(`🔍 Scraping profile for: ${username}`);
 
     const scrapedData = await scrapeTwitterProfile(username);
 
@@ -187,28 +159,28 @@ app.get("/profile/:username", async (c) => {
     console.log("Scraped data object:", scrapedData);
     console.log("==========================");
 
-    try {
-      if (existingProfile) {
-        console.log(`Updating existing profile for ${username}`);
-        db.updateProfile(username, scrapedData);
-      } else {
-        console.log(`Inserting new profile for ${username}`);
-        db.insertProfile(scrapedData);
-      }
-    } catch (dbError: any) {
-      if (dbError.code === "SQLITE_CONSTRAINT_UNIQUE") {
-        console.log(`Constraint error for ${username}, trying update instead`);
-        db.updateProfile(username, scrapedData);
-      } else {
-        throw dbError;
-      }
+    const registerResult = await registerScrapedProfile(scrapedData);
+
+    if (!registerResult.isSuccess) {
+      console.error(`❌ Failed to register profile in main DB:`, registerResult.error);
+
+      return c.json({
+        success: true,
+        data: scrapedData,
+        cached: false,
+        lastScraped: new Date(),
+        registrationWarning: `Failed to register in main DB: ${registerResult.error}`,
+      });
     }
+
+    console.log(`✅ Successfully scraped and registered profile for ${username}`);
 
     return c.json({
       success: true,
       data: scrapedData,
       cached: false,
       lastScraped: new Date(),
+      registeredUser: registerResult.user,
     });
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -249,37 +221,36 @@ app.post("/profile/:username/refresh", async (c) => {
   }
 
   try {
-    // Don't auto-post to backend for manual refresh requests
-    const scrapedData = await scrapeTwitterProfile(username, false);
+    console.log(`🔄 Force refreshing profile for: ${username}`);
+
+    const scrapedData = await scrapeTwitterProfile(username);
 
     if (!scrapedData) {
       return c.json({ error: "Failed to scrape profile" }, 404);
     }
 
-    try {
-      const existingProfile: ScrapedProfileRow | null = db.getProfile(username);
+    const registerResult = await registerScrapedProfile(scrapedData);
 
-      if (existingProfile) {
-        console.log(`Updating existing profile for ${username} (refresh)`);
-        db.updateProfile(username, scrapedData);
-      } else {
-        console.log(`Inserting new profile for ${username} (refresh)`);
-        db.insertProfile(scrapedData);
-      }
-    } catch (dbError: any) {
-      if (dbError.code === "SQLITE_CONSTRAINT_UNIQUE") {
-        console.log(`Constraint error for ${username} (refresh), trying update instead`);
-        db.updateProfile(username, scrapedData);
-      } else {
-        throw dbError;
-      }
+    if (!registerResult.isSuccess) {
+      console.error(`❌ Failed to register refreshed profile in main DB:`, registerResult.error);
+
+      return c.json({
+        success: true,
+        data: scrapedData,
+        cached: false,
+        lastScraped: new Date(),
+        registrationWarning: `Failed to register in main DB: ${registerResult.error}`,
+      });
     }
+
+    console.log(`✅ Successfully refreshed and registered profile for ${username}`);
 
     return c.json({
       success: true,
       data: scrapedData,
       cached: false,
       lastScraped: new Date(),
+      registeredUser: registerResult.user,
     });
   } catch (error) {
     console.error("Error refreshing profile:", error);
@@ -288,24 +259,223 @@ app.post("/profile/:username/refresh", async (c) => {
 });
 
 app.get("/profiles", async (c) => {
+  return c.json(
+    {
+      error:
+        "This endpoint is deprecated. The scraper no longer maintains a local database. Please use the main engine API to get user profiles.",
+      suggestion: "Use GET /api/account/ on the main engine to get all user profiles",
+    },
+    410
+  );
+});
+
+app.get("/profile/:username/exists", async (c) => {
+  const username = c.req.param("username");
+
+  if (!username) {
+    return c.json({ error: "Username is required" }, 400);
+  }
+
   try {
-    const profiles: ScrapedProfileRow[] = db.getAllProfiles();
+    const exists = await checkProfileExists(username);
+    return c.json({
+      success: true,
+      username,
+      exists,
+    });
+  } catch (error) {
+    console.error("Error checking if profile exists:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.post("/profile/:username/register-only", async (c) => {
+  const username = c.req.param("username");
+
+  if (!username) {
+    return c.json({ error: "Username is required" }, 400);
+  }
+
+  try {
+    console.log(`🎯 Scraping and registering profile (register-only mode): ${username}`);
+
+    const scrapedData = await scrapeTwitterProfile(username);
+
+    if (!scrapedData) {
+      return c.json(
+        { error: "Failed to scrape profile. Profile may not exist or be private." },
+        404
+      );
+    }
+
+    const registerResult = await registerScrapedProfile(scrapedData);
+
+    if (!registerResult.isSuccess) {
+      console.error(`❌ Failed to register profile in main DB:`, registerResult.error);
+      return c.json(
+        {
+          success: false,
+          error: `Failed to register profile: ${registerResult.error}`,
+          scrapedData,
+        },
+        500
+      );
+    }
+
+    console.log(`✅ Successfully scraped and registered profile for ${username}`);
 
     return c.json({
       success: true,
-      data: profiles.map((profile: ScrapedProfileRow) => ({
-        fullName: profile.full_name,
-        username: profile.username,
-        bio: profile.bio,
-        avatarUrl: profile.avatar_url,
-        followers: profile.followers,
-        url: profile.url,
-        lastScraped: profile.last_scraped,
-      })),
-      count: profiles.length,
+      message: `Profile ${username} successfully scraped and registered`,
+      registeredUser: registerResult.user,
     });
   } catch (error) {
-    console.error("Error fetching profiles:", error);
+    console.error("Error in register-only mode:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.get("/profile/:username/optimized", async (c) => {
+  const username = c.req.param("username");
+
+  if (!username) {
+    return c.json({ error: "Username is required" }, 400);
+  }
+
+  try {
+    console.log(`⚡ Optimized profile fetch for: ${username}`);
+
+    const result = await getOrScrapeUserProfile(username);
+
+    if (!result.success) {
+      return c.json({ error: result.error || "Failed to get profile" }, 500);
+    }
+
+    if (!result.fromCache && result.data) {
+      const bioAvatarData = result.data as TwitterBioAvatar;
+      const registerResult = await registerBioAndAvatar(bioAvatarData);
+
+      if (!registerResult.isSuccess) {
+        console.warn(`⚠️ Failed to register scraped data: ${registerResult.error}`);
+
+        return c.json({
+          success: true,
+          data: result.data,
+          fromCache: false,
+          registrationWarning: `Failed to register: ${registerResult.error}`,
+        });
+      }
+
+      return c.json({
+        success: true,
+        data: result.data,
+        fromCache: false,
+        registeredUser: registerResult.user,
+      });
+    }
+
+    return c.json({
+      success: true,
+      data: result.data,
+      fromCache: true,
+    });
+  } catch (error) {
+    console.error("Error in optimized profile fetch:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.get("/profile/:username/bio-avatar", async (c) => {
+  const username = c.req.param("username");
+
+  if (!username) {
+    return c.json({ error: "Username is required" }, 400);
+  }
+
+  try {
+    console.log(`🔄 Scraping bio and avatar only for: ${username}`);
+
+    const scrapedData = await scrapeTwitterBioAndAvatar(username);
+
+    if (!scrapedData) {
+      return c.json(
+        { error: "Failed to scrape bio and avatar. Profile may not exist or be private." },
+        404
+      );
+    }
+
+    const registerResult = await registerBioAndAvatar(scrapedData);
+
+    if (!registerResult.isSuccess) {
+      console.error(`❌ Failed to register bio and avatar in main DB:`, registerResult.error);
+
+      return c.json({
+        success: true,
+        data: scrapedData,
+        registrationWarning: `Failed to register in main DB: ${registerResult.error}`,
+      });
+    }
+
+    console.log(`✅ Successfully scraped and registered bio+avatar for ${username}`);
+
+    return c.json({
+      success: true,
+      data: scrapedData,
+      registeredUser: registerResult.user,
+    });
+  } catch (error) {
+    console.error("Error scraping bio and avatar:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.post("/profile/:username/avatar-to-db", async (c) => {
+  const username = c.req.param("username");
+
+  if (!username) {
+    return c.json({ error: "Username is required" }, 400);
+  }
+
+  try {
+    console.log(`🖼️ Scraping avatar and posting to DB for: ${username}`);
+
+    const avatarUrl = await scrapeTwitterAvatar(username);
+
+    if (!avatarUrl) {
+      return c.json({ error: "Failed to scrape avatar" }, 404);
+    }
+
+    const avatarData: TwitterBioAvatar = {
+      username,
+      bio: null,
+      avatarUrl,
+      url: `https://x.com/${username}`,
+    };
+
+    const registerResult = await registerBioAndAvatar(avatarData);
+
+    if (!registerResult.isSuccess) {
+      console.error(`❌ Failed to register avatar in main DB:`, registerResult.error);
+      return c.json(
+        {
+          success: false,
+          error: `Failed to register avatar: ${registerResult.error}`,
+          avatarUrl,
+        },
+        500
+      );
+    }
+
+    console.log(`✅ Successfully scraped and registered avatar for ${username}`);
+
+    return c.json({
+      success: true,
+      message: `Avatar for ${username} successfully scraped and registered`,
+      avatarUrl,
+      registeredUser: registerResult.user,
+    });
+  } catch (error) {
+    console.error("Error in avatar-to-db:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });

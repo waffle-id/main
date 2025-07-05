@@ -6,9 +6,18 @@ const dbPath = path.join(process.cwd(), "database.sqlite");
 console.log(`Database path: ${dbPath}`);
 const sqlite = new Database(dbPath);
 
+const profileCache = new Map<string, { data: ScrapedProfileRow | null; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000;
+
 export const db = {
   getProfile: (username: string): ScrapedProfileRow | null => {
     try {
+      const cached = profileCache.get(username);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log(`Cache hit for username "${username}"`);
+        return cached.data;
+      }
+
       const query = sqlite.query(`
         SELECT * FROM scraped_profiles 
         WHERE username = ? 
@@ -18,11 +27,14 @@ export const db = {
 
       console.log(`Database query for username "${username}":`, result);
 
-      if (!result) {
-        return null;
-      }
+      const profileData = result ? (result as ScrapedProfileRow) : null;
 
-      return result as ScrapedProfileRow;
+      profileCache.set(username, {
+        data: profileData,
+        timestamp: Date.now(),
+      });
+
+      return profileData;
     } catch (error) {
       console.error("Database query error:", error);
       return null;

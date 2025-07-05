@@ -1,5 +1,4 @@
 import puppeteer from "puppeteer-extra";
-import { CONFIG } from "../config";
 
 export interface TwitterProfile {
   fullName: string | null;
@@ -10,37 +9,25 @@ export interface TwitterProfile {
   url: string;
 }
 
-async function postToBackend(profile: TwitterProfile): Promise<void> {
-  try {
-    const backendUrl = `${CONFIG.BACKEND_URL}${CONFIG.REGISTER_SCRAPER_ENDPOINT}`;
-    console.log(`📤 Posting scraped data to backend: ${backendUrl}`);
-
-    const response = await fetch(backendUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: profile.username,
-        fullName: profile.fullName,
-        bio: profile.bio,
-        avatarUrl: profile.avatarUrl,
-      }),
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      console.log(`✅ Successfully posted ${profile.username} to backend:`, result);
-    } else {
-      const errorText = await response.text();
-      console.warn(`⚠️ Failed to post ${profile.username} to backend (${response.status}):`, errorText);
-    }
-  } catch (error) {
-    console.error(`❌ Error posting ${profile.username} to backend:`, error);
-  }
+export interface TwitterBioAvatar {
+  username: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  url: string;
 }
 
-export async function scrapeTwitterProfile(username: string, shouldPostToBackend = true): Promise<TwitterProfile | null> {
+export interface ExistingUserProfile {
+  address: string;
+  username: string;
+  fullName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  reputationScore: number;
+  hasInvitationAuthority: boolean;
+  userPersonaScores: any[];
+}
+
+export async function scrapeTwitterProfile(username: string): Promise<TwitterProfile | null> {
   const url = `https://x.com/${username}`;
 
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
@@ -341,11 +328,6 @@ export async function scrapeTwitterProfile(username: string, shouldPostToBackend
     }, username);
 
     await browser.close();
-
-    if (shouldPostToBackend && data && data.username) {
-      await postToBackend(data);
-    }
-
     return data;
   } catch (err) {
     await browser.close();
@@ -481,5 +463,265 @@ export async function scrapeTwitterAvatar(username: string): Promise<string | nu
     const error = err as Error;
     console.error("Avatar scraping failed:", error.message);
     return null;
+  }
+}
+
+export async function scrapeTwitterBioAndAvatar(
+  username: string
+): Promise<TwitterBioAvatar | null> {
+  const url = `https://x.com/${username}`;
+
+  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+
+  if (!executablePath) {
+    if (process.platform === "darwin") {
+      executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    } else if (process.platform === "linux") {
+      executablePath = "/usr/bin/chromium";
+    } else if (process.platform === "win32") {
+      executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+    } else {
+      executablePath = "/usr/bin/chromium";
+    }
+  }
+
+  console.log(
+    "scrapeTwitterBioAndAvatar ",
+    url,
+    "using executable:",
+    executablePath,
+    "platform:",
+    process.platform
+  );
+
+  const browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    protocolTimeout: 60000,
+    timeout: 10000,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-blink-features=AutomationControlled",
+      "--disable-features=VizDisplayCompositor",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-extensions",
+      "--disable-default-apps",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--remote-debugging-port=0",
+      "--disable-web-security",
+      "--disable-features=site-per-process",
+    ],
+  });
+  const page = await browser.newPage();
+
+  try {
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    );
+
+    console.log("Loading page for bio and avatar...");
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
+
+    try {
+      await page.waitForSelector(
+        'img[alt="Opens profile photo"], img[src*="pbs.twimg.com/profile_images"], [data-testid="UserDescription"]',
+        { timeout: 10000 }
+      );
+      console.log("Bio or avatar elements found");
+    } catch (e) {
+      console.log("Basic elements not found, proceeding anyway");
+    }
+
+    await page.waitForNetworkIdle({ idleTime: 1000, timeout: 8000 });
+
+    const data = await page.evaluate((username) => {
+      console.log("=== BIO + AVATAR SCRAPER ===");
+
+      const bioEl =
+        document.querySelector('[data-testid="UserDescription"]') ||
+        document.querySelector('[data-testid="UserBio"]') ||
+        document.querySelector('div[data-testid="UserDescription"] span') ||
+        document.querySelector('div[data-testid="UserName"] + div[dir="auto"]') ||
+        document.querySelector(
+          'div[data-testid="UserName"] ~ div[dir="auto"]:not([data-testid*="tweet"])'
+        );
+
+      let bio = bioEl?.textContent?.trim() || null;
+      if (bio) {
+        const tweetPatterns: (RegExp | boolean)[] = [
+          /^RT @/,
+          /https:\/\/t\.co\//,
+          /^@\w+/,
+          bio.length > 300,
+          /\n.*\n/,
+        ];
+
+        const looksLikeTweet = tweetPatterns.some((pattern) =>
+          typeof pattern === "boolean" ? pattern : pattern.test(bio!)
+        );
+
+        if (looksLikeTweet) {
+          console.log("Detected tweet content instead of bio, skipping:", bio.substring(0, 100));
+          bio = null;
+        }
+      }
+
+      let avatarUrl: string | null = null;
+
+      const profileImg = document.querySelector(
+        'img[alt="Opens profile photo"]'
+      ) as HTMLImageElement | null;
+      if (profileImg && profileImg.src && profileImg.src.includes("pbs.twimg.com/profile_images")) {
+        avatarUrl = profileImg.src;
+        console.log("✅ Found avatar via img alt method:", avatarUrl);
+      }
+
+      if (!avatarUrl) {
+        const anyProfileImg = document.querySelector(
+          'img[src*="pbs.twimg.com/profile_images"]'
+        ) as HTMLImageElement | null;
+        if (anyProfileImg && anyProfileImg.src) {
+          avatarUrl = anyProfileImg.src;
+          console.log("✅ Found avatar via profile_images img:", avatarUrl);
+        }
+      }
+
+      if (!avatarUrl) {
+        const allDivs = document.querySelectorAll("div") as NodeListOf<HTMLDivElement>;
+        for (const div of allDivs) {
+          if (
+            div.style.backgroundImage &&
+            div.style.backgroundImage.includes("pbs.twimg.com/profile_images")
+          ) {
+            const match = div.style.backgroundImage.match(/url\("([^"]+)"\)/);
+            if (match) {
+              avatarUrl = match[1];
+              console.log("✅ Found avatar via background-image:", avatarUrl);
+              break;
+            }
+          }
+        }
+      }
+
+      if (avatarUrl && avatarUrl.includes("_200x200")) {
+        const highResUrl = avatarUrl.replace("_200x200", "_400x400");
+        console.log("Upgraded to higher resolution:", highResUrl);
+        avatarUrl = highResUrl;
+      } else if (avatarUrl && !avatarUrl.includes("_400x400") && !avatarUrl.includes("_200x200")) {
+        const urlParts = avatarUrl.split(".");
+        if (urlParts.length >= 2) {
+          const extension = urlParts.pop();
+          const baseUrl = urlParts.join(".");
+          const highResUrl = baseUrl + "_400x400." + extension;
+          console.log("Added 400x400 resolution:", highResUrl);
+          avatarUrl = highResUrl;
+        }
+      }
+
+      console.log("=== RESULTS ===");
+      console.log("Bio:", bio ? bio.substring(0, 100) + "..." : "null");
+      console.log("Avatar URL:", avatarUrl);
+      console.log("================");
+
+      return {
+        username,
+        bio,
+        avatarUrl,
+        url: window.location.href,
+      };
+    }, username);
+
+    await browser.close();
+    console.log(`✅ Successfully scraped bio and avatar for ${username}`);
+    return data;
+  } catch (err) {
+    await browser.close();
+    const error = err as Error;
+    console.error("Bio + Avatar scraping failed:", error.message);
+    return null;
+  }
+}
+
+export async function checkUserInMainDB(username: string): Promise<ExistingUserProfile | null> {
+  const url = `https://api.waffle.food/account/${username}`;
+
+  console.log(`🔍 Checking user in main DB: ${url}`);
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 200) {
+      const userData = await response.json();
+      console.log(`✅ User ${username} found in main DB`);
+      return userData;
+    } else if (response.status === 404) {
+      console.log(`📭 User ${username} not found in main DB`);
+      return null;
+    } else {
+      console.warn(`⚠️ Unexpected response when checking user: ${response.status}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`❌ Error checking user in main DB:`, error);
+    return null;
+  }
+}
+
+export async function getOrScrapeUserProfile(username: string): Promise<{
+  success: boolean;
+  data?: ExistingUserProfile | TwitterBioAvatar;
+  fromCache: boolean;
+  error?: string;
+}> {
+  try {
+    console.log(`🚀 Getting or scraping profile for: ${username}`);
+
+    const existingUser = await checkUserInMainDB(username);
+
+    if (existingUser) {
+      console.log(`✅ User ${username} found in cache, returning existing data`);
+      return {
+        success: true,
+        data: existingUser,
+        fromCache: true,
+      };
+    }
+
+    console.log(`🔄 User ${username} not in cache, scraping bio and avatar...`);
+    const scrapedData = await scrapeTwitterBioAndAvatar(username);
+
+    if (!scrapedData) {
+      return {
+        success: false,
+        fromCache: false,
+        error: "Failed to scrape profile data",
+      };
+    }
+
+    console.log(`✅ Successfully scraped bio and avatar for ${username}`);
+    return {
+      success: true,
+      data: scrapedData,
+      fromCache: false,
+    };
+  } catch (error) {
+    console.error(`❌ Error in getOrScrapeUserProfile:`, error);
+    return {
+      success: false,
+      fromCache: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
