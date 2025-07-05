@@ -117,7 +117,7 @@ export function ConnectWalletRainbow() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="center"
-                        className="w-48"
+                        className="w-48 z-[100002]"
                         onPointerDownOutside={() => setDropdownOpenControl(false)}
                       >
                         {chain.unsupported && (

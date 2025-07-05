@@ -217,7 +217,7 @@ export function ConnectWalletXellar() {
                       </ButtonMagnet>
                     </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="w-48">
+                  <DropdownMenuContent align="center" className="w-48 z-[100002]">
                     {isWrongNetwork && (
                       <DropdownMenuItem className="py-4">
                         Change Network

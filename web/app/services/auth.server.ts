@@ -88,8 +88,8 @@ authenticator.use(
     {
       clientID: clientID,
       clientSecret: clientSecret,
-      // callbackURL: "http://127.0.0.1:5173/auth/twitter/callback",
-      callbackURL: "https://waffle.food/auth/twitter/callback",
+      callbackURL: "http://127.0.0.1:5173/auth/twitter/callback",
+      // callbackURL: "https://waffle.food/auth/twitter/callback",
       scopes: ["users.read", "tweet.read"],
     },
     async ({ request, tokens }) => {
