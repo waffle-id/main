@@ -19,6 +19,7 @@ export async function findAllByRevieweeUsername(revieweeUsername: string) {
       },
     },
     { $unwind: { path: "$reviewerAccount", preserveNullAndEmptyArrays: true } },
+    { $sort: { createdAt: -1 } },
   ]);
 }
 
@@ -34,5 +35,6 @@ export async function findAllByReviewerUsername(reviewerUsername: string) {
       },
     },
     { $unwind: { path: "$reviewerAccount", preserveNullAndEmptyArrays: true } },
+    { $sort: { createdAt: -1 } },
   ]);
 }
