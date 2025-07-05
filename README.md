@@ -230,10 +230,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **Live App**: [waffle.id](https://waffle.id)
-- **Documentation**: [docs.waffle.id](https://docs.waffle.id)
-- **Discord**: [Join our community](https://discord.gg/waffle)
-- **Twitter**: [@waffle_id](https://twitter.com/waffle_id)
+<!-- - **Live App**: [waffle.id](https://waffle.id) -->
+<!-- - **Documentation**: [docs.waffle.id](https://docs.waffle.id) -->
+<!-- - **Discord**: [Join our community](https://discord.gg/waffle) -->
+<!-- - **Twitter**: [@waffle_id](https://twitter.com/waffle_id) -->
 
 ---
 
