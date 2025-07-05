@@ -166,7 +166,7 @@ export const ConnectTwitter = forwardRef<ConnectTwitterRef, ConnectTwitterProps>
                           setInvitationCode(e.target.value);
                           setInvitationError("");
                         }}
-                        className={`bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max ${
+                        className={`bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max text-black ${
                           invitationError ? "border-red-500" : ""
                         }`}
                         autoFocus
@@ -208,7 +208,7 @@ export const ConnectTwitter = forwardRef<ConnectTwitterRef, ConnectTwitterProps>
                           </ButtonMagnet>
                         </NavLink>
                         <DrawerClose>
-                          <ButtonMagnet type="button" className="h-12 px-4">
+                          <ButtonMagnet color="red" type="button" className="h-12 px-4">
                             <X className="size-5" />
                           </ButtonMagnet>
                         </DrawerClose>
