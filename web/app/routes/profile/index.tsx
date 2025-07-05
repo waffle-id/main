@@ -57,6 +57,13 @@ interface ScraperProfileData {
   lastScraped: string;
 }
 
+interface ImageItems {
+  src?: string;
+  r: number;
+  c: number;
+  review?: string;
+}
+
 const imageItems = [
   {
     src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
@@ -109,7 +116,6 @@ const imageItems = [
   },
 ];
 
-// https://api.waffle.food/reviews?revieweeUsername=rei_yan__
 export async function loader({ params }: { params: { variant: string; slug: string } }) {
   const { variant, slug } = params;
 
@@ -141,6 +147,25 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     };
   }
 
+  // review
+  const reviewResult = await fetch(`https://api.waffle.food/reviews?revieweeUsername=${slug}`);
+  const newImagesItems: ImageItems[] = [];
+
+  // if (reviewResult.ok) {
+  const userReview = await reviewResult.json();
+
+  imageItems.map((v, i) => {
+    const item = userReview.reviews[i];
+
+    newImagesItems.push({
+      ...v,
+      // @ts-expect-error aokoskoaks
+      reviews: item ? item.comment : v.review,
+      src: item ? item.reviewerAccount.avatarUrl : v.src,
+    });
+  });
+  // }
+
   try {
     const response = await fetch(`https://api.waffle.food/account/${slug}`, {
       signal: AbortSignal.timeout(3000),
@@ -153,7 +178,8 @@ export async function loader({ params }: { params: { variant: string; slug: stri
         error: null,
         needsScraping: false,
         slug,
-        imagesItemsLoader: imageItems,
+        imagesItemsLoader: newImagesItems,
+        userReview,
       };
     }
   } catch (error) {
@@ -165,7 +191,8 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     error: null,
     needsScraping: true,
     slug,
-    imagesItemsLoader: imageItems,
+    imagesItemsLoader: newImagesItems,
+    userReview,
   };
 }
 
@@ -178,6 +205,7 @@ export default function Profile() {
     needsScraping,
     slug,
     imagesItemsLoader,
+    userReview,
   } = loaderData;
 
   const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
@@ -320,7 +348,7 @@ export default function Profile() {
           {imagesItemsLoader.map(({ src, review, r, c }, i) => (
             <ImageHoverRevealText
               key={i}
-              review={review}
+              review={review ?? ""}
               animatableProperties={{
                 tx: { current: 0, previous: 0, amt: 0.1 },
                 ty: { current: 0, previous: 0, amt: 0.1 },
@@ -334,8 +362,12 @@ export default function Profile() {
               parentClassName="grid-item"
             >
               <div className="relative aspect-square w-full">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full"></div>
-                <img src={src} alt="" className="grid-item-img relative aspect-square w-full p-2" />
+                {/* <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full"></div> */}
+                <img
+                  src={src}
+                  alt=""
+                  className="grid-item-img relative aspect-square w-full p-2 rounded-full"
+                />
               </div>
             </ImageHoverRevealText>
           ))}
@@ -392,7 +424,8 @@ export default function Profile() {
               ))}
             </TabsList>
             <TabsContent value={TABS[0]} className="flex flex-col gap-10">
-              <ContentGiven />
+              {/* @ts-ignore */}
+              <ContentGiven listData={userReview.reviews} />
             </TabsContent>
             <TabsContent value={TABS[1]} className="flex flex-col gap-10">
               <ContentReceived />

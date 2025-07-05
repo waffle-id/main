@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 
-export function ContentGiven() {
+type ContentGivenProps = {
+  listData: Record<string, string>[];
+};
+
+export function ContentGiven({ listData }: ContentGivenProps) {
   const [expandedIndexes, setExpandedIndexes] = useState<Record<number, boolean>>({});
   const [shouldShowReadMore, setShouldShowReadMore] = useState<Record<number, boolean>>({});
   const refs = useRef<Record<number, HTMLParagraphElement | null>>({});
@@ -9,23 +13,35 @@ export function ContentGiven() {
   const REVIEWS = [
     {
       avatar: "https://api.dicebear.com/9.x/big-smile/svg?seed=emma",
-      title: "Great Experience Working Together",
-      desc: "Very professional and delivered high-quality work on time.",
+
+      reviewerAccount: {
+        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=emma",
+      },
+      reviewerUsername: "Great Experience Working Together",
+      comment: "Very professional and delivered high-quality work on time.",
     },
     {
-      avatar: "https://api.dicebear.com/9.x/big-smile/svg?seed=frank",
-      title: "Exceeded Expectations",
-      desc: "Fantastic communication skills and attention to detail. The final result was better than I imagined and delivered ahead of schedule.",
+      reviewerAccount: {
+        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=grace",
+      },
+      reviewerUsername: "Exceeded Expectations",
+      comment:
+        "Fantastic communication skills and attention to detail. The final result was better than I imagined and delivered ahead of schedule.",
     },
     {
-      avatar: "https://api.dicebear.com/9.x/big-smile/svg?seed=grace",
-      title: "Highly Professional Service",
-      desc: "Outstanding work quality and very responsive throughout the project. Would definitely recommend to others.",
+      reviewerAccount: {
+        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=kent",
+      },
+      reviewerUsername: "Highly Professional Service",
+      comment:
+        "Outstanding work quality and very responsive throughout the project. Would definitely recommend to others.",
     },
     {
-      avatar: "https://api.dicebear.com/9.x/big-smile/svg?seed=henry",
-      title: "Amazing Results",
-      desc: "Perfect execution and great collaboration. Very happy with the outcome.",
+      reviewerAccount: {
+        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=kent",
+      },
+      reviewerUsername: "Amazing Results",
+      comment: "Perfect execution and great collaboration. Very happy with the outcome.",
     },
   ];
 
@@ -56,7 +72,7 @@ export function ContentGiven() {
   return (
     <div className="relative flex flex-col justify-center">
       <div className="columns-2 md:columns-3 gap-10 [column-fill:_balance]">
-        {EXTENDED_REVIEWS.map((val, i) => {
+        {(listData.length > 0 ? listData : EXTENDED_REVIEWS).map((val, i) => {
           const isExpanded = expandedIndexes[i];
 
           return (
@@ -66,22 +82,23 @@ export function ContentGiven() {
             >
               <div className="flex flex-row gap-8">
                 <div className="relative size-24 flex-shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full"></div>
+                  {/* <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full"></div> */}
                   <img
-                    src={val.avatar}
+                    // @ts-ignore
+                    src={val.reviewerAccount.avatarUrl}
                     alt=""
-                    className="relative z-10 size-24 aspect-square rounded-full p-2"
+                    className="relative z-10 size-24 aspect-square rounded-full"
                   />
                 </div>
                 <div className="flex flex-col gap-4">
-                  <p className="text-xl leading-snug">{val.title}</p>
+                  <p className="text-xl leading-snug">{val.reviewerUsername}</p>
                   <p
                     ref={(el) => {
                       refs.current[i] = el;
                     }}
                     className={`leading-snug ${isExpanded ? "" : "line-clamp-3"}`}
                   >
-                    {val.desc}
+                    {val.comment}
                   </p>
                   {shouldShowReadMore[i] && (
                     <p
