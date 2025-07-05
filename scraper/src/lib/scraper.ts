@@ -11,6 +11,7 @@ export interface TwitterProfile {
 
 export interface TwitterBioAvatar {
   username: string;
+  fullName: string | null;
   bio: string | null;
   avatarUrl: string | null;
   url: string;
@@ -89,14 +90,41 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     "--disable-web-security",
     "--disable-features=VizDisplayCompositor",
     "--remote-debugging-port=0",
+    "--memory-pressure-off",
+    "--max_old_space_size=4096",
+    "--disable-background-networking",
+    "--disable-background-media-suspend",
+    "--disable-renderer-backgrounding",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-client-side-phishing-detection",
+    "--disable-default-apps",
+    "--disable-hang-monitor",
+    "--disable-popup-blocking",
+    "--disable-prompt-on-repost",
+    "--disable-sync",
+    "--disable-domain-reliability",
+    "--disable-features=AudioServiceOutOfProcess",
+    "--disable-features=MediaRouter",
+    "--disable-print-preview",
+    "--disable-voice-input",
+    "--disable-wake-on-wifi",
+    "--enable-features=NetworkService,NetworkServiceLogging",
+    "--force-color-profile=srgb",
+    "--metrics-recording-only",
+    "--use-mock-keychain",
+    "--enable-automation",
+    "--password-store=basic",
+    "--use-mock-keychain",
+    "--no-service-autorun",
+    "--disable-component-update",
   ];
 
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
     args: chromeArgs,
-    timeout: 15000,
-    protocolTimeout: 60000,
+    timeout: 0,
+    // protocolTimeout: 300000,
   });
   const page = await browser.newPage();
 
@@ -108,7 +136,7 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     );
 
     console.log("Navigating to:", url);
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     console.log("Page loaded, waiting for content...");
 
@@ -363,7 +391,8 @@ export async function scrapeTwitterAvatar(username: string): Promise<string | nu
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    protocolTimeout: 60000,
+    timeout: 0,
+    // protocolTimeout: 300000,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -497,8 +526,8 @@ export async function scrapeTwitterBioAndAvatar(
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    protocolTimeout: 60000,
-    timeout: 10000,
+    // protocolTimeout: 300000,
+    timeout: 0,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -542,7 +571,15 @@ export async function scrapeTwitterBioAndAvatar(
     await page.waitForNetworkIdle({ idleTime: 1000, timeout: 8000 });
 
     const data = await page.evaluate((username) => {
-      console.log("=== BIO + AVATAR SCRAPER ===");
+      console.log("=== BIO + AVATAR + FULLNAME SCRAPER ===");
+
+      const nameEl =
+        document.querySelector('div[data-testid="UserName"] span span') ||
+        document.querySelector('h1[role="heading"]') ||
+        document.querySelector('[data-testid="UserDescription"] + div span') ||
+        document.querySelector("h1");
+
+      const fullName = nameEl?.textContent?.trim() || null;
 
       const bioEl =
         document.querySelector('[data-testid="UserDescription"]') ||
@@ -626,12 +663,14 @@ export async function scrapeTwitterBioAndAvatar(
       }
 
       console.log("=== RESULTS ===");
+      console.log("Full Name:", fullName);
       console.log("Bio:", bio ? bio.substring(0, 100) + "..." : "null");
       console.log("Avatar URL:", avatarUrl);
       console.log("================");
 
       return {
         username,
+        fullName,
         bio,
         avatarUrl,
         url: window.location.href,
@@ -639,12 +678,12 @@ export async function scrapeTwitterBioAndAvatar(
     }, username);
 
     await browser.close();
-    console.log(`✅ Successfully scraped bio and avatar for ${username}`);
+    console.log(`✅ Successfully scraped bio, avatar and fullName for ${username}`);
     return data;
   } catch (err) {
     await browser.close();
     const error = err as Error;
-    console.error("Bio + Avatar scraping failed:", error.message);
+    console.error("Bio + Avatar + FullName scraping failed:", error.message);
     return null;
   }
 }

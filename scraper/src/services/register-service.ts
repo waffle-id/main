@@ -98,10 +98,10 @@ export async function checkProfileExists(username: string): Promise<boolean> {
 export async function registerBioAndAvatar(data: TwitterBioAvatar): Promise<RegisterResponse> {
     const url = `${CONFIG.BACKEND_URL}${CONFIG.REGISTER_SCRAPER_ENDPOINT}`;
 
-    console.log(`🚀 Posting bio and avatar to: ${url}`);
-    console.log(`📊 Bio + Avatar data:`, {
+    console.log(`🚀 Posting bio, avatar and fullName to: ${url}`);
+    console.log(`📊 Bio + Avatar + FullName data:`, {
         username: data.username,
-        fullName: data.username,
+        fullName: data.fullName || data.username,
         bio: data.bio ? data.bio.substring(0, 100) + "..." : null,
         avatarUrl: data.avatarUrl,
     });
@@ -114,7 +114,7 @@ export async function registerBioAndAvatar(data: TwitterBioAvatar): Promise<Regi
             },
             body: JSON.stringify({
                 username: data.username,
-                fullName: data.username,
+                fullName: data.fullName || data.username,
                 bio: data.bio,
                 avatarUrl: data.avatarUrl,
             }),
@@ -122,7 +122,7 @@ export async function registerBioAndAvatar(data: TwitterBioAvatar): Promise<Regi
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`❌ Failed to register bio and avatar. Status: ${response.status}`);
+            console.error(`❌ Failed to register bio, avatar and fullName. Status: ${response.status}`);
             console.error(`❌ Error response:`, errorText);
 
             return {
@@ -132,12 +132,12 @@ export async function registerBioAndAvatar(data: TwitterBioAvatar): Promise<Regi
         }
 
         const result = await response.json();
-        console.log(`✅ Successfully registered bio and avatar for ${data.username}`);
+        console.log(`✅ Successfully registered bio, avatar and fullName for ${data.username}`);
         console.log(`✅ Response:`, result);
 
         return result;
     } catch (error) {
-        console.error(`❌ Network error while registering bio and avatar:`, error);
+        console.error(`❌ Network error while registering bio, avatar and fullName:`, error);
         return {
             isSuccess: false,
             error: error instanceof Error ? error.message : "Unknown network error",
