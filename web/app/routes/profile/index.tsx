@@ -116,7 +116,7 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     return redirect("/");
   }
 
-  if (!slug) {
+  if (!slug || !slug.startsWith("0x")) {
     return redirect("/");
   }
 
