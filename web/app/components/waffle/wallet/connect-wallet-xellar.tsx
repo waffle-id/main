@@ -145,6 +145,14 @@ export function ConnectWalletXellar() {
 
   useEffect(() => {
     if (isConnected && address && address !== lastCheckedAddress) {
+      if (lastCheckedAddress && address !== lastCheckedAddress) {
+        console.log("🔄 Address changed, clearing previous user data");
+        setTwitterUser(null);
+        setAuthStatus(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem("waffle_auth_token");
+      }
+
       localStorage.setItem("waffle_wallet_address", address);
 
       console.log("🔍 Checking auth status for address:", address);
