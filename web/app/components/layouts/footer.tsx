@@ -3,7 +3,7 @@ import { TextStaticAnimation } from "../waffle/logo/text-static-animation";
 
 export function Footer() {
   return (
-    <div className="px-[20px] lg:px-[50px] relative bg-gradient-to-br from-background via-orange-25 to-orange-50 overflow-hidden">
+    <div className="px-[20px] lg:px-[50px] relative bg-gradient-to-br from-background via-orange-25 to-orange-50 z-[1000] overflow-hidden">
       <div className="relative">
         <div className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-orange-200 to-transparent blur-sm opacity-40 animate-pulse"></div>
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-300 via-yellow-400 to-orange-300 rounded-full opacity-70 shadow-sm"></div>
