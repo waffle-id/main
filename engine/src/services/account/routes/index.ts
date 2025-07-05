@@ -134,8 +134,7 @@ router.post("/login", async (req, res, next) => {
 
 router.post("/register", async (req, res, next) => {
   try {
-    const { username, address, referralCode, fullName, bio, avatarUrl } =
-      req.body;
+    const { username, address, referralCode, fullName, bio, avatarUrl } = req.body;
 
     if (!username || !address || !referralCode) {
       const error = Error("Bad request");
@@ -196,6 +195,53 @@ router.post("/register", async (req, res, next) => {
     res.status(200).json({
       isSuccess: true,
       token,
+      user: {
+        id: user._id,
+        address: user.address,
+        username: user.username,
+        hasInvitationAuthority: user.hasInvitationAuthority,
+        reputationScore: user.reputationScore,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/register-scraper", async (req, res, next) => {
+  try {
+    const { username, fullName, bio, avatarUrl } = req.body;
+
+    const existingUser = await findByUsernameFullData(username);
+
+    let user;
+    if (existingUser != null) {
+      user = await update({});
+    } else {
+      user = await create({
+        username,
+        address: "",
+        hasInvitationAuthority: false,
+        reputationScore: 1000,
+        avatarUrl: avatarUrl,
+        bio: bio,
+        fullName: fullName,
+      });
+    }
+
+    // const token = jwt.sign(
+    //   {
+    //     id: user._id,
+    //     address: user.address,
+    //     username: user.username,
+    //   },
+    //   CONFIG.JWT_SECRET,
+    //   { expiresIn: "1h" }
+    // );
+
+    res.status(200).json({
+      isSuccess: true,
+      // token,
       user: {
         id: user._id,
         address: user.address,
