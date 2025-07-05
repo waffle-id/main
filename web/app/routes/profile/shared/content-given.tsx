@@ -60,10 +60,11 @@ export function ContentGiven({ listData }: ContentGivenProps) {
     EXTENDED_REVIEWS.forEach((_, i) => {
       const el = refs.current[i];
       if (el) {
-        const isClamped = el.scrollHeight > el.clientHeight + 2; // small buffer for rounding
+        console.log(el);
+        // const isClamped = el.scrollHeight > el.clientHeight + 1; // small buffer for rounding
         setShouldShowReadMore((prev) => ({
           ...prev,
-          [i]: isClamped,
+          [i]: true,
         }));
       }
     });
@@ -96,18 +97,19 @@ export function ContentGiven({ listData }: ContentGivenProps) {
                     ref={(el) => {
                       refs.current[i] = el;
                     }}
-                    className={`leading-snug ${isExpanded ? "" : "line-clamp-3"}`}
+                    // className={`leading-snug ${isExpanded ? "" : "line-clamp-6"}`}
+                    className={`leading-snug`}
                   >
                     {val.comment}
                   </p>
-                  {shouldShowReadMore[i] && (
+                  {/* {shouldShowReadMore[i] && (
                     <p
                       className="text-sm font-semibold mt-4 cursor-pointer"
                       onClick={() => toggleExpand(i)}
                     >
                       {isExpanded ? "show less" : "read more"}
                     </p>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
