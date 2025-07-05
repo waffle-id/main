@@ -1,0 +1,40 @@
+{
+  "apps": [
+    {
+      "name": "waffle-scraper",
+      "script": "/root/.bun/bin/bun",
+      "args": "run src/index.ts",
+      "cwd": "/opt/waffle/scraper",
+      "instances": 1,
+      "exec_mode": "fork",
+      "watch": false,
+      "autorestart": true,
+      "restart_delay": 5000,
+      "max_restarts": 10,
+      "min_uptime": "10s",
+      "max_memory_restart": "1G",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3003",
+        "BACKEND_URL": "https://api.waffle.food",
+        "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/chromium-browser",
+        "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
+        "CHROME_BIN": "/usr/bin/chromium-browser",
+        "NODE_OPTIONS": "--max-old-space-size=2048"
+      },
+      "env_development": {
+        "NODE_ENV": "development",
+        "PORT": "3003",
+        "BACKEND_URL": "https://api.waffle.food"
+      },
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "error_file": "/var/log/waffle-scraper/error.log",
+      "out_file": "/var/log/waffle-scraper/out.log",
+      "log_file": "/var/log/waffle-scraper/combined.log",
+      "time": true,
+      "merge_logs": true,
+      "kill_timeout": 5000,
+      "listen_timeout": 10000
+    }
+  ]
+}

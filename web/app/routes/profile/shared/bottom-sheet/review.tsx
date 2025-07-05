@@ -65,6 +65,11 @@ export default function Review({ user }: ReviewProps) {
   const [aiFeedback, setAiFeedback] = useState("");
   const [checking, setChecking] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [shouldAnalyze, setShouldAnalyze] = useState(false);
+
+  const triggerAnalysis = () => {
+    setShouldAnalyze((prev) => !prev);
+  };
 
   const handleSubmit = async () => {
     console.log("Here submitting");
@@ -79,11 +84,7 @@ export default function Review({ user }: ReviewProps) {
         abi: ABI,
         address: CA,
         functionName: "submitUsernameReview",
-        args: [
-          user.username, // from props
-          sentimentScores[sentiment!], // uint8
-          description.trim(), // comment
-        ],
+        args: [user.username, sentimentScores[sentiment!], description.trim()],
       });
 
       console.log(`TxHash: ${txHash}`);
@@ -105,11 +106,10 @@ export default function Review({ user }: ReviewProps) {
         txHash: txHash,
         // @ts-expect-error
         rating: sentiment,
-        personas: [], // Default value first, not used yet,
+        personas: [],
         overallPersona: "helpful",
       });
 
-      // ✅ Only reset if successful
       setTitle("");
       setDescription("");
       setSentiment(null);
@@ -126,16 +126,18 @@ export default function Review({ user }: ReviewProps) {
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
 
-    // Don't even try to debounce if both are not filled
     if (trimmedTitle.length === 0 || trimmedDesc.length === 0) {
       setQualityLevel(null);
       setAiFeedback("");
+      setQualityLoading(false);
+      setChecking(false);
       return;
     }
 
     setQualityLoading(true);
+    setChecking(true);
+
     const timeout = setTimeout(async () => {
-      setChecking(true);
       try {
         if (!client) {
           client = await Client.connect("RVMV/review-analyzer");
@@ -149,33 +151,34 @@ export default function Review({ user }: ReviewProps) {
         const results = aiResponse.data as ReviewAIResponse[];
         const result = results[0];
 
-        console.log(result);
-        setQualityLoading(false);
+        console.log("AI Analysis Result:", result);
         setQualityLevel(result.quality.level);
         setAiFeedback(result.quality.feedback);
       } catch (err) {
         console.error("AI analysis failed", err);
-        setQualityLoading(false);
         setQualityLevel(null);
-        setAiFeedback("Could not analyze review.");
+        setAiFeedback("Unable to analyze review quality. Please try again.");
       } finally {
+        setQualityLoading(false);
         setChecking(false);
       }
-    }, 500); // Wait 500ms after last keystroke
+    }, 800);
 
-    return () => clearTimeout(timeout); // Cleanup on each change
-  }, [title, description]);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [title, description, shouldAnalyze]);
 
   useEffect(() => {
     setIsFormValid(
       sentiment !== null &&
         title.trim().length > 0 &&
         description.trim().length > 0 &&
-        qualityLevel !== "low" &&
-        qualityLevel !== null &&
-        !checking
+        qualityLevel === "high" &&
+        !checking &&
+        !qualityLoading
     );
-  }, [sentiment, title, description, qualityLevel, checking]);
+  }, [sentiment, title, description, qualityLevel, checking, qualityLoading]);
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -187,7 +190,7 @@ export default function Review({ user }: ReviewProps) {
       </ButtonMagnet>
 
       <DrawerContent className="pb-10 text-black h-full max-h-3/4">
-        <div className="mx-auto w-full max-w-sm flex flex-col gap-12">
+        <div className="mx-auto w-full max-w-sm flex flex-col gap-6">
           <DrawerHeader>
             <DrawerTitle className="text-center font-bold text-black text-2xl">
               Write review
@@ -195,7 +198,6 @@ export default function Review({ user }: ReviewProps) {
           </DrawerHeader>
 
           <div className="flex flex-row items-center gap-4 w-full">
-            {/* <Button className="text-red-500 border-re" variant="outline">Negative</Button> */}
             <ButtonMagnet
               color="red"
               className={`w-full ${sentiment === "negative" ? "bg-red-500 text-white" : ""}`}
@@ -223,65 +225,105 @@ export default function Review({ user }: ReviewProps) {
           <div className="flex flex-col gap-2">
             <p>Title</p>
             <Input
-              placeholder="Title"
+              placeholder="Review title..."
               className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              // value={form.from}
-              // onChange={(e) =>
-              //   setForm((prev) => {
-              //     return { ...prev, from: e.target.value };
-              //   })
-              // }
+              onChange={(e) => {
+                setTitle(e.target.value);
+                triggerAnalysis();
+              }}
+              onBlur={triggerAnalysis}
             />
           </div>
           <div className="flex flex-col gap-2">
             <p>Description</p>
             <div className="overflow-y-auto max-h-[10vh]">
               <Textarea
-                placeholder="Description"
+                placeholder="Write your detailed review. AI will analyze as you type or when you finish."
                 className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                // value={form.message}
-                // onChange={(e) =>
-                //   setForm((prev) => {
-                //     return { ...prev, message: e.target.value };
-                //   })
-                // }
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  triggerAnalysis();
+                }}
+                onBlur={triggerAnalysis}
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 p-3 border border-black/20 rounded-lg bg-gray-50/50">
             <div
-              className={`w-4 h-4 rounded-full ${
-                qualityLevel === "low"
+              className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                qualityLoading
+                  ? "bg-blue-500 animate-pulse shadow-lg shadow-blue-500/50"
+                  : qualityLevel === "low"
                   ? "bg-red-500"
                   : qualityLevel === "medium"
                   ? "bg-yellow-400"
-                  : "bg-green-500"
+                  : qualityLevel === "high"
+                  ? "bg-green-500"
+                  : "bg-gray-300"
               }`}
             />
             {qualityLoading ? (
-              <span className="text-sm text-black/70 capitalize">loading ...</span>
+              <div className="flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                <span className="text-sm text-black/70 animate-pulse font-medium">
+                  AI analyzing your review...
+                </span>
+              </div>
             ) : (
-              <span className="text-sm text-black/70 capitalize">
-                {qualityLevel ?? "idle"} quality
-              </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-black/80 capitalize font-medium">
+                  Quality: {qualityLevel ?? "Not analyzed"}
+                </span>
+                {aiFeedback && (
+                  <p className="text-xs text-black/60 animate-fade-in leading-relaxed">
+                    💡 {aiFeedback}
+                  </p>
+                )}
+                {qualityLevel === "low" && (
+                  <p className="text-xs text-red-600 font-medium animate-fade-in">
+                    ❌ Quality too low - Please add more detail and constructive feedback
+                  </p>
+                )}
+                {qualityLevel === "medium" && (
+                  <p className="text-xs text-orange-600 font-medium animate-fade-in">
+                    ⚠️ Good quality but needs improvement - Add more specific details
+                  </p>
+                )}
+                {qualityLevel === "high" && (
+                  <p className="text-xs text-green-600 font-medium animate-fade-in">
+                    ✅ Excellent quality - Ready to submit!
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
           <ButtonMagnet
-            disabled={!isFormValid}
-            className="self-center w-max px-16"
+            disabled={!isFormValid || isPending}
+            className={`self-center w-max px-16 transition-all duration-300 ${
+              !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={() => {
               console.log("disabled", !isFormValid);
-              handleSubmit();
+              if (isFormValid) {
+                handleSubmit();
+              }
             }}
           >
-            Submit
+            {isPending ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Submitting...
+              </div>
+            ) : qualityLevel !== "high" && qualityLevel !== null ? (
+              "Improve Quality to Submit"
+            ) : (
+              "Submit"
+            )}
           </ButtonMagnet>
         </div>
       </DrawerContent>
