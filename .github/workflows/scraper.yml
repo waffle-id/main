@@ -3,9 +3,9 @@ name: 🐳 [SCRAPER] Build & Deploy
 on:
   push:
     branches:
-    - main
-    paths:
-    - "scraper/**"
+    - scraper
+    # paths:
+    # - "scraper/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
