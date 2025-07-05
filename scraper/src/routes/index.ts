@@ -249,7 +249,8 @@ app.post("/profile/:username/refresh", async (c) => {
   }
 
   try {
-    const scrapedData = await scrapeTwitterProfile(username);
+    // Don't auto-post to backend for manual refresh requests
+    const scrapedData = await scrapeTwitterProfile(username, false);
 
     if (!scrapedData) {
       return c.json({ error: "Failed to scrape profile" }, 404);

@@ -212,12 +212,27 @@ router.post("/register-scraper", async (req, res, next) => {
   try {
     const { username, fullName, bio, avatarUrl } = req.body;
 
+    if (!username) {
+      const error = Error("Username is required");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+
     const existingUser = await findByUsernameFullData(username);
 
     let user;
     if (existingUser != null) {
-      user = await update({});
+      // Update existing user with new scraped data
+      const updatedData = {
+        ...existingUser,
+        fullName: fullName || existingUser.fullName,
+        bio: bio || existingUser.bio,
+        avatarUrl: avatarUrl || existingUser.avatarUrl,
+      };
+      user = await update(updatedData);
+      console.log(`🔄 Updated existing user: ${username}`);
     } else {
+      // Create new user with scraped data
       user = await create({
         username,
         address: "",
@@ -227,21 +242,11 @@ router.post("/register-scraper", async (req, res, next) => {
         bio: bio,
         fullName: fullName,
       });
+      console.log(`🆕 Created new user: ${username}`);
     }
-
-    // const token = jwt.sign(
-    //   {
-    //     id: user._id,
-    //     address: user.address,
-    //     username: user.username,
-    //   },
-    //   CONFIG.JWT_SECRET,
-    //   { expiresIn: "1h" }
-    // );
 
     res.status(200).json({
       isSuccess: true,
-      // token,
       user: {
         id: user._id,
         address: user.address,
@@ -251,6 +256,7 @@ router.post("/register-scraper", async (req, res, next) => {
       },
     });
   } catch (err) {
+    console.error("Error in register-scraper:", err);
     next(err);
   }
 });

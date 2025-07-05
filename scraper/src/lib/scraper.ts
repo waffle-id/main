@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer-extra";
+import { CONFIG } from "../config";
 
 export interface TwitterProfile {
   fullName: string | null;
@@ -9,7 +10,37 @@ export interface TwitterProfile {
   url: string;
 }
 
-export async function scrapeTwitterProfile(username: string): Promise<TwitterProfile | null> {
+async function postToBackend(profile: TwitterProfile): Promise<void> {
+  try {
+    const backendUrl = `${CONFIG.BACKEND_URL}${CONFIG.REGISTER_SCRAPER_ENDPOINT}`;
+    console.log(`📤 Posting scraped data to backend: ${backendUrl}`);
+
+    const response = await fetch(backendUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: profile.username,
+        fullName: profile.fullName,
+        bio: profile.bio,
+        avatarUrl: profile.avatarUrl,
+      }),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log(`✅ Successfully posted ${profile.username} to backend:`, result);
+    } else {
+      const errorText = await response.text();
+      console.warn(`⚠️ Failed to post ${profile.username} to backend (${response.status}):`, errorText);
+    }
+  } catch (error) {
+    console.error(`❌ Error posting ${profile.username} to backend:`, error);
+  }
+}
+
+export async function scrapeTwitterProfile(username: string, shouldPostToBackend = true): Promise<TwitterProfile | null> {
   const url = `https://x.com/${username}`;
 
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
@@ -310,6 +341,11 @@ export async function scrapeTwitterProfile(username: string): Promise<TwitterPro
     }, username);
 
     await browser.close();
+
+    if (shouldPostToBackend && data && data.username) {
+      await postToBackend(data);
+    }
+
     return data;
   } catch (err) {
     await browser.close();
