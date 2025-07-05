@@ -8,9 +8,31 @@ export async function findByRevieweeUsernameAndReviewerUsername(
 }
 
 export async function findAllByRevieweeUsername(revieweeUsername: string) {
-  return ReviewModel.find({ revieweeUsername });
+  return ReviewModel.aggregate([
+    { $match: { revieweeUsername } },
+    {
+      $lookup: {
+        from: "accounts",
+        localField: "reviewerUsername",
+        foreignField: "username",
+        as: "reviewerAccount",
+      },
+    },
+    { $unwind: { path: "$reviewerAccount", preserveNullAndEmptyArrays: true } },
+  ]);
 }
 
 export async function findAllByReviewerUsername(reviewerUsername: string) {
-  return ReviewModel.find({ reviewerUsername });
+  return ReviewModel.aggregate([
+    { $match: { reviewerUsername } },
+    {
+      $lookup: {
+        from: "accounts",
+        localField: "revieweeUsername",
+        foreignField: "username",
+        as: "revieweeAccount",
+      },
+    },
+    { $unwind: { path: "$reviewerAccount", preserveNullAndEmptyArrays: true } },
+  ]);
 }

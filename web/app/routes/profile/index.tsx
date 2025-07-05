@@ -31,6 +31,32 @@ import Slash from "./shared/bottom-sheet/slash";
 import { redirect, useParams, useLoaderData } from "react-router";
 import type { Route } from "./+types";
 
+export interface UserProfileData {
+  address?: string;
+  username: string;
+  fullName: string;
+  bio: string;
+  avatarUrl: string;
+  reputationScore: number;
+  hasInvitationAuthority: boolean;
+  userPersonaScores?: any[];
+  isScraped?: boolean;
+}
+
+interface ScraperProfileData {
+  success: boolean;
+  data: {
+    fullName: string;
+    username: string;
+    bio: string;
+    avatarUrl: string;
+    followers: string;
+    url: string;
+  };
+  cached: boolean;
+  lastScraped: string;
+}
+
 const imageItems = [
   {
     src: `https://api.dicebear.com/9.x/big-smile/svg?seed=${Math.floor(Math.random() * 100) + 1}`,
@@ -83,32 +109,7 @@ const imageItems = [
   },
 ];
 
-export interface UserProfileData {
-  address?: string;
-  username: string;
-  fullName: string;
-  bio: string;
-  avatarUrl: string;
-  reputationScore: number;
-  hasInvitationAuthority: boolean;
-  userPersonaScores?: any[];
-  isScraped?: boolean;
-}
-
-interface ScraperProfileData {
-  success: boolean;
-  data: {
-    fullName: string;
-    username: string;
-    bio: string;
-    avatarUrl: string;
-    followers: string;
-    url: string;
-  };
-  cached: boolean;
-  lastScraped: string;
-}
-
+// https://api.waffle.food/reviews?revieweeUsername=rei_yan__
 export async function loader({ params }: { params: { variant: string; slug: string } }) {
   const { variant, slug } = params;
 

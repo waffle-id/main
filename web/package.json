@@ -46,10 +46,10 @@
     "twitter-api-v2": "^1.24.0",
     "vaul": "^1.1.2",
     "viem": "^2.31.6",
-    "wagmi": "^2.15.6"
+    "wagmi": "^2.15.6",
+    "@gradio/client": "^1.15.4"
   },
   "devDependencies": {
-    "@gradio/client": "^1.15.4",
     "@react-router/dev": "^7.5.3",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",
