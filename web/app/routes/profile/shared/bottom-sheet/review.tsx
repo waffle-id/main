@@ -61,16 +61,10 @@ export default function Review({ user }: ReviewProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [qualityLevel, setQualityLevel] = useState<"low" | "medium" | "high" | null>(null);
+  const [qualityLoading, setQualityLoading] = useState(false);
   const [aiFeedback, setAiFeedback] = useState("");
   const [checking, setChecking] = useState(false);
-
-  const isFormValid =
-    sentiment !== null &&
-    title.trim().length > 0 &&
-    description.trim().length > 0 &&
-    qualityLevel !== "low" &&
-    qualityLevel !== null &&
-    !checking;
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleSubmit = async () => {
     console.log("Here submitting");
@@ -107,6 +101,7 @@ export default function Review({ user }: ReviewProps) {
         revieweeUsername: user.username,
         comment: description,
         txHash: txHash,
+        // @ts-expect-error
         rating: sentiment,
         personas: [], // Default value first, not used yet,
         overallPersona: "helpful",
@@ -116,6 +111,7 @@ export default function Review({ user }: ReviewProps) {
       setTitle("");
       setDescription("");
       setSentiment(null);
+      setQualityLoading(false);
       setQualityLevel(null);
       setAiFeedback("");
       setIsOpen(false);
@@ -135,6 +131,7 @@ export default function Review({ user }: ReviewProps) {
       return;
     }
 
+    setQualityLoading(true);
     const timeout = setTimeout(async () => {
       setChecking(true);
       try {
@@ -151,10 +148,12 @@ export default function Review({ user }: ReviewProps) {
         const result = results[0];
 
         console.log(result);
+        setQualityLoading(false);
         setQualityLevel(result.quality.level);
         setAiFeedback(result.quality.feedback);
       } catch (err) {
         console.error("AI analysis failed", err);
+        setQualityLoading(false);
         setQualityLevel(null);
         setAiFeedback("Could not analyze review.");
       } finally {
@@ -165,6 +164,17 @@ export default function Review({ user }: ReviewProps) {
     return () => clearTimeout(timeout); // Cleanup on each change
   }, [title, description]);
 
+  useEffect(() => {
+    setIsFormValid(
+      sentiment !== null &&
+        title.trim().length > 0 &&
+        description.trim().length > 0 &&
+        qualityLevel !== "low" &&
+        qualityLevel !== null &&
+        !checking
+    );
+  }, [sentiment, title, description, qualityLevel, checking]);
+
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <ButtonMagnet className="px-8 py-2" onClick={() => setIsOpen(true)}>
@@ -174,7 +184,7 @@ export default function Review({ user }: ReviewProps) {
         </div>
       </ButtonMagnet>
 
-      <DrawerContent className="pb-10 text-black">
+      <DrawerContent className="pb-10 text-black h-full max-h-3/4">
         <div className="mx-auto w-full max-w-sm flex flex-col gap-12">
           <DrawerHeader>
             <DrawerTitle className="text-center font-bold text-black text-2xl">
@@ -186,18 +196,14 @@ export default function Review({ user }: ReviewProps) {
             {/* <Button className="text-red-500 border-re" variant="outline">Negative</Button> */}
             <ButtonMagnet
               color="red"
-              className={`w-full ${
-                sentiment === "negative" ? "bg-red-500 text-white hover:text-white" : ""
-              }`}
+              className={`w-full ${sentiment === "negative" ? "bg-red-500 text-white" : ""}`}
               onClick={() => setSentiment("negative")}
             >
               Negative
             </ButtonMagnet>
 
             <ButtonMagnet
-              className={`w-full ${
-                sentiment === "neutral" ? "bg-yellow-500 text-white hover:text-white" : "w-full"
-              }`}
+              className={`w-full ${sentiment === "neutral" ? "bg-yellow-500 text-white" : ""}`}
               onClick={() => setSentiment("neutral")}
             >
               Neutral
@@ -205,9 +211,7 @@ export default function Review({ user }: ReviewProps) {
 
             <ButtonMagnet
               color="green"
-              className={`w-full ${
-                sentiment === "positive" ? "bg-green-500 text-white hover:text-white" : ""
-              }`}
+              className={`w-full ${sentiment === "positive" ? "bg-green-500 text-white" : ""}`}
               onClick={() => setSentiment("positive")}
             >
               Positive
@@ -248,25 +252,32 @@ export default function Review({ user }: ReviewProps) {
             </div>
           </div>
 
-          {qualityLevel && (
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  qualityLevel === "low"
-                    ? "bg-red-500"
-                    : qualityLevel === "medium"
-                    ? "bg-yellow-400"
-                    : "bg-green-500"
-                }`}
-              />
-              <span className="text-sm text-black/70 capitalize">{qualityLevel} quality</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-4 h-4 rounded-full ${
+                qualityLevel === "low"
+                  ? "bg-red-500"
+                  : qualityLevel === "medium"
+                  ? "bg-yellow-400"
+                  : "bg-green-500"
+              }`}
+            />
+            {qualityLoading ? (
+              <span className="text-sm text-black/70 capitalize">loading ...</span>
+            ) : (
+              <span className="text-sm text-black/70 capitalize">
+                {qualityLevel ?? "idle"} quality
+              </span>
+            )}
+          </div>
 
           <ButtonMagnet
             disabled={!isFormValid}
             className="self-center w-max px-16"
-            onClick={handleSubmit}
+            onClick={() => {
+              console.log("disabled", !isFormValid);
+              handleSubmit();
+            }}
           >
             Submit
           </ButtonMagnet>

@@ -9,9 +9,7 @@ export interface AddReviewPayload {
   overallPersona?: string;
 }
 
-export async function addReview(
-  payload: AddReviewPayload
-): Promise<{ isSuccess: boolean }> {
+export async function addReview(payload: AddReviewPayload): Promise<{ isSuccess: boolean }> {
   const token = localStorage.getItem("waffle_auth_token");
 
   if (!token) {
