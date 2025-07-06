@@ -1,4 +1,5 @@
 import { ReviewModel } from "../model";
+import { findByAddress } from "../../account/controller/find";
 
 export async function findByRevieweeUsernameAndReviewerUsername(
   revieweeUsername: string,
@@ -37,4 +38,63 @@ export async function findAllByReviewerUsername(reviewerUsername: string) {
     { $unwind: { path: "$reviewerAccount", preserveNullAndEmptyArrays: true } },
     { $sort: { createdAt: -1 } },
   ]);
+}
+
+export async function findAllByRevieweeAddress(revieweeAddress: string) {
+  const revieweeAccount = await findByAddress(revieweeAddress);
+  if (!revieweeAccount) {
+    return [];
+  }
+
+  return ReviewModel.aggregate([
+    { $match: { revieweeUsername: revieweeAccount.username } },
+    {
+      $lookup: {
+        from: "accounts",
+        localField: "reviewerUsername",
+        foreignField: "username",
+        as: "reviewerAccount",
+      },
+    },
+    { $unwind: { path: "$reviewerAccount", preserveNullAndEmptyArrays: true } },
+    { $sort: { createdAt: -1 } },
+  ]);
+}
+
+export async function findAllByReviewerAddress(reviewerAddress: string) {
+  const reviewerAccount = await findByAddress(reviewerAddress);
+  if (!reviewerAccount) {
+    return [];
+  }
+
+  return ReviewModel.aggregate([
+    { $match: { reviewerUsername: reviewerAccount.username } },
+    {
+      $lookup: {
+        from: "accounts",
+        localField: "revieweeUsername",
+        foreignField: "username",
+        as: "revieweeAccount",
+      },
+    },
+    { $unwind: { path: "$revieweeAccount", preserveNullAndEmptyArrays: true } },
+    { $sort: { createdAt: -1 } },
+  ]);
+}
+
+export async function findByRevieweeAddressAndReviewerAddress(
+  revieweeAddress: string,
+  reviewerAddress: string
+) {
+  const revieweeAccount = await findByAddress(revieweeAddress);
+  const reviewerAccount = await findByAddress(reviewerAddress);
+
+  if (!revieweeAccount || !reviewerAccount) {
+    return null;
+  }
+
+  return ReviewModel.findOne({
+    revieweeUsername: revieweeAccount.username,
+    reviewerUsername: reviewerAccount.username,
+  });
 }
