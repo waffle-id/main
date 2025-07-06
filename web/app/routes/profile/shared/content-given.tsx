@@ -73,7 +73,7 @@ export function ContentGiven({ listData }: ContentGivenProps) {
   return (
     <div className="relative flex flex-col justify-center">
       <div className="columns-2 md:columns-3 gap-10 [column-fill:_balance]">
-        {(listData.length > 0 ? listData : EXTENDED_REVIEWS).map((val, i) => {
+        {(listData.length > 10 ? listData : [...listData, ...EXTENDED_REVIEWS]).map((val, i) => {
           const isExpanded = expandedIndexes[i];
 
           return (
