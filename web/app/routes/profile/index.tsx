@@ -128,6 +128,15 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     return redirect("/");
   }
 
+  // review
+  const urlREVIEW = `https://api.waffle.food/reviews?${
+    variant == "w" ? "revieweeAddress=" : "revieweeUsername="
+  }${slug}`;
+  const reviewResult = await fetch(urlREVIEW);
+
+  // if (reviewResult.ok) {
+  const userReview = await reviewResult.json();
+
   if (variant === "w" && slug.startsWith("0x")) {
     const walletBios = [
       "Early adopter exploring the Web3 ecosystem with passion.",
@@ -166,19 +175,11 @@ export async function loader({ params }: { params: { variant: string; slug: stri
       needsScraping: false,
       slug,
       imagesItemsLoader: imageItems,
+      userReview,
     };
   }
 
-  // review
-  const reviewResult = await fetch(
-    `https://api.waffle.food/reviews?${
-      variant == "w" ? "revieweeAddress=" : "revieweeUsername"
-    }${slug}`
-  );
   const newImagesItems: ImageItems[] = [];
-
-  // if (reviewResult.ok) {
-  const userReview = await reviewResult.json();
 
   imageItems.map((v, i) => {
     const item = userReview.reviews[i];
@@ -451,6 +452,8 @@ export default function Profile() {
             <Vouch />
             <Slash />
           </div>
+
+          {/* <p>{JSON.stringify(userReview)}</p> */}
           <Tabs defaultValue={TABS[0]}>
             <TabsList className="w-full mb-5 flex flex-wrap gap-2">
               {TABS.map((val, idx) => (

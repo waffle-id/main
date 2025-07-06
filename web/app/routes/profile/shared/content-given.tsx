@@ -54,7 +54,7 @@ export function ContentGiven({ listData }: ContentGivenProps) {
   }));
 
   const combinedData = useMemo(() => {
-    return listData.length > 7 ? [...listData, ...EXTENDED_REVIEWS] : EXTENDED_REVIEWS;
+    return listData.length > 7 ? listData : [...listData, ...EXTENDED_REVIEWS];
   }, [listData]);
 
   function toggleExpand(index: number) {
