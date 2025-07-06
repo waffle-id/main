@@ -170,7 +170,11 @@ export async function loader({ params }: { params: { variant: string; slug: stri
   }
 
   // review
-  const reviewResult = await fetch(`https://api.waffle.food/reviews?revieweeUsername=${slug}`);
+  const reviewResult = await fetch(
+    `https://api.waffle.food/reviews?${
+      variant == "w" ? "revieweeAddress=" : "revieweeUsername"
+    }${slug}`
+  );
   const newImagesItems: ImageItems[] = [];
 
   // if (reviewResult.ok) {
