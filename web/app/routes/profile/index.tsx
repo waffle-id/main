@@ -129,11 +129,32 @@ export async function loader({ params }: { params: { variant: string; slug: stri
   }
 
   if (variant === "w" && slug.startsWith("0x")) {
+    const walletBios = [
+      "Early adopter exploring the Web3 ecosystem with passion.",
+      "Building the future, one transaction at a time.",
+      "Decentralized finance enthusiast and blockchain advocate.",
+      "Digital nomad navigating the metaverse landscape.",
+      "Crypto researcher focused on innovative protocols.",
+      "DeFi strategist with a keen eye for emerging opportunities.",
+      "NFT collector and digital art enthusiast.",
+      "Blockchain developer contributing to open-source projects.",
+      "Web3 pioneer exploring decentralized technologies.",
+      "Smart contract auditor ensuring protocol security.",
+      "DAO participant shaping decentralized governance.",
+      "Yield farmer optimizing across multiple protocols.",
+      "On-chain analyst tracking market movements.",
+      "Ethereum validator supporting network security.",
+      "Cross-chain bridge explorer connecting ecosystems.",
+    ];
+
+    const addressHash = slug.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const bioIndex = addressHash % walletBios.length;
+
     const walletUserData: UserProfileData = {
       address: slug,
       username: `${slug.slice(0, 6)}...${slug.slice(-4)}`,
-      fullName: `Wallet ${slug.slice(0, 6)}...${slug.slice(-4)}`,
-      bio: "Wallet address profile - connect to see more details",
+      fullName: `${slug.slice(0, 6)}...${slug.slice(-4)}`,
+      bio: walletBios[bioIndex],
       avatarUrl: `https://api.dicebear.com/9.x/identicon/svg?seed=${slug}`,
       reputationScore: 1000,
       hasInvitationAuthority: false,
