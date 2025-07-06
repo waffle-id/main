@@ -382,7 +382,7 @@ export default function Profile() {
 
       <div className="relative z-[10000] h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
         <p className="text-[5vh] max-w-[40ch] leading-snug">
-          {userData.bio || "use me as a bad example"}
+          {userData.bio || "This user prefers to stay mysterious."}
         </p>
         <div className="absolute bottom-0 px-[20px] lg:px-[50px] mb-20 w-full">
           <div className="flex flex-row items-center justify-between">
@@ -439,10 +439,10 @@ export default function Profile() {
               <ContentGiven listData={userReview ? userReview.reviews : []} />
             </TabsContent>
             <TabsContent value={TABS[1]} className="flex flex-col gap-10">
-              <ContentReceived />
+              <ContentReceived listData={userReview ? userReview.reviews : []} />
             </TabsContent>
             <TabsContent value={TABS[2]} className="flex flex-col gap-10">
-              <ContentAll />
+              <ContentAll listData={userReview ? userReview.reviews : []} />
             </TabsContent>
           </Tabs>
         </div>
