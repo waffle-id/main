@@ -1,7 +1,9 @@
-import { Share2, Wallet } from "lucide-react";
+import { Share2, Wallet, Copy, Check } from "lucide-react";
 import type { JSX } from "react";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 import { useParams } from "react-router";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/shadcn/tooltip";
+import { useState } from "react";
 
 interface ActionScoreProps {
   reputationScore?: number;
@@ -13,6 +15,7 @@ export function ActionScore({
   hasInvitationAuthority = false,
 }: ActionScoreProps) {
   const params = useParams();
+  const [copied, setCopied] = useState(false);
 
   const handleTwitterClick = () => {
     if (params.variant === "x" && params.slug) {
@@ -20,18 +23,59 @@ export function ActionScore({
     }
   };
 
+  const handleAddressClick = async () => {
+    if (params.variant === "w" && params.slug) {
+      try {
+        await navigator.clipboard.writeText(params.slug);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy address:", err);
+      }
+    }
+  };
+
+  const isWalletProfile = params.variant === "w";
+  const isTwitterProfile = params.variant === "x";
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-row items-center justify-end gap-8">
         <IconX
           className={`size-6 ${
-            params.variant === "x"
+            isTwitterProfile
               ? "cursor-pointer hover:opacity-70 transition-opacity"
               : "cursor-default opacity-50"
           }`}
-          onClick={params.variant === "x" ? handleTwitterClick : undefined}
+          onClick={isTwitterProfile ? handleTwitterClick : undefined}
         />
-        <Wallet className="size-6 cursor-pointer" />
+
+        {isWalletProfile && params.slug ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity p-2 rounded-md hover:bg-gray-100"
+                onClick={handleAddressClick}
+              >
+                {copied ? (
+                  <Check className="size-6 text-green-600" />
+                ) : (
+                  <Wallet className="size-6" />
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="flex flex-col gap-1">
+                <p className="font-medium">Wallet Address</p>
+                <p className="text-xs font-mono break-all max-w-[200px]">{params.slug}</p>
+                <p className="text-xs opacity-70">{copied ? "Copied!" : "Click to copy"}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Wallet className="size-6 cursor-default opacity-50" />
+        )}
+
         <Share2 className="size-6 cursor-pointer" />
       </div>
       <div className="flex flex-row gap-8 items-center">
