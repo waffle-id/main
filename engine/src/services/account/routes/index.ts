@@ -163,7 +163,7 @@ router.post("/register", async (req, res, next) => {
       throw error;
     }
 
-    existingReferralCode.isExpired = true;
+    // existingReferralCode.isExpired = true; // temporary disable
     await updateReferralCode(existingReferralCode);
 
     let user;
