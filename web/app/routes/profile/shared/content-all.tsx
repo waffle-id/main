@@ -1,33 +1,27 @@
-import { Award, BadgeDollarSign } from "lucide-react";
+import { Award, BadgeDollarSign, Users } from "lucide-react";
 import { Link } from "react-router";
-import { useMemo } from "react";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 
 type ContentAllProps = {
-  listData: Record<string, string>[];
+  listData: any[];
 };
 
 export function ContentAll({ listData }: ContentAllProps) {
-  const mockActivities = useMemo(
-    () =>
-      Array.from({ length: 20 }, (_, idx) => ({
-        id: `mock-${idx}`,
-        type: idx % 2 === 0 ? "vouch" : "review",
-        amount: "$2000",
-        actorName: `User${String(idx + 1).padStart(3, "0")}`,
-        actorUsername: `user${String(idx + 1).padStart(3, "0")}`,
-        actorAvatar: `https://api.dicebear.com/9.x/big-smile/svg?seed=actor${idx}`,
-        subjectName: `Subject${String(idx + 1).padStart(3, "0")}`,
-        subjectUsername: `subject${String(idx + 1).padStart(3, "0")}`,
-        subjectAvatar: `https://api.dicebear.com/9.x/big-smile/svg?seed=subject${idx}`,
-      })),
-    []
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <Users className="size-16 text-gray-400 mb-4" />
+      <h3 className="text-xl font-semibold text-gray-600 mb-2">No Activity Yet</h3>
+      <p className="text-gray-500 max-w-md">
+        There's no activity to display at the moment. Once there are reviews or vouches, they'll
+        appear here.
+      </p>
+    </div>
   );
 
-  const combinedData = useMemo(() => {
-    return listData.length > 0 ? [...listData, ...mockActivities] : mockActivities;
-  }, [listData, mockActivities]);
+  if (listData.length === 0) {
+    return <EmptyState />;
+  }
   return (
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-4 w-full text-black text-md">
@@ -35,13 +29,13 @@ export function ContentAll({ listData }: ContentAllProps) {
         <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Date</p>
         <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Actor</p>
         <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Subject</p>
-        {combinedData.map((activity, idx) => (
+        {listData.map((activity, idx) => (
           <div key={activity.id || idx} className="contents">
             <div className="border-b border-gray-400 border-dashed py-3">
               <div className="flex items-center h-full">
                 <div className="flex flex-row w-max items-center gap-4">
                   {/* @ts-ignore */}
-                  {(activity.type || (idx % 2 === 0 ? "vouch" : "review")) === "vouch" ? (
+                  {activity.type === "vouch" ? (
                     <>
                       <BadgeDollarSign className="size-5 text-foreground" />
                       <p className="ml-1">Vouch</p>
@@ -58,7 +52,7 @@ export function ContentAll({ listData }: ContentAllProps) {
             <div className="border-b border-gray-400 border-dashed py-3">
               <div className="flex items-center h-full">
                 {/* @ts-ignore */}
-                <p>{activity.amount || "$2000"}</p>
+                <p>{activity.amount || activity.date || "-"}</p>
               </div>
             </div>
             <div className="border-b border-gray-400 border-dashed py-3">
@@ -67,20 +61,23 @@ export function ContentAll({ listData }: ContentAllProps) {
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-red-500 rounded-full"></div>
                   <img
                     className="relative z-10 size-10 aspect-square rounded-full p-1"
+                    /* @ts-ignore */
                     src={
                       activity.actorAvatar ||
-                      `https://api.dicebear.com/9.x/big-smile/svg?seed=actor${idx}`
+                      `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+                        activity.actorName || "default"
+                      }`
                     }
                     alt=""
                   />
                 </div>
                 <Link
-                  // @ts-ignore
-                  to={`/profile/x/${activity.actorName || "unknown"}`}
+                  /* @ts-ignore */
+                  to={`/profile/x/${activity.actorUsername || activity.actorName || "unknown"}`}
                   className="hover:text-blue-600 hover:underline transition-colors cursor-pointer"
                 >
                   {/* @ts-ignore */}
-                  {activity.actorName || `User${String(idx + 1).padStart(3, "0")}`}
+                  {activity.actorName || activity.actorUsername || "Unknown"}
                 </Link>
               </div>
             </div>
@@ -90,29 +87,34 @@ export function ContentAll({ listData }: ContentAllProps) {
                   <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full"></div>
                   <img
                     className="relative z-10 size-10 aspect-square rounded-full p-1"
+                    /* @ts-ignore */
                     src={
                       activity.subjectAvatar ||
-                      `https://api.dicebear.com/9.x/big-smile/svg?seed=subject${idx}`
+                      `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+                        activity.subjectName || "default"
+                      }`
                     }
                     alt=""
                   />
                 </div>
                 <Link
-                  // @ts-ignore
-                  to={`/profile/x/${activity.subjectName || "unknown"}`}
+                  /* @ts-ignore */
+                  to={`/profile/x/${activity.subjectUsername || activity.subjectName || "unknown"}`}
                   className="hover:text-blue-600 hover:underline transition-colors cursor-pointer"
                 >
                   {/* @ts-ignore */}
-                  {activity.subjectName || `Subject${String(idx + 1).padStart(3, "0")}`}
+                  {activity.subjectName || activity.subjectUsername || "Unknown"}
                 </Link>
               </div>
             </div>
           </div>
         ))}
       </div>
-      <ButtonMagnet className="w-max self-center mt-12" size="lg">
-        Load More
-      </ButtonMagnet>
+      {listData.length > 0 && (
+        <ButtonMagnet className="w-max self-center mt-12" size="lg">
+          Load More
+        </ButtonMagnet>
+      )}
     </div>
   );
 }
