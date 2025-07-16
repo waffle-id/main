@@ -1,8 +1,26 @@
 import { UserModel } from "../model";
 
-export async function findAll() {
-  const items = await UserModel.find();
+export async function findAll(
+  shouldSort: boolean,
+  sortBy: string | null,
+  order: string | null,
+  skip: number,
+  limit: number
+) {
+  const sortOrder = order?.toLowerCase() === "asc" ? 1 : -1;
+
+  const query = UserModel.find({}).skip(skip).limit(limit);
+
+  if (shouldSort && sortBy) {
+    query.sort({ [sortBy]: sortOrder }); // ✅ Apply sort before executing
+  }
+
+  const items = await query.exec();
   return items;
+}
+
+export async function getTotalUsers() {
+  return await UserModel.countDocuments();
 }
 
 export async function findByUsername(username: string) {
