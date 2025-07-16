@@ -1,61 +1,27 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
+import { MessageSquare } from "lucide-react";
 
 type ContentGivenProps = {
-  listData: Record<string, string>[];
+  listData: any[];
 };
 
 export function ContentGiven({ listData }: ContentGivenProps) {
   const [expandedIndexes, setExpandedIndexes] = useState<Record<number, boolean>>({});
   const [shouldShowReadMore, setShouldShowReadMore] = useState<Record<number, boolean>>({});
+  const [visibleCount, setVisibleCount] = useState(10);
   const refs = useRef<Record<number, HTMLParagraphElement | null>>({});
 
-  const REVIEWS = [
-    {
-      avatar: "https://api.dicebear.com/9.x/big-smile/svg?seed=emma",
-      reviewerAccount: {
-        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=emma",
-      },
-      reviewerUsername: "Great Experience Working Together",
-      username: "emma_dev",
-      comment: "Very professional and delivered high-quality work on time.",
-    },
-    {
-      reviewerAccount: {
-        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=grace",
-      },
-      reviewerUsername: "Exceeded Expectations",
-      username: "grace_designer",
-      comment:
-        "Fantastic communication skills and attention to detail. The final result was better than I imagined and delivered ahead of schedule.",
-    },
-    {
-      reviewerAccount: {
-        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=kent",
-      },
-      reviewerUsername: "Highly Professional Service",
-      username: "kent_coder",
-      comment:
-        "Outstanding work quality and very responsive throughout the project. Would definitely recommend to others.",
-    },
-    {
-      reviewerAccount: {
-        avatarUrl: "https://api.dicebear.com/9.x/big-smile/svg?seed=kent",
-      },
-      reviewerUsername: "Amazing Results",
-      username: "amazing_dev",
-      comment: "Perfect execution and great collaboration. Very happy with the outcome.",
-    },
-  ];
-
-  const EXTENDED_REVIEWS = Array.from({ length: 15 }, (_, i) => ({
-    ...REVIEWS[i % REVIEWS.length],
-  }));
-
-  const combinedData = useMemo(() => {
-    return listData.length > 7 ? listData : [...listData, ...EXTENDED_REVIEWS];
-  }, [listData]);
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <MessageSquare className="size-16 text-gray-400 mb-4" />
+      <h3 className="text-xl font-semibold text-gray-600 mb-2">No Reviews Given</h3>
+      <p className="text-gray-500 max-w-md">
+        No reviews have been given yet. Once reviews are submitted, they'll be displayed here.
+      </p>
+    </div>
+  );
 
   function toggleExpand(index: number) {
     setExpandedIndexes((prev) => ({
@@ -65,71 +31,86 @@ export function ContentGiven({ listData }: ContentGivenProps) {
   }
 
   useEffect(() => {
-    combinedData.forEach((_, i) => {
+    const visibleData = listData.slice(0, visibleCount);
+    visibleData.forEach((_, i) => {
       const el = refs.current[i];
       if (el) {
-        console.log(el);
-        // const isClamped = el.scrollHeight > el.clientHeight + 1; // small buffer for rounding
+        const isClamped = el.scrollHeight > el.clientHeight + 2;
         setShouldShowReadMore((prev) => ({
           ...prev,
-          [i]: true,
+          [i]: isClamped,
         }));
       }
     });
-  }, [combinedData]);
+  }, [listData, visibleCount]);
+
+  if (listData.length === 0) {
+    return <EmptyState />;
+  }
+
+  const visibleData = listData.slice(0, visibleCount);
+  const hasMore = listData.length > visibleCount;
+
+  const loadMore = () => {
+    setVisibleCount((prev) => prev + 10);
+  };
 
   return (
     <div className="relative flex flex-col justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {combinedData.map((val, i) => {
+        {visibleData.map((val, i) => {
           const isExpanded = expandedIndexes[i];
 
           return (
             <div key={i} className="p-8 w-full bg-gray-100 rounded-lg">
               <div className="flex flex-row gap-8">
                 <div className="relative size-24 flex-shrink-0">
-                  {/* <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full"></div> */}
                   <img
-                    // @ts-ignore
-                    src={val.reviewerAccount?.avatarUrl || val.avatar}
+                    src={
+                      val.reviewerAccount?.avatarUrl ||
+                      val.avatar ||
+                      `https://api.dicebear.com/9.x/big-smile/svg?seed=${
+                        val.reviewerUsername || "default"
+                      }`
+                    }
                     alt=""
                     className="relative z-10 size-24 aspect-square rounded-full object-cover"
                   />
                 </div>
                 <div className="flex flex-col gap-4">
                   <Link
-                    // @ts-ignore
                     to={`/profile/x/${val.reviewerUsername || "unknown"}`}
                     className="text-xl leading-snug hover:text-blue-600 hover:underline transition-colors cursor-pointer"
                   >
-                    {val.reviewerUsername}
+                    {val.reviewerUsername || "Unknown"}
                   </Link>
                   <p
                     ref={(el) => {
                       refs.current[i] = el;
                     }}
-                    // className={`leading-snug ${isExpanded ? "" : "line-clamp-6"}`}
-                    className={`leading-snug`}
+                    className={`leading-snug ${isExpanded ? "" : "line-clamp-3"}`}
                   >
                     {val.comment}
                   </p>
-                  {/* {shouldShowReadMore[i] && (
+                  {shouldShowReadMore[i] && (
                     <p
                       className="text-sm font-semibold mt-4 cursor-pointer"
                       onClick={() => toggleExpand(i)}
                     >
                       {isExpanded ? "show less" : "read more"}
                     </p>
-                  )} */}
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-      <ButtonMagnet className="w-max self-center mt-12" size="lg">
-        Load More
-      </ButtonMagnet>
+      {hasMore && (
+        <ButtonMagnet className="w-max self-center mt-12" size="lg" onClick={loadMore}>
+          Load More
+        </ButtonMagnet>
+      )}
     </div>
   );
 }
