@@ -10,6 +10,7 @@ type ContentGivenProps = {
 export function ContentGiven({ listData }: ContentGivenProps) {
   const [expandedIndexes, setExpandedIndexes] = useState<Record<number, boolean>>({});
   const [shouldShowReadMore, setShouldShowReadMore] = useState<Record<number, boolean>>({});
+  const [visibleCount, setVisibleCount] = useState(10);
   const refs = useRef<Record<number, HTMLParagraphElement | null>>({});
 
   const EmptyState = () => (
@@ -30,7 +31,8 @@ export function ContentGiven({ listData }: ContentGivenProps) {
   }
 
   useEffect(() => {
-    listData.forEach((_, i) => {
+    const visibleData = listData.slice(0, visibleCount);
+    visibleData.forEach((_, i) => {
       const el = refs.current[i];
       if (el) {
         const isClamped = el.scrollHeight > el.clientHeight + 2;
@@ -40,16 +42,23 @@ export function ContentGiven({ listData }: ContentGivenProps) {
         }));
       }
     });
-  }, [listData]);
+  }, [listData, visibleCount]);
 
   if (listData.length === 0) {
     return <EmptyState />;
   }
 
+  const visibleData = listData.slice(0, visibleCount);
+  const hasMore = listData.length > visibleCount;
+
+  const loadMore = () => {
+    setVisibleCount((prev) => prev + 10);
+  };
+
   return (
     <div className="relative flex flex-col justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {listData.map((val, i) => {
+        {visibleData.map((val, i) => {
           const isExpanded = expandedIndexes[i];
 
           return (
@@ -57,7 +66,6 @@ export function ContentGiven({ listData }: ContentGivenProps) {
               <div className="flex flex-row gap-8">
                 <div className="relative size-24 flex-shrink-0">
                   <img
-                    /* @ts-ignore */
                     src={
                       val.reviewerAccount?.avatarUrl ||
                       val.avatar ||
@@ -71,11 +79,9 @@ export function ContentGiven({ listData }: ContentGivenProps) {
                 </div>
                 <div className="flex flex-col gap-4">
                   <Link
-                    /* @ts-ignore */
                     to={`/profile/x/${val.reviewerUsername || "unknown"}`}
                     className="text-xl leading-snug hover:text-blue-600 hover:underline transition-colors cursor-pointer"
                   >
-                    {/* @ts-ignore */}
                     {val.reviewerUsername || "Unknown"}
                   </Link>
                   <p
@@ -84,7 +90,6 @@ export function ContentGiven({ listData }: ContentGivenProps) {
                     }}
                     className={`leading-snug ${isExpanded ? "" : "line-clamp-3"}`}
                   >
-                    {/* @ts-ignore */}
                     {val.comment}
                   </p>
                   {shouldShowReadMore[i] && (
@@ -101,8 +106,8 @@ export function ContentGiven({ listData }: ContentGivenProps) {
           );
         })}
       </div>
-      {listData.length > 0 && (
-        <ButtonMagnet className="w-max self-center mt-12" size="lg">
+      {hasMore && (
+        <ButtonMagnet className="w-max self-center mt-12" size="lg" onClick={loadMore}>
           Load More
         </ButtonMagnet>
       )}
