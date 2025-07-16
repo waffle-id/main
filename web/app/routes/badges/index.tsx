@@ -5,6 +5,7 @@ import { Badge } from "~/components/shadcn/badge";
 import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animation";
 import { Award, Star, Trophy, Target, Users, Zap, Shield, Heart, Crown, Code } from "lucide-react";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
+import { cn } from "~/utils/cn";
 
 export async function loader() {
   try {
@@ -47,36 +48,6 @@ const FALLBACK_BADGES = [
     icon: Code,
     earned: 567,
     color: "from-green-400 to-emerald-600",
-  },
-  {
-    title: "Pioneer",
-    desc: "Early adopter and trendsetter who pushes boundaries in the Web3 space",
-    images: "https://ik.imagekit.io/3592mo0vh/waffle/pioneer.svg",
-    category: "Achievement",
-    rarity: "Epic",
-    icon: Star,
-    earned: 234,
-    color: "from-purple-400 to-violet-600",
-  },
-  {
-    title: "Guardian",
-    desc: "Protects and secures the community through vigilance and expertise",
-    images: "https://ik.imagekit.io/3592mo0vh/waffle/guardian.svg",
-    category: "Security",
-    rarity: "Legendary",
-    icon: Shield,
-    earned: 89,
-    color: "from-orange-400 to-red-600",
-  },
-  {
-    title: "Innovator",
-    desc: "Brings groundbreaking ideas and revolutionary solutions to life",
-    images: "https://ik.imagekit.io/3592mo0vh/waffle/innovator.svg",
-    category: "Innovation",
-    rarity: "Mythic",
-    icon: Zap,
-    earned: 23,
-    color: "from-pink-400 via-purple-500 to-indigo-600",
   },
 ];
 
@@ -161,17 +132,12 @@ export default function BadgesPage() {
       <div className="mb-12">
         <div className="flex flex-wrap gap-3 justify-center">
           {categories.map((category) => (
-            <button
-              key={category}
+            <ButtonMagnet
+              className={cn(selectedCategory === category && "bg-foreground text-white")}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 hover:scale-105 ${
-                selectedCategory === category
-                  ? "bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg"
-                  : "bg-white text-gray-600 border-2 border-gray-200 hover:border-orange-300 hover:text-orange-600"
-              }`}
             >
               {category}
-            </button>
+            </ButtonMagnet>
           ))}
         </div>
       </div>
@@ -189,15 +155,16 @@ export default function BadgesPage() {
               className="group relative bg-gradient-to-br from-white to-orange-50/30 rounded-3xl p-8 border-2 border-orange-200/50 shadow-lg transition-all duration-500 overflow-hidden"
             >
               {/* Background Effects */}
-              {/* <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 to-yellow-100/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div> */}
-              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-300/20 to-yellow-400/20 rounded-full transition-transform duration-700"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-300/20 to-yellow-400/20 rounded-full transition-transform duration-700" />
 
-              {/* Rarity Indicator */}
-              <div
-                className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${rarityStyle} shadow-md`}
+              <Badge
+                className={cn(
+                  `absolute top-4 right-4 text-white bg-gradient-to-r border-0 px-3 py-1`,
+                  rarityStyle
+                )}
               >
                 {rarity}
-              </div>
+              </Badge>
 
               <div className="relative z-10 flex flex-col items-center gap-6">
                 {/* Badge Image Container */}
@@ -223,13 +190,6 @@ export default function BadgesPage() {
                       }`}
                     />
                   </div>
-
-                  {/* Floating animation elements */}
-                  <div className="absolute -top-2 -right-2 w-3 h-3 bg-yellow-400 rounded-full animate-pulse opacity-60"></div>
-                  <div
-                    className="absolute -bottom-2 -left-2 w-2 h-2 bg-orange-400 rounded-full animate-bounce opacity-40"
-                    style={{ animationDelay: "0.5s" }}
-                  ></div>
                 </div>
 
                 {/* Badge Info */}
