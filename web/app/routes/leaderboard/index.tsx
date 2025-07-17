@@ -7,7 +7,16 @@ import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animat
 import { Separator } from "~/components/waffle/separator";
 import type { Route } from "./+types";
 import { capitalizeEachWord } from "~/utils/formatter";
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/shadcn/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/shadcn/tooltip";
+import { useState } from "react";
+import { useEffect } from "react";
+import { BASE_URL } from "~/constants/constant";
+import type { UserLeaderboard } from "~/types/account-service";
+import { useNavigate } from "react-router";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   let title = "most-credible"; // default
@@ -22,8 +31,47 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 }
 
 export default function LeaderboardPage() {
-  const loaderData = useLoaderData();
-  const { title } = loaderData;
+  const navigate = useNavigate();
+  const [top3, setTop3] = useState<UserLeaderboard[]>([]);
+  const [users, setUsers] = useState<UserLeaderboard[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  // const loaderData = useLoaderData();
+  // const { title } = loaderData;
+
+  const fetchLeaderboard = async (page = 1) => {
+    setLoading(true);
+    const res = await fetch(
+      `${BASE_URL}/account/?page=${page}&size=20&sortBy=reputationScore`
+    );
+    const data = await res.json();
+
+    if (page === 1) {
+      setTop3(data.users.slice(0, 3));
+      setUsers(data.users);
+    } else {
+      setUsers((prev) => [...prev, ...data.users]);
+    }
+
+    if (data.pagination.page < data.pagination.totalPages) {
+      setHasMore(true);
+      setPage((prev) => prev + 1); // increase local state
+    } else {
+      setHasMore(false);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLeaderboard(1); // fetch on mount
+  }, []);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      fetchLeaderboard((page as number) + 1);
+    }
+  };
 
   return (
     <>
@@ -31,13 +79,13 @@ export default function LeaderboardPage() {
         <div className="grid grid-cols-2 ">
           <div className="flex flex-col justify-between mt-24">
             <div className="flex flex-col gap-2">
-              <p className="text-gray-dark">{title}</p>
+              <p className="text-gray-dark">Most Credible</p>
               <p className="text-black text-5xl">Leaderboards</p>
             </div>
             <TextStaticAnimation className="w-max" />
           </div>
           <div className="grid grid-cols-3 gap-8 text-black mt-24">
-            {new Array(3).fill("").map((val, idx) => (
+            {top3.map((user, idx) => (
               <div key={idx} className="flex flex-col gap-6 h-full relative">
                 <div
                   className="absolute -top-2 -right-2 w-3 h-3 bg-orange-300/20 rounded-full animate-pulse"
@@ -93,9 +141,12 @@ export default function LeaderboardPage() {
                       )}
 
                       <img
-                        src={`https://api.dicebear.com/9.x/big-smile/svg?seed=leaderboard${
-                          idx + 1
-                        }`}
+                        src={
+                          user.avatarUrl ||
+                          `https://api.dicebear.com/9.x/big-smile/svg?seed=leaderboard${
+                            idx + 1
+                          }`
+                        }
                         className="relative z-10 size-36 rounded-full p-4 transition-transform duration-500 group-hover/avatar:scale-110"
                         alt={`Top ${idx + 1} user`}
                       />
@@ -112,7 +163,8 @@ export default function LeaderboardPage() {
 
                     <div className="text-center">
                       <p className="text-2xl font-bold text-gray-800 mb-2">
-                        user_{String(idx + 1).padStart(3, "0")}
+                        {user.username ||
+                          `user_${String(idx + 1).padStart(3, "0")}`}
                       </p>
                       <div className="flex items-center justify-center gap-3 mt-3 bg-white/50 rounded-full px-4 py-2 backdrop-blur-sm border border-orange-200/50">
                         <Award
@@ -125,12 +177,21 @@ export default function LeaderboardPage() {
                           }`}
                         />
                         <p className="text-lg font-semibold text-gray-700">
-                          {2000 - idx * 100} pts
+                          {user.reputationScore} pts
                         </p>
                       </div>
                     </div>
 
-                    <button className="group/btn cursor-pointer text-sm font-semibold bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500 text-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-orange-300/50">
+                    <button
+                      onClick={() => {
+                        navigate(
+                          user.username
+                            ? `/profile/x/${user.username}`
+                            : `/profile/w/${user.address}`
+                        );
+                      }}
+                      className="group/btn cursor-pointer text-sm font-semibold bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500 text-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-orange-300/50"
+                    >
                       <span className="flex items-center gap-2">
                         View Profile
                         <span className="text-xs group-hover/btn:translate-x-1 transition-transform duration-300">
@@ -152,17 +213,25 @@ export default function LeaderboardPage() {
         <div className="my-24 flex flex-col gap-8">
           <p className="text-5xl text-black">Most Credible</p>
           <div className="grid grid-cols-6 w-full text-black text-md">
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Rank</p>
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Name</p>
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Score</p>
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Review</p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
+              Rank
+            </p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
+              Name
+            </p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
+              Score
+            </p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
+              Review
+            </p>
             <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
               Vouched for
             </p>
             <p className="text-black text-sm border-b-2 border-gray-300 border-dashed py-3 text-center">
               Badges
             </p>
-            {new Array(20).fill("").map((val, idx) => (
+            {users.map((user, idx) => (
               <React.Fragment key={idx}>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex flex-row w-max items-center gap-4">
@@ -193,34 +262,50 @@ export default function LeaderboardPage() {
                     <div className="relative size-10 flex-shrink-0 group">
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-500 rounded-full shadow-md group-hover:shadow-lg transition-all duration-300"></div>
                       <img
-                        src={`https://api.dicebear.com/9.x/big-smile/svg?seed=rank${idx + 1}`}
+                        src={
+                          user.avatarUrl ??
+                          `https://api.dicebear.com/9.x/big-smile/svg?seed=rank${
+                            idx + 1
+                          }`
+                        }
                         className="relative z-10 size-10 aspect-square rounded-full p-1.5 group-hover:scale-110 transition-transform duration-300"
                         alt=""
                       />
                     </div>
-                    <p className="font-medium hover:text-orange-600 transition-colors duration-300 cursor-pointer">
-                      User{String(idx + 1).padStart(3, "0")}
+                    <p
+                      onClick={() => {
+                        navigate(
+                          user.username
+                            ? `/profile/x/${user.username}`
+                            : `/profile/w/${user.address}`
+                        );
+                      }}
+                      className="font-medium hover:text-orange-600 transition-colors duration-300 cursor-pointer"
+                    >
+                      {user.username ??
+                        user.address ??
+                        `User${String(idx + 1).padStart(3, "0")}`}
                     </p>
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex items-center h-full">
-                    <p>1900</p>
+                    <p>{user.reputationScore}</p>
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex items-center h-full">
-                    <p>123</p>
+                    <p>{user.receivedReviewCount ?? 0}</p>
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex items-center h-full">
-                    <p>$2000</p>
+                    <p>-</p>
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex flex-row gap-2 items-center justify-center">
-                    <Tooltip>
+                    {/* <Tooltip>
                       <TooltipTrigger>
                         <Badge className="bg-gradient-to-br from-white to-orange-50 text-black border border-orange-200/50 hover:border-orange-300 hover:shadow-md transition-all duration-300 hover:scale-105">
                           <img
@@ -262,15 +347,23 @@ export default function LeaderboardPage() {
                           <p>Builder 🔨</p>
                         </TooltipContent>
                       </Tooltip>
-                    )}
+                    )} */}
+                    -
                   </div>
                 </div>
               </React.Fragment>
             ))}
           </div>
-          <ButtonMagnet className="w-max self-center mt-12" size="lg">
-            Load More
-          </ButtonMagnet>
+          {hasMore && (
+            <ButtonMagnet
+              className="w-max self-center mt-12"
+              size="lg"
+              onClick={handleLoadMore}
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Load More"}
+            </ButtonMagnet>
+          )}
         </div>
       </div>
     </>
