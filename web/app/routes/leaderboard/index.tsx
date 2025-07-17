@@ -295,7 +295,7 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
                   <div className="flex items-center h-full">
-                    <p>123</p>
+                    <p>{user.receivedReviewCount ?? 0}</p>
                   </div>
                 </div>
                 <div className="border-b border-gray-400 border-dashed py-3">
