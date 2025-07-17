@@ -16,6 +16,10 @@ import jwt from "jsonwebtoken";
 import { verifyWalletSignature } from "@/helpers/verify-signature";
 import { deleteNonce, generateNonce, getNonce } from "@/helpers/nonce-store";
 import { findAllByUsername } from "@/services/user-persona-scores/controller/find";
+import {
+  getReviewsReceivedByUserCount,
+  getReviewsWrittenByUserCount,
+} from "@/services/reviews/controller/find";
 
 const router = Router();
 
@@ -55,10 +59,33 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * size;
 
     const users = await findAll(shouldSort, sortBy, order, skip, size);
+    // Fetch review counts for the listed users
+    const usernames = users.map((u) => u.username);
+    const writtenReviewsCount = await getReviewsWrittenByUserCount(
+      usernames as string[]
+    );
+    const receivedReviewsCount = await getReviewsReceivedByUserCount(
+      usernames as string[]
+    );
+    // Create lookup maps
+    const writtenMap = Object.fromEntries(
+      writtenReviewsCount.map((r) => [r._id, r.count])
+    );
+    const receivedMap = Object.fromEntries(
+      receivedReviewsCount.map((r) => [r._id, r.count])
+    );
+
+    // Merge review data into users
+    const usersWithReviews = users.map((user) => ({
+      ...user.toObject(),
+      writtenReviewCount: writtenMap[user.username as string] ?? 0,
+      receivedReviewCount: receivedMap[user.username as string] ?? 0,
+    }));
+
     const total = await getTotalUsers();
 
     res.status(200).json({
-      users,
+      users: usersWithReviews,
       pagination: {
         page,
         size,
