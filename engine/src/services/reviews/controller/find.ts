@@ -98,3 +98,17 @@ export async function findByRevieweeAddressAndReviewerAddress(
     reviewerUsername: reviewerAccount.username,
   });
 }
+
+export const getReviewsWrittenByUserCount = async (usernames: string[]) => {
+  return await ReviewModel.aggregate([
+    { $match: { reviewerUsername: { $in: usernames } } },
+    { $group: { _id: "$reviewerUsername", count: { $sum: 1 } } },
+  ]);
+};
+
+export const getReviewsReceivedByUserCount = async (usernames: string[]) => {
+  return await ReviewModel.aggregate([
+    { $match: { revieweeUsername: { $in: usernames } } },
+    { $group: { _id: "$revieweeUsername", count: { $sum: 1 } } },
+  ]);
+};
