@@ -470,7 +470,13 @@ export default function Profile() {
               <ContentReceived listData={userReview ? userReview.reviews : []} />
             </TabsContent>
             <TabsContent value={TABS[2]} className="flex flex-col gap-10">
-              <ContentAll listData={userReview ? userReview.reviews : []} />
+              <ContentAll
+                listData={userReview ? userReview.reviews : []}
+                currentUser={{
+                  username: userData.username,
+                  avatarUrl: userData.avatarUrl,
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>
