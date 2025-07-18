@@ -28,7 +28,7 @@ export default function LeaderboardPage() {
   return (
     <>
       <div className="mt-32 px-[20px] lg:px-[50px]">
-        <div className="grid grid-cols-2 ">
+        <div className="grid grid-cols-2">
           <div className="flex flex-col justify-between mt-24">
             <div className="flex flex-col gap-2">
               <p className="text-gray-dark">{title}</p>

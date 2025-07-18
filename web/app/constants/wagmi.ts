@@ -1,6 +1,6 @@
 import type { Config } from "wagmi";
 import { defaultConfig } from "@xellar/kit";
-import { monadTestnet, liskSepolia } from "viem/chains";
+import { monadTestnet, liskSepolia, bscTestnet } from "viem/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { injected, metaMask } from "wagmi/connectors";
 import { getPublicClient } from "@wagmi/core";

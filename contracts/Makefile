@@ -10,8 +10,11 @@ deploy:
 	forge script \
 	--rpc-url $$RPC_URL \
 	--private-key $$PRIVATE_KEY \
+	--verifier-url $$VERIFIER_URL \
+	--etherscan-api-key $$ETHERSCAN_API_KEY \
 	--broadcast \
 	--verify \
-	--verifier <type_verifier> \
-	--verifier-url <url_soon> \
-	script/Deployer.s.sol:Deployer
+	--verifier etherscan \
+	--optimize \
+	--skip-simulation \
+	script/Waffle.s.sol:WaffleDeployment

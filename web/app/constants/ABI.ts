@@ -52,6 +52,7 @@ export const ABI = [
     type: "error",
   },
   { inputs: [], name: "EnforcedPause", type: "error" },
+  { inputs: [], name: "EntityAlreadyReviewed", type: "error" },
   { inputs: [], name: "ExpectedPause", type: "error" },
   { inputs: [], name: "InvalidBadgeRequirements", type: "error" },
   { inputs: [], name: "InvalidInput", type: "error" },
@@ -73,31 +74,15 @@ export const ABI = [
   { inputs: [], name: "SoulboundTokenApprovalNotAllowed", type: "error" },
   { inputs: [], name: "SoulboundTokenTransferNotAllowed", type: "error" },
   { inputs: [], name: "UserAlreadyRegistered", type: "error" },
-  { inputs: [], name: "UserAlreadyReviewed", type: "error" },
   { inputs: [], name: "UserNotRegistered", type: "error" },
-  { inputs: [], name: "UsernameAlreadyReviewed", type: "error" },
+  { inputs: [], name: "UsernameAlreadyLinked", type: "error" },
   { inputs: [], name: "ZeroAddress", type: "error" },
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "approved",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
+      { indexed: true, internalType: "address", name: "owner", type: "address" },
+      { indexed: true, internalType: "address", name: "approved", type: "address" },
+      { indexed: true, internalType: "uint256", name: "tokenId", type: "uint256" },
     ],
     name: "Approval",
     type: "event",
@@ -105,18 +90,8 @@ export const ABI = [
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "operator",
-        type: "address",
-      },
+      { indexed: true, internalType: "address", name: "owner", type: "address" },
+      { indexed: true, internalType: "address", name: "operator", type: "address" },
       { indexed: false, internalType: "bool", name: "approved", type: "bool" },
     ],
     name: "ApprovalForAll",
@@ -126,24 +101,9 @@ export const ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, internalType: "address", name: "user", type: "address" },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "badgeId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "badgeName",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
+      { indexed: true, internalType: "uint256", name: "badgeId", type: "uint256" },
+      { indexed: false, internalType: "string", name: "badgeName", type: "string" },
+      { indexed: false, internalType: "uint256", name: "tokenId", type: "uint256" },
     ],
     name: "BadgeClaimed",
     type: "event",
@@ -151,19 +111,9 @@ export const ABI = [
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "badgeId",
-        type: "uint256",
-      },
+      { indexed: true, internalType: "uint256", name: "badgeId", type: "uint256" },
       { indexed: false, internalType: "string", name: "name", type: "string" },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "requiredScore",
-        type: "uint256",
-      },
+      { indexed: false, internalType: "uint256", name: "requiredScore", type: "uint256" },
     ],
     name: "BadgeCreated",
     type: "event",
@@ -172,18 +122,17 @@ export const ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, internalType: "address", name: "user", type: "address" },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "currentStreak",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "longestStreak",
-        type: "uint256",
-      },
+      { indexed: false, internalType: "uint256", name: "badgeCount", type: "uint256" },
+    ],
+    name: "DebugBadgesRevoked",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "user", type: "address" },
+      { indexed: false, internalType: "uint256", name: "currentStreak", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "longestStreak", type: "uint256" },
     ],
     name: "LoginStreakUpdated",
     type: "event",
@@ -191,32 +140,15 @@ export const ABI = [
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
+      { indexed: true, internalType: "address", name: "previousOwner", type: "address" },
+      { indexed: true, internalType: "address", name: "newOwner", type: "address" },
     ],
     name: "OwnershipTransferred",
     type: "event",
   },
   {
     anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-    ],
+    inputs: [{ indexed: false, internalType: "address", name: "account", type: "address" }],
     name: "Paused",
     type: "event",
   },
@@ -224,18 +156,8 @@ export const ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, internalType: "address", name: "user", type: "address" },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "oldScore",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "newScore",
-        type: "uint256",
-      },
+      { indexed: false, internalType: "uint256", name: "oldScore", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "newScore", type: "uint256" },
       {
         indexed: false,
         internalType: "enum WaffleEnums.ReputationTier",
@@ -249,37 +171,12 @@ export const ABI = [
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "reviewId",
-        type: "uint256",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "reviewer",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "reviewee",
-        type: "address",
-      },
+      { indexed: true, internalType: "uint256", name: "reviewId", type: "uint256" },
+      { indexed: true, internalType: "address", name: "reviewer", type: "address" },
+      { indexed: true, internalType: "address", name: "reviewee", type: "address" },
       { indexed: false, internalType: "uint8", name: "rating", type: "uint8" },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "comment",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "timestamp",
-        type: "uint256",
-      },
+      { indexed: false, internalType: "string", name: "comment", type: "string" },
+      { indexed: false, internalType: "uint256", name: "timestamp", type: "uint256" },
     ],
     name: "ReviewSubmitted",
     type: "event",
@@ -287,26 +184,17 @@ export const ABI = [
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "reviewId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "isVerified",
-        type: "bool",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "verifier",
-        type: "address",
-      },
+      { indexed: true, internalType: "uint256", name: "reviewId", type: "uint256" },
+      { indexed: false, internalType: "bool", name: "isVerified", type: "bool" },
+      { indexed: false, internalType: "address", name: "verifier", type: "address" },
     ],
     name: "ReviewVerified",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: true, internalType: "address", name: "user", type: "address" }],
+    name: "SuccessRevokeUser",
     type: "event",
   },
   {
@@ -314,26 +202,14 @@ export const ABI = [
     inputs: [
       { indexed: true, internalType: "address", name: "from", type: "address" },
       { indexed: true, internalType: "address", name: "to", type: "address" },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
+      { indexed: true, internalType: "uint256", name: "tokenId", type: "uint256" },
     ],
     name: "Transfer",
     type: "event",
   },
   {
     anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-    ],
+    inputs: [{ indexed: false, internalType: "address", name: "account", type: "address" }],
     name: "Unpaused",
     type: "event",
   },
@@ -341,20 +217,25 @@ export const ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, internalType: "address", name: "user", type: "address" },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "timestamp",
-        type: "uint256",
-      },
+      { indexed: false, internalType: "uint256", name: "timestamp", type: "uint256" },
     ],
     name: "UserRegistered",
     type: "event",
   },
   {
-    inputs: [{ internalType: "address", name: "", type: "address" }],
-    name: "aiVerifiers",
+    inputs: [
+      { internalType: "address", name: "user", type: "address" },
+      { internalType: "uint256", name: "badgeId", type: "uint256" },
+    ],
+    name: "_checkBadgeEligibility",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "addressToUsername",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
     stateMutability: "view",
     type: "function",
   },
@@ -400,6 +281,17 @@ export const ABI = [
     type: "function",
   },
   {
+    inputs: [
+      { internalType: "address", name: "reviewer", type: "address" },
+      { internalType: "address", name: "entityAddress", type: "address" },
+      { internalType: "string", name: "entityUsername", type: "string" },
+    ],
+    name: "canReviewEntity",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "uint256", name: "badgeId", type: "uint256" }],
     name: "claimBadge",
     outputs: [],
@@ -414,6 +306,16 @@ export const ABI = [
       { internalType: "uint256", name: "requiredScore", type: "uint256" },
     ],
     name: "createBadge",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "user", type: "address" },
+      { internalType: "uint256", name: "score", type: "uint256" },
+    ],
+    name: "debugIncreaseScore",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -443,6 +345,20 @@ export const ABI = [
         type: "tuple",
       },
     ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "string", name: "username", type: "string" }],
+    name: "getLinkedAddress",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getLinkedUsername",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
     stateMutability: "view",
     type: "function",
   },
@@ -478,13 +394,7 @@ export const ABI = [
   {
     inputs: [{ internalType: "address", name: "user", type: "address" }],
     name: "getReputationTier",
-    outputs: [
-      {
-        internalType: "enum WaffleEnums.ReputationTier",
-        name: "",
-        type: "uint8",
-      },
-    ],
+    outputs: [{ internalType: "enum WaffleEnums.ReputationTier", name: "", type: "uint8" }],
     stateMutability: "view",
     type: "function",
   },
@@ -554,11 +464,7 @@ export const ABI = [
           { internalType: "uint256", name: "loginStreak", type: "uint256" },
           { internalType: "uint256", name: "lastLoginDate", type: "uint256" },
           { internalType: "uint256[]", name: "ownedBadges", type: "uint256[]" },
-          {
-            internalType: "bool",
-            name: "hasInvitationAuthority",
-            type: "bool",
-          },
+          { internalType: "bool", name: "hasInvitationAuthority", type: "bool" },
         ],
         internalType: "struct UserStructs.UserProfile",
         name: "",
@@ -598,6 +504,27 @@ export const ABI = [
       { internalType: "address", name: "", type: "address" },
     ],
     name: "hasReviewed",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "", type: "address" },
+      { internalType: "bytes32", name: "", type: "bytes32" },
+    ],
+    name: "hasReviewedEntity",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "reviewer", type: "address" },
+      { internalType: "address", name: "entityAddress", type: "address" },
+      { internalType: "string", name: "entityUsername", type: "string" },
+    ],
+    name: "hasReviewedEntityByHash",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
     type: "function",
@@ -704,13 +631,7 @@ export const ABI = [
     stateMutability: "view",
     type: "function",
   },
-  {
-    inputs: [],
-    name: "pause",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
+  { inputs: [], name: "pause", outputs: [], stateMutability: "nonpayable", type: "function" },
   {
     inputs: [],
     name: "paused",
@@ -721,6 +642,23 @@ export const ABI = [
   {
     inputs: [],
     name: "registerUser",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "string", name: "twitterUsername", type: "string" }],
+    name: "registerUserWithTwitter",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "user", type: "address" },
+      { internalType: "uint256", name: "badgeId", type: "uint256" },
+    ],
+    name: "removeRegisteredUser",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -814,6 +752,18 @@ export const ABI = [
   },
   {
     inputs: [
+      { internalType: "address", name: "revieweeAddress", type: "address" },
+      { internalType: "string", name: "revieweeUsername", type: "string" },
+      { internalType: "uint8", name: "rating", type: "uint8" },
+      { internalType: "string", name: "comment", type: "string" },
+    ],
+    name: "submitEntityReview",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       { internalType: "address", name: "reviewee", type: "address" },
       { internalType: "uint8", name: "rating", type: "uint8" },
       { internalType: "string", name: "comment", type: "string" },
@@ -880,13 +830,7 @@ export const ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-  {
-    inputs: [],
-    name: "unpause",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
+  { inputs: [], name: "unpause", outputs: [], stateMutability: "nonpayable", type: "function" },
   {
     inputs: [],
     name: "updateLoginStreak",
@@ -927,6 +871,13 @@ export const ABI = [
     ],
     name: "usernameReviews",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "string", name: "", type: "string" }],
+    name: "usernameToAddress",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
   },

@@ -31,7 +31,7 @@ import { ConnectTwitter, type ConnectTwitterRef } from "./shared/connect-twitter
 import { useWaffleProvider } from "../waffle-provider";
 import { useWalletAuth } from "~/hooks/useWalletAuth";
 import { IconX } from "~/routes/profile/shared/action-score";
-import { monadTestnet } from "viem/chains";
+import { monadTestnet, bscTestnet } from "viem/chains";
 
 export function ConnectWalletXellar() {
   const { isConnected, chain, address } = useAccount();
@@ -68,11 +68,7 @@ export function ConnectWalletXellar() {
       setLastCheckedAddress(null);
 
       setTwitterUser(null);
-
-      console.log("🚪 Disconnected wallet and cleared session states");
     } catch (error) {
-      console.error("Error during disconnect:", error);
-
       disconnect();
       localStorage.removeItem("waffle_wallet_address");
 
@@ -88,14 +84,10 @@ export function ConnectWalletXellar() {
   const handleWalletLogin = async () => {
     if (!address) return;
 
-    console.log("🔐 Starting wallet login for address:", address);
-
     try {
       const result = await loginWithWallet(address);
 
       if (result.success) {
-        console.log("✅ Wallet login successful:", result.user);
-
         if (result.token) {
           localStorage.setItem("waffle_auth_token", result.token);
         }
@@ -103,7 +95,6 @@ export function ConnectWalletXellar() {
         setIsAuthenticated(true);
 
         if (result.user && (result.user as any).username) {
-          console.log("👤 Creating user object from wallet login:", result.user);
           const userFromAuth = {
             id: (result.user as any).id || 0,
             screen_name: (result.user as any).username,
@@ -115,38 +106,29 @@ export function ConnectWalletXellar() {
           setTwitterUser(userFromAuth);
         }
 
-        console.log("🔄 Refreshing auth status after successful login");
         setTimeout(async () => {
           await refreshAuthStatus();
         }, 100);
       } else if (result.needsTwitterRegistration) {
-        console.log("🐦 User needs Twitter registration");
         connectXRef.current?.handleConnectTwitterClick();
       } else {
-        console.error("❌ Login failed:", result.error);
       }
-    } catch (error) {
-      console.error("💥 Wallet login error:", error);
-    }
+    } catch (error) {}
   };
 
   const refreshAuthStatus = async () => {
     if (!address) return;
 
-    console.log("🔄 Refreshing auth status after state change");
-
     setLastCheckedAddress(null);
 
     const status = await checkAuthStatus(address);
-    console.log("📊 Refreshed auth status result:", status);
+
     setAuthStatus(status);
 
     const existingToken = localStorage.getItem("waffle_auth_token");
     if (status.isRegistered && status.canLoginWithWallet && existingToken) {
-      console.log("🎫 User has valid auth token and is registered, marking as authenticated");
       setIsAuthenticated(true);
     } else if (!status.canLoginWithWallet || !existingToken) {
-      console.log("🚫 User not authenticated or no valid token found");
       setIsAuthenticated(false);
     }
 
@@ -156,7 +138,6 @@ export function ConnectWalletXellar() {
   useEffect(() => {
     if (isConnected && address && address !== lastCheckedAddress) {
       if (lastCheckedAddress && address !== lastCheckedAddress) {
-        console.log("🔄 Address changed, clearing previous user data");
         setTwitterUser(null);
         setAuthStatus(null);
         setIsAuthenticated(false);
@@ -165,25 +146,19 @@ export function ConnectWalletXellar() {
 
       localStorage.setItem("waffle_wallet_address", address);
 
-      console.log("🔍 Checking auth status for address:", address);
-
       const existingToken = localStorage.getItem("waffle_auth_token");
       if (existingToken) {
-        console.log("🎫 Found existing auth token, user is already authenticated");
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
       }
 
       checkAuthStatus(address).then((status) => {
-        console.log("📊 Auth status result:", status);
         setAuthStatus(status);
 
         if (status.isRegistered && status.canLoginWithWallet && existingToken) {
-          console.log("✅ User is registered with valid token, marking as authenticated");
           setIsAuthenticated(true);
         } else if (!status.canLoginWithWallet || !existingToken) {
-          console.log("❌ User not authenticated or no valid token");
           setIsAuthenticated(false);
         }
       });
@@ -194,21 +169,18 @@ export function ConnectWalletXellar() {
       setLastCheckedAddress(null);
       setIsAuthenticated(false);
       setTwitterUser(null);
-      console.log("🚪 Wallet disconnected, cleared all states");
     }
   }, [isConnected, address, lastCheckedAddress]);
 
   useEffect(() => {
     const existingToken = localStorage.getItem("waffle_auth_token");
     if (existingToken) {
-      console.log("🎫 Found existing auth token on mount");
       setIsAuthenticated(true);
     }
   }, []);
 
   useEffect(() => {
     const handleTwitterRegistrationSuccess = () => {
-      console.log("🎉 Twitter registration completed, refreshing auth status");
       refreshAuthStatus();
     };
 
@@ -216,7 +188,6 @@ export function ConnectWalletXellar() {
 
     const handleWindowFocus = () => {
       if (authStatus?.needsTwitterRegistration && address) {
-        console.log("👀 Window focused, checking if Twitter registration completed");
         setTimeout(() => {
           refreshAuthStatus();
         }, 1000);
@@ -233,7 +204,6 @@ export function ConnectWalletXellar() {
 
   useEffect(() => {
     if (twitterUser && authStatus?.needsTwitterRegistration && address) {
-      console.log("🎯 Twitter user updated after registration, refreshing auth status");
       refreshAuthStatus();
     }
   }, [twitterUser, authStatus?.needsTwitterRegistration, address]);
@@ -275,12 +245,6 @@ export function ConnectWalletXellar() {
               }
 
               if (authStatus?.canLoginWithWallet && !isAuthenticated) {
-                console.log(
-                  "🔵 Rendering Sign to Login button - canLogin:",
-                  authStatus?.canLoginWithWallet,
-                  "isAuth:",
-                  isAuthenticated
-                );
                 return (
                   <ButtonMagnet
                     onClick={handleWalletLogin}
@@ -291,15 +255,6 @@ export function ConnectWalletXellar() {
                   </ButtonMagnet>
                 );
               }
-
-              console.log(
-                "🟢 Rendering dropdown menu - canLogin:",
-                authStatus?.canLoginWithWallet,
-                "isAuth:",
-                isAuthenticated,
-                "authStatus:",
-                authStatus
-              );
 
               return (
                 <>

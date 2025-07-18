@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 
 import "./interfaces/IReviewSystem.sol";
 import "./interfaces/IBadgeSystem.sol";
@@ -81,6 +82,8 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
     event ReputationUpdated(address indexed user, uint256 oldScore, uint256 newScore, WaffleEnums.ReputationTier tier);
     event BadgeCreated(uint256 indexed badgeId, string name, uint256 requiredScore);
     event ReviewVerified(uint256 indexed reviewId, bool isVerified, address verifier);
+
+    mapping(uint256 => string) private _tokenURIs;
 
     // ============ Modifiers ============
 
@@ -442,10 +445,26 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         profile.ownedBadges.push(badgeId);
         badgeHolders[badgeId].push(msg.sender);
 
+
         // Mint soulbound NFT
         _tokenIds++;
         uint256 tokenId = _tokenIds;
+
+        string memory json = string(abi.encodePacked(
+            '{',
+                '"name":"', badge.name, '",',
+                '"description":"', badge.description,'",',
+                '"image":"', badge.imageURI, '"',
+            '}'
+        ));
+
+        string memory encodedTokenURI = string(abi.encodePacked(
+            "data:application/json;base64,",
+            Base64.encode(bytes(json))
+        ));
+
         _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, encodedTokenURI);
 
         // Add badge bonus to reputation
         uint256 oldScore = profile.reputationScore;
@@ -455,6 +474,14 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
 
         emit BadgeClaimed(msg.sender, badgeId, badge.name, tokenId);
         emit ReputationUpdated(msg.sender, oldScore, profile.reputationScore, tier);
+    }
+
+    function _setTokenURI(uint256 tokenId, string memory _uri) internal virtual {
+        _tokenURIs[tokenId] = _uri;
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        return _tokenURIs[tokenId];
     }
 
     function createBadge(
@@ -605,31 +632,22 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         }
     }
 
-    function _checkBadgeEligibility(address user, uint256 badgeId) internal view returns (bool) {
+    function _checkBadgeEligibility(address user, uint256 badgeId) public view returns (bool) {
         UserStructs.UserProfile memory profile = userProfiles[user];
         BadgeStructs.Badge memory badge = badges[badgeId];
 
         // Basic eligibility: reputation score
+        // Badge 4 - Builder shud met the requiredScore
         if (profile.reputationScore < badge.requiredScore) return false;
 
         // Specific badge requirements
-        if (badgeId == 1) {
-            // Early Adopter
-            return profile.totalReviews >= 1;
-        } else if (badgeId == 2) {
-            // Trusted Reviewer - needs 10 reviews with 70% positive (rating 3)
-            return profile.totalReviews >= 10 && profile.positiveReviews >= 7;
+        if (badgeId == 2) {
+            return profile.totalReviews >= 10;
         } else if (badgeId == 3) {
-            // Streak Master
-            return profile.loginStreak >= 30;
-        } else if (badgeId == 4) {
-            // Golden Waffle
-            return profile.reputationScore >= 1000;
-        } else if (badgeId == 5) {
-            // Community Builder
-            return profile.totalReviews >= 50;
+            return profile.totalReviews >= 10 && profile.positiveReviews >= 7;
         }
 
+        // Early Adopter always get the badge
         return true;
     }
 
@@ -659,7 +677,7 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
             id: 1,
             name: "Early Adopter",
             description: "One of the first to join Waffle community",
-            imageURI: "ipfs://QmEarlyAdopter",
+            imageURI: "https://ik.imagekit.io/3592mo0vh/waffle/early_adopter",
             requiredScore: 100,
             isActive: true
         });
@@ -668,9 +686,9 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         _badgeIds++;
         badges[2] = BadgeStructs.Badge({
             id: 2,
-            name: "Trusted Reviewer",
-            description: "Consistently provides helpful reviews",
-            imageURI: "ipfs://QmTrustedReviewer",
+            name: "Supportive Soul",
+            description: "Awarded to those who uplift and encourage others in the community.",
+            imageURI: "https://ik.imagekit.io/3592mo0vh/waffle/support.svg",
             requiredScore: 500,
             isActive: true
         });
@@ -679,9 +697,9 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         _badgeIds++;
         badges[3] = BadgeStructs.Badge({
             id: 3,
-            name: "Streak Master",
-            description: "Maintained 30-day login streak",
-            imageURI: "ipfs://QmStreakMaster",
+            name: "Contributor",
+            description: "Given to members who actively contribute ideas, feedback, or resources.",
+            imageURI: "https://ik.imagekit.io/3592mo0vh/waffle/contrib.svg",
             requiredScore: 300,
             isActive: true
         });
@@ -690,23 +708,23 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         _badgeIds++;
         badges[4] = BadgeStructs.Badge({
             id: 4,
-            name: "Golden Waffle",
-            description: "Reached 1000+ reputation score",
-            imageURI: "ipfs://QmGoldenWaffle",
-            requiredScore: 1000,
+            name: "Builder",
+            description: "Recognizes individuals who create and innovate through hands-on work.",
+            imageURI: "https://ik.imagekit.io/3592mo0vh/waffle/build.svg",
+            requiredScore: 2000,
             isActive: true
         });
 
-        // Community Builder Badge
-        _badgeIds++;
-        badges[5] = BadgeStructs.Badge({
-            id: 5,
-            name: "Community Builder",
-            description: "Received 50+ reviews from community",
-            imageURI: "ipfs://QmCommunityBuilder",
-            requiredScore: 750,
-            isActive: true
-        });
+        // // Community Builder Badge
+        // _badgeIds++;
+        // badges[5] = BadgeStructs.Badge({
+        //     id: 5,
+        //     name: "Community Builder",
+        //     description: "Received 50+ reviews from community",
+        //     imageURI: "ipfs://QmCommunityBuilder",
+        //     requiredScore: 750,
+        //     isActive: true
+        // });
     }
 
     // ============ Admin Functions ============

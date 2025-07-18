@@ -50,7 +50,14 @@ export type ButtonMagnetVariants = VariantProps<typeof buttonVariants>;
 
 type ButtonMagnetProps = {} & ButtonMagnetVariants & JSX.IntrinsicElements["button"];
 
-export function ButtonMagnet({ children, color, size, className, ...props }: ButtonMagnetProps) {
+export function ButtonMagnet({
+  children,
+  color,
+  size,
+  className,
+  disabled,
+  ...props
+}: ButtonMagnetProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const flairRef = useRef<HTMLSpanElement | null>(null);
 
@@ -139,6 +146,8 @@ export function ButtonMagnet({ children, color, size, className, ...props }: But
         "relative inline-flex items-center justify-center overflow-hidden transition-colors cursor-pointer whitespace-nowrap select-none",
         "border-2 bg-transparent rounded-full font-semibold h-max",
         "hover:text-white",
+        disabled && "opacity-50 cursor-not-allowed hover:text-white",
+
         className
       )}
       {...props}
