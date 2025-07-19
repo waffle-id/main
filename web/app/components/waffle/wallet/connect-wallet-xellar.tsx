@@ -267,7 +267,7 @@ export function ConnectWalletXellar() {
                               "Wrong Network"
                             ) : (
                               <>
-                                {`${chain} - ${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                {`${chain?.name} - ${address?.slice(0, 6)}...${address?.slice(-4)}`}
                                 <ChevronDown className="size-4 transition-transform" />
                               </>
                             )}
