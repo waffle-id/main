@@ -84,25 +84,23 @@ export function BadgeItem({
   }, [address]);
 
   return (
-    <div className="relative bg-gradient-to-br from-white to-orange-50/30 rounded-3xl p-8 shadow overflow-hidden">
-      {/* Background Effects */}
+    <div className="relative bg-gradient-to-br from-white to-orange-50/30 rounded-3xl p-6 md:p-8 shadow overflow-hidden h-full flex flex-col">
       <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-300/20 to-yellow-400/20 rounded-full" />
 
       <Badge
         className={cn(
-          `absolute top-4 right-4 text-white bg-gradient-to-r border-0 px-3 py-1`,
+          `absolute top-4 right-4 text-white bg-gradient-to-r border-0 px-2 md:px-3 py-1 text-xs md:text-sm`,
           RARITY_STYLES[rarity]
         )}
       >
         {rarity}
       </Badge>
 
-      <div className="relative z-10 flex flex-col items-center gap-6">
-        {/* Badge Image Container */}
-        <div className="relative bg-white rounded-full p-6 shadow-inner">
+      <div className="relative z-10 flex flex-col items-center gap-4 md:gap-6 flex-grow">
+        <div className="relative bg-white rounded-full p-4 md:p-6 shadow-inner">
           <img
             src={images}
-            className="size-20 object-contain"
+            className="size-16 md:size-20 object-contain"
             alt={title}
             onError={(e) => {
               e.currentTarget.style.display = "none";
@@ -111,46 +109,51 @@ export function BadgeItem({
           />
         </div>
 
-        {/* Badge Info */}
-        <div className="text-center space-y-3">
-          <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
-          <p className="text-gray-600 leading-relaxed">{desc}</p>
+        <div className="text-center space-y-2 md:space-y-3 flex-grow flex flex-col justify-between">
+          <div>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2 md:mb-3">{title}</h3>
+            <p className="text-sm md:text-base text-gray-600 leading-relaxed px-2">{desc}</p>
+          </div>
 
-          {/* Category and Stats */}
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <Badge className="bg-orange-100 text-orange-700 border-orange-200">{category}</Badge>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-4 mt-3 md:mt-4">
+            <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs md:text-sm">
+              {category}
+            </Badge>
             {earned && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <Trophy className="size-4" />
+              <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
+                <Trophy className="size-3 md:size-4" />
                 {earned.toLocaleString()} earned
               </div>
             )}
           </div>
         </div>
 
-        {/* Earn Button */}
-        {!isPending && !isLoadingReceipt && (
-          <ButtonMagnet
-            className="w-full"
-            disabled={loading || !elig}
-            onClick={(e) => (loading || !elig ? e.preventDefault() : mintBadge())}
-          >
-            <div className="flex flex-row items-center justify-center gap-2">
-              {loading && "Loading ..."}
-              {!loading && !elig && "Not Eligible"}
-              {!loading && elig && (
-                <>
-                  <Award className="size-4" />
-                  Claim Badge
-                </>
-              )}
-            </div>
-          </ButtonMagnet>
-        )}
+        <div className="w-full mt-auto pt-4">
+          {!isPending && !isLoadingReceipt && (
+            <ButtonMagnet
+              className="w-full text-sm md:text-base py-2 md:py-3"
+              disabled={loading || !elig}
+              onClick={(e) => (loading || !elig ? e.preventDefault() : mintBadge())}
+            >
+              <div className="flex flex-row items-center justify-center gap-2">
+                {loading && "Loading ..."}
+                {!loading && !elig && "Not Eligible"}
+                {!loading && elig && (
+                  <>
+                    <Award className="size-3 md:size-4" />
+                    Claim Badge
+                  </>
+                )}
+              </div>
+            </ButtonMagnet>
+          )}
 
-        {(isPending || isLoadingReceipt) && (
-          <ButtonMagnet className="w-full">Loading Minting ...</ButtonMagnet>
-        )}
+          {(isPending || isLoadingReceipt) && (
+            <ButtonMagnet className="w-full text-sm md:text-base py-2 md:py-3">
+              Loading Minting ...
+            </ButtonMagnet>
+          )}
+        </div>
       </div>
     </div>
   );
