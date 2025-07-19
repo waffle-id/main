@@ -13,7 +13,7 @@ import gsap from "gsap";
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WAGMI_RAINBOW_CONFIG, WAGMI_XELLAR_CONFIG } from "./constants/wagmi";
+import { WAGMI_XELLAR_CONFIG } from "./constants/wagmi";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
