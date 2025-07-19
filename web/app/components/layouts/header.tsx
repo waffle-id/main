@@ -48,14 +48,14 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
   return (
     <div
       className={cn(
-        "absolute lg:fixed left-0 w-full py-4 lg:py-6 px-4 sm:px-6 md:px-8 lg:px-10 z-50 rounded-b-lg transition-all duration-300",
+        "absolute lg:fixed left-0 w-full py-4 lg:py-6 px-4 sm:px-6 md:px-8 lg:px-10 z-50 rounded-b-lg transition-all duration-300 overflow-hidden",
         scrolling && "backdrop-blur-md bg-white/80 border-b border-orange-200/50 shadow-sm",
         className
       )}
     >
-      <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
+      <div className="flex items-center justify-between w-full mx-auto">
         <div className="flex-shrink-0">
-          <NavLink to={"/"} prefetch="intent">
+          <NavLink to={"/"} prefetch="intent" className="no-underline">
             <LogoAnimation className="h-12 lg:h-14 w-max aspect-square" />
           </NavLink>
         </div>
