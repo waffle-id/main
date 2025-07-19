@@ -30,6 +30,7 @@ import Vouch from "./shared/bottom-sheet/vouch";
 import Slash from "./shared/bottom-sheet/slash";
 import { redirect, useParams, useLoaderData } from "react-router";
 import type { Route } from "./+types";
+import { ScrapingLoader } from "~/components/waffle/scrape-loader";
 
 const hasToken = typeof window !== "undefined" && !!localStorage.getItem("waffle_auth_token");
 export interface UserProfileData {
@@ -240,7 +241,10 @@ export default function Profile() {
   const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
   const [error, setError] = React.useState<string | null>(initialError);
   const [isLoading, setIsLoading] = React.useState(needsScraping);
+  const [isScraping, setIsScraping] = React.useState(needsScraping);
   const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean | null>(null);
+  const [showProfile, setShowProfile] = React.useState(!needsScraping);
+  const profileContainerRef = useRef<HTMLDivElement>(null);
 
   const TABS = ["received", "given", "all"];
   const gridRef = useRef<HTMLDivElement>(null);
@@ -249,6 +253,8 @@ export default function Profile() {
     setUserData(initialUserData);
     setError(initialError);
     setIsLoading(needsScraping);
+    setIsScraping(needsScraping);
+    setShowProfile(!needsScraping);
     const token = localStorage.getItem("waffle_auth_token");
     setHasLoggedIn(!!token);
   }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
@@ -259,6 +265,7 @@ export default function Profile() {
     const fetchScrapedData = async () => {
       try {
         setIsLoading(true);
+        setIsScraping(true);
         const scraperResponse = await fetch(
           `https://scraper.waffle.food/profile/${slug}/optimized`
         );
@@ -290,11 +297,36 @@ export default function Profile() {
         setError(err instanceof Error ? err.message : "Failed to load user profile");
       } finally {
         setIsLoading(false);
+        setIsScraping(false);
       }
     };
 
     fetchScrapedData();
   }, [needsScraping, slug]);
+
+  const handleScrapingComplete = () => {
+    // Smooth transition when scraping loader finishes
+    setIsScraping(false);
+    setShowProfile(true);
+
+    // Animate profile content in
+    if (profileContainerRef.current) {
+      gsap.set(profileContainerRef.current, {
+        opacity: 0,
+        y: 30,
+        scale: 0.95,
+      });
+
+      gsap.to(profileContainerRef.current, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 1.2,
+        ease: "power2.out",
+        delay: 0.3,
+      });
+    }
+  };
 
   useEffect(() => {
     if (!userData || isLoading) return;
@@ -343,6 +375,10 @@ export default function Profile() {
         );
     });
   }, [userData, isLoading]);
+
+  if (isScraping) {
+    return <ScrapingLoader username={slug} />;
+  }
 
   if (isLoading) {
     return <ProfileSkeleton />;
