@@ -28,18 +28,17 @@ export default function BadgesPage() {
       : badges.filter((badge) => badge.category === selectedCategory);
 
   return (
-    <div className="mt-16 md:mt-24 lg:mt-32 px-4 md:px-8 lg:px-[50px] min-h-screen mb-16 md:mb-24 lg:mb-32">
+    <div className="mt-32 px-[20px] lg:px-[50px] min-h-screen mb-32">
+      {/* Hero Section */}
       <BadgeHero badges={badges} />
 
-      <div className="my-12 md:my-16 lg:my-24">
-        <div className="flex flex-wrap gap-2 md:gap-3 justify-center max-w-4xl mx-auto">
+      {/* Category Filter */}
+      <div className="my-24">
+        <div className="flex flex-wrap gap-3 justify-center">
           {categories.map((category, idx) => (
             <ButtonMagnet
               key={idx}
-              className={cn(
-                "text-sm md:text-base px-3 md:px-4 py-2",
-                selectedCategory === category && "bg-foreground text-white"
-              )}
+              className={cn(selectedCategory === category && "bg-foreground text-white")}
               onClick={() => setSelectedCategory(category)}
             >
               {category}
@@ -48,7 +47,8 @@ export default function BadgesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
+      {/* Badges Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <ClientOnly>
           {() => filteredBadges.map((badge, idx) => <BadgeItem key={idx} {...badge} />)}
         </ClientOnly>
