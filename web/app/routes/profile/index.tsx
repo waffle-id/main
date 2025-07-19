@@ -184,11 +184,13 @@ export async function loader({ params }: { params: { variant: string; slug: stri
   imageItems.map((v, i) => {
     const item = userReview.reviews[i];
 
+    console.log(item, "ahaha");
+
     newImagesItems.push({
       ...v,
       // @ts-expect-error aokoskoaks
       reviews: item ? item.comment : v.review,
-      src: item.reviewerAccount.avatarUrl ? item.reviewerAccount.avatarUrl : v.src,
+      src: item ? item.reviewerAccount.avatarUrl : v.src,
     });
   });
   // }

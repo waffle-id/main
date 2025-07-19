@@ -40,6 +40,7 @@ export function BadgeItem({
 }: BadgeItemProps) {
   const [loading, setLoading] = useState(true);
   const [elig, setElig] = useState(false);
+  const [alreadyOwned, setAlreadyOwned] = useState(false);
   const { address } = useAccount();
 
   const { data: mintHash, writeContract: doMintBadge, isPending } = useWriteContract();
@@ -48,6 +49,16 @@ export function BadgeItem({
   });
 
   function mintBadge() {
+    if (alreadyOwned) {
+      toast.error("You already own this badge!");
+      return;
+    }
+
+    if (!elig) {
+      toast.error("You are not eligible for this badge!");
+      return;
+    }
+
     doMintBadge({
       abi: ABI,
       address: CA,
@@ -56,16 +67,30 @@ export function BadgeItem({
     });
   }
 
-  useEffect(() => {
-    if (statusReceipt === "success") {
-      toast.success("Minting succeed!", { closeButton: true, duration: Infinity });
-    }
-  }, [statusReceipt]);
+  const checkEligibilityAndOwnership = async () => {
+    if (!address) return;
 
-  useEffect(() => {
-    if (address) {
-      const client = createPublicClient({ chain: bscTestnet, transport: http() });
-      async function getData() {
+    setLoading(true);
+    const client = createPublicClient({ chain: bscTestnet, transport: http() });
+
+    try {
+      const ownsTheBadge = await client
+        .readContract({
+          abi: ABI,
+          address: CA,
+          functionName: "hasBadge",
+          args: [address, badgeId],
+        })
+        .catch((error) => {
+          console.error("Error checking badge ownership:", error);
+          return false;
+        });
+
+      const alreadyHasBadge = Boolean(ownsTheBadge);
+      console.log(`Badge ${badgeId} ownership check for ${address}:`, alreadyHasBadge);
+      setAlreadyOwned(alreadyHasBadge);
+
+      if (!alreadyHasBadge) {
         const isEligible = await client
           .readContract({
             abi: ABI,
@@ -73,20 +98,65 @@ export function BadgeItem({
             functionName: "_checkBadgeEligibility",
             args: [address, badgeId],
           })
-          .catch(() => false);
+          .catch((error) => {
+            console.error("Error checking badge eligibility:", error);
+            return false;
+          });
 
-        setLoading(false);
-        setElig(Boolean(isEligible ?? false));
+        const eligible = Boolean(isEligible);
+        console.log(`Badge ${badgeId} eligibility check for ${address}:`, eligible);
+        setElig(eligible);
+      } else {
+        setElig(false);
       }
-
-      getData();
+    } catch (error) {
+      console.error("Error checking badge status:", error);
+      setElig(false);
+      setAlreadyOwned(false);
+    } finally {
+      setLoading(false);
     }
-  }, [address]);
+  };
+
+  useEffect(() => {
+    if (statusReceipt === "success") {
+      toast.success("Badge claimed successfully!", { closeButton: true, duration: 5000 });
+
+      setAlreadyOwned(true);
+      setElig(false);
+
+      setTimeout(() => {
+        checkEligibilityAndOwnership();
+      }, 2000);
+    }
+  }, [statusReceipt]);
+
+  useEffect(() => {
+    if (address) {
+      setAlreadyOwned(false);
+      setElig(false);
+      checkEligibilityAndOwnership();
+    } else {
+      setAlreadyOwned(false);
+      setElig(false);
+      setLoading(false);
+    }
+  }, [address, badgeId]);
 
   return (
-    <div className="relative bg-gradient-to-br from-white to-orange-50/30 rounded-3xl p-8 shadow overflow-hidden">
-      {/* Background Effects */}
+    <div
+      className={cn(
+        "relative bg-gradient-to-br from-white to-orange-50/30 rounded-3xl p-8 shadow overflow-hidden h-full flex flex-col",
+        alreadyOwned && "ring-2 ring-green-300 bg-gradient-to-br from-green-50 to-green-100/30"
+      )}
+    >
       <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-300/20 to-yellow-400/20 rounded-full" />
+
+      {alreadyOwned && (
+        <Badge className="absolute top-4 left-4 bg-green-600 text-white border-0 px-3 py-1">
+          ✓ Owned
+        </Badge>
+      )}
 
       <Badge
         className={cn(
@@ -97,60 +167,78 @@ export function BadgeItem({
         {rarity}
       </Badge>
 
-      <div className="relative z-10 flex flex-col items-center gap-6">
-        {/* Badge Image Container */}
-        <div className="relative bg-white rounded-full p-6 shadow-inner">
-          <img
-            src={images}
-            className="size-20 object-contain"
-            alt={title}
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.nextElementSibling?.classList.remove("hidden");
-            }}
-          />
-        </div>
-
-        {/* Badge Info */}
-        <div className="text-center space-y-3">
-          <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
-          <p className="text-gray-600 leading-relaxed">{desc}</p>
-
-          {/* Category and Stats */}
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <Badge className="bg-orange-100 text-orange-700 border-orange-200">{category}</Badge>
-            {earned && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <Trophy className="size-4" />
-                {earned.toLocaleString()} earned
+      <div className="relative z-10 flex flex-col items-center gap-6 flex-1 justify-between">
+        <div className="flex flex-col items-center gap-6">
+          <div
+            className={cn(
+              "relative bg-white rounded-full p-6 shadow-inner",
+              alreadyOwned && "bg-green-50 ring-2 ring-green-200"
+            )}
+          >
+            <img
+              src={images}
+              className={cn("size-20 object-contain", alreadyOwned && "opacity-80")}
+              alt={title}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                e.currentTarget.nextElementSibling?.classList.remove("hidden");
+              }}
+            />
+            {alreadyOwned && (
+              <div className="absolute -top-1 -right-1 bg-green-600 text-white rounded-full p-1">
+                <Award className="size-3" />
               </div>
             )}
           </div>
-        </div>
 
-        {/* Earn Button */}
-        {!isPending && !isLoadingReceipt && (
-          <ButtonMagnet
-            className="w-full"
-            disabled={loading || !elig}
-            onClick={(e) => (loading || !elig ? e.preventDefault() : mintBadge())}
-          >
-            <div className="flex flex-row items-center justify-center gap-2">
-              {loading && "Loading ..."}
-              {!loading && !elig && "Not Eligible"}
-              {!loading && elig && (
-                <>
-                  <Award className="size-4" />
-                  Claim Badge
-                </>
+          <div className="text-center space-y-3">
+            <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+            <p className="text-gray-600 leading-relaxed">{desc}</p>
+
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <Badge className="bg-orange-100 text-orange-700 border-orange-200">{category}</Badge>
+              {earned && (
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <Trophy className="size-4" />
+                  {earned.toLocaleString()} earned
+                </div>
               )}
             </div>
-          </ButtonMagnet>
-        )}
+          </div>
+        </div>
 
-        {(isPending || isLoadingReceipt) && (
-          <ButtonMagnet className="w-full">Loading Minting ...</ButtonMagnet>
-        )}
+        <div className="w-full mt-auto">
+          {!isPending && !isLoadingReceipt && (
+            <ButtonMagnet
+              className="w-full"
+              disabled={loading || !elig || alreadyOwned || !address}
+              onClick={(e) => {
+                if (loading || !elig || alreadyOwned || !address) {
+                  e.preventDefault();
+                  return;
+                }
+                mintBadge();
+              }}
+            >
+              <div className="flex flex-row items-center justify-center gap-2">
+                {loading && "Loading ..."}
+                {!loading && !address && "Connect Wallet"}
+                {!loading && address && alreadyOwned && "Already Owned"}
+                {!loading && address && !alreadyOwned && !elig && "Not Eligible"}
+                {!loading && address && !alreadyOwned && elig && (
+                  <>
+                    <Award className="size-4" />
+                    Claim Badge
+                  </>
+                )}
+              </div>
+            </ButtonMagnet>
+          )}
+
+          {(isPending || isLoadingReceipt) && (
+            <ButtonMagnet className="w-full">Minting...</ButtonMagnet>
+          )}
+        </div>
       </div>
     </div>
   );
