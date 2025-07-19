@@ -91,46 +91,21 @@ export function BadgeItem({
       setAlreadyOwned(alreadyHasBadge);
 
       if (!alreadyHasBadge) {
-        try {
-          const userProfile = await client
-            .readContract({
-              abi: ABI,
-              address: CA,
-              functionName: "userProfiles",
-              args: [address],
-            })
-            .catch(() => null);
+        const isEligible = await client
+          .readContract({
+            abi: ABI,
+            address: CA,
+            functionName: "_checkBadgeEligibility",
+            args: [address, badgeId],
+          })
+          .catch((error) => {
+            console.error("Error checking badge eligibility:", error);
+            return false;
+          });
 
-          const badgeInfo = await client
-            .readContract({
-              abi: ABI,
-              address: CA,
-              functionName: "getBadge",
-              args: [badgeId],
-            })
-            .catch(() => null);
-
-          if (userProfile && badgeInfo) {
-            const userScore = (userProfile as any).reputationScore || 0;
-            const requiredScore = (badgeInfo as any).requiredScore || 0;
-            const isActive = (badgeInfo as any).isActive || false;
-
-            const meetsRequirements =
-              Number(userScore) >= Number(requiredScore) && Boolean(isActive);
-            console.log(`Badge ${badgeId} eligibility:`, {
-              userScore: Number(userScore),
-              requiredScore: Number(requiredScore),
-              isActive: Boolean(isActive),
-              meetsRequirements,
-            });
-            setElig(meetsRequirements);
-          } else {
-            setElig(false);
-          }
-        } catch (eligibilityError) {
-          console.error("Error checking eligibility:", eligibilityError);
-          setElig(false);
-        }
+        const eligible = Boolean(isEligible);
+        console.log(`Badge ${badgeId} eligibility check for ${address}:`, eligible);
+        setElig(eligible);
       } else {
         setElig(false);
       }
