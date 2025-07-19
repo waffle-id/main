@@ -5,7 +5,7 @@ import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { injected, metaMask } from "wagmi/connectors";
 import { getPublicClient } from "@wagmi/core";
 
-export const FIXED_CHAIN = monadTestnet.id;
+export const FIXED_CHAIN = bscTestnet.id;
 
 export const WAGMI_XELLAR_CONFIG = defaultConfig({
   appName: "Waffle",
@@ -14,7 +14,7 @@ export const WAGMI_XELLAR_CONFIG = defaultConfig({
   xellarAppId: "e766524a-ad0d-4268-b42c-9ec0eae5999d",
   xellarEnv: "sandbox",
   chains: [
-    monadTestnet,
+    bscTestnet,
     // liskSepolia,
   ],
   ssr: true,
@@ -23,7 +23,7 @@ export const WAGMI_XELLAR_CONFIG = defaultConfig({
 export const WAGMI_RAINBOW_CONFIG = getDefaultConfig({
   appName: "Waffle",
   projectId: "702bd4efaeffd9a2a114b75acc3cc307",
-  chains: [monadTestnet],
+  chains: [bscTestnet],
   // connectors: [injected(), metaMask()],
   ssr: true,
 });
