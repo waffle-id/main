@@ -305,40 +305,14 @@ export function ConnectWalletXellar() {
                         </DropdownMenuItem>
                       )}
 
-                      <NavLink to="/">
+                      {/* <NavLink to="/">
                         <DropdownMenuItem className="py-4 cursor-pointer">
                           Home
                           <DropdownMenuShortcut>
                             <House className="size-5" />
                           </DropdownMenuShortcut>
                         </DropdownMenuItem>
-                      </NavLink>
-                      <NavLink to="/categories">
-                        <DropdownMenuItem className="py-4 cursor-pointer">
-                          Categories
-                          <DropdownMenuShortcut>
-                            <Hash className="size-5" />
-                          </DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      </NavLink>
-
-                      <NavLink to="/leaderboard">
-                        <DropdownMenuItem className="py-4 cursor-pointer">
-                          Leaderboards
-                          <DropdownMenuShortcut>
-                            <Award className="size-5" />
-                          </DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      </NavLink>
-
-                      <NavLink to="/badges">
-                        <DropdownMenuItem className="py-4 cursor-pointer">
-                          Badges
-                          <DropdownMenuShortcut>
-                            <BadgeCheck className="size-5" />
-                          </DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      </NavLink>
+                      </NavLink> */}
 
                       {twitterUser ? (
                         <DropdownMenuSub>
