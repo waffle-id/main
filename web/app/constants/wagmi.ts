@@ -10,7 +10,7 @@ export const FIXED_CHAIN = bscTestnet.id;
 export const WAGMI_XELLAR_CONFIG = defaultConfig({
   appName: "Waffle",
   // walletConnectProjectId: "5a26ed9ab5fae12d12af7250d0611486",
-  walletConnectProjectId: "702bd4efaeffd9a2a114b75acc3cc307",
+  walletConnectProjectId: "43c07cbc-1bc4-4937-bab1-1443188626b6",
   xellarAppId: "e766524a-ad0d-4268-b42c-9ec0eae5999d",
   xellarEnv: "sandbox",
   chains: [
@@ -20,12 +20,12 @@ export const WAGMI_XELLAR_CONFIG = defaultConfig({
   ssr: true,
 }) satisfies Config;
 
-export const WAGMI_RAINBOW_CONFIG = getDefaultConfig({
-  appName: "Waffle",
-  projectId: "702bd4efaeffd9a2a114b75acc3cc307",
-  chains: [bscTestnet],
-  // connectors: [injected(), metaMask()],
-  ssr: true,
-});
+// export const WAGMI_RAINBOW_CONFIG = getDefaultConfig({
+//   appName: "Waffle",
+//   projectId: "43c07cbc-1bc4-4937-bab1-1443188626b6",
+//   chains: [bscTestnet],
+//   // connectors: [injected(), metaMask()],
+//   ssr: true,
+// });
 
 export const publicClient = getPublicClient(WAGMI_XELLAR_CONFIG);

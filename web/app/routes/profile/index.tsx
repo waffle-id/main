@@ -188,7 +188,7 @@ export async function loader({ params }: { params: { variant: string; slug: stri
       ...v,
       // @ts-expect-error aokoskoaks
       reviews: item ? item.comment : v.review,
-      src: item ? item.reviewerAccount.avatarUrl : v.src,
+      src: item.reviewerAccount.avatarUrl ? item.reviewerAccount.avatarUrl : v.src,
     });
   });
   // }
