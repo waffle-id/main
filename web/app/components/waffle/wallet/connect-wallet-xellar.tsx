@@ -209,12 +209,15 @@ export function ConnectWalletXellar() {
   }, [twitterUser, authStatus?.needsTwitterRegistration, address]);
 
   useEffect(() => {
-    if (isConnected && chain?.id !== FIXED_CHAIN) {
+    if (isConnected && chain) {
+      console.log("Chain detected:", { id: chain.id, name: chain.name, FIXED_CHAIN });
+      setIsWrongNetwork(chain.id !== FIXED_CHAIN);
+    } else if (isConnected && !chain) {
       setIsWrongNetwork(true);
     } else {
       setIsWrongNetwork(false);
     }
-  }, [chain]);
+  }, [chain, isConnected]);
 
   return (
     <>
@@ -234,7 +237,7 @@ export function ConnectWalletXellar() {
                 return (
                   <ButtonMagnet
                     className="w-full sm:max-w-xs"
-                    onClick={() => switchChain?.({ chainId: bscTestnet.id })}
+                    onClick={() => switchChain?.({ chainId: FIXED_CHAIN })}
                   >
                     <div className="flex flex-row items-center gap-2">
                       <RefreshCcw className="size-5" />
@@ -267,7 +270,11 @@ export function ConnectWalletXellar() {
                               "Wrong Network"
                             ) : (
                               <>
-                                {`${chain} - ${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                {chain?.name
+                                  ? `${chain.name} - ${address?.slice(0, 6)}...${address?.slice(
+                                      -4
+                                    )}`
+                                  : `${address?.slice(0, 6)}...${address?.slice(-4)}`}
                                 <ChevronDown className="size-4 transition-transform" />
                               </>
                             )}
@@ -277,7 +284,10 @@ export function ConnectWalletXellar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="center" className="w-48 z-[100002]">
                       {isWrongNetwork && (
-                        <DropdownMenuItem className="py-4 cursor-pointer">
+                        <DropdownMenuItem
+                          className="py-4 cursor-pointer"
+                          onClick={() => switchChain?.({ chainId: FIXED_CHAIN })}
+                        >
                           Change Network
                           <DropdownMenuShortcut>
                             <RefreshCcw className="size-5" />
