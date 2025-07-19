@@ -64,7 +64,7 @@ export function BadgeItem({
 
   useEffect(() => {
     if (address) {
-      const client = createPublicClient({ chain: monadTestnet, transport: http() });
+      const client = createPublicClient({ chain: bscTestnet, transport: http() });
       async function getData() {
         const isEligible = await client
           .readContract({

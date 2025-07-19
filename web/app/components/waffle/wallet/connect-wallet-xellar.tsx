@@ -234,7 +234,7 @@ export function ConnectWalletXellar() {
                 return (
                   <ButtonMagnet
                     className="w-full sm:max-w-xs"
-                    onClick={() => switchChain?.({ chainId: monadTestnet.id })}
+                    onClick={() => switchChain?.({ chainId: bscTestnet.id })}
                   >
                     <div className="flex flex-row items-center gap-2">
                       <RefreshCcw className="size-5" />
@@ -267,7 +267,7 @@ export function ConnectWalletXellar() {
                               "Wrong Network"
                             ) : (
                               <>
-                                {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                {`${chain} - ${address?.slice(0, 6)}...${address?.slice(-4)}`}
                                 <ChevronDown className="size-4 transition-transform" />
                               </>
                             )}
