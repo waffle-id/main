@@ -61,7 +61,7 @@ export function ContentAll({ listData, currentUser }: ContentAllProps) {
             : activity.revieweeUsername;
           const subjectAvatarUrl = isReceivedReview
             ? currentUser?.avatarUrl
-            : activity.revieweeAccount?.avatarUrl;
+            : activity.revieweeAccount?.[0].avatarUrl;
           const subjectProfilePath = isReceivedReview
             ? currentUser?.username
             : activity.revieweeUsername;

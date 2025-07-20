@@ -20,7 +20,7 @@ function getRatingStyles(rating: string) {
       };
     case "neutral":
       return {
-        indicator: "bg-blue-500 shadow-lg shadow-blue-300/60",
+        indicator: "bg-yellow-500 shadow-lg shadow-yellow-300/60",
       };
     default:
       return {

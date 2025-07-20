@@ -23,10 +23,6 @@ export let authenticator = new Authenticator<User>();
 const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 
-console.log("Twitter OAuth2 credentials check:");
-console.log("ClientID exists:", !!clientID);
-console.log("ClientSecret exists:", !!clientSecret);
-
 if (!clientID || !clientSecret) {
   throw new Error("CLIENT_ID and CLIENT_SECRET must be provided");
 }
@@ -38,10 +34,6 @@ export async function checkUserExists(address: string): Promise<{
   error?: string;
 }> {
   try {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Checking if user exists for address:", address);
-    }
-
     const response = await fetch("https://api.waffle.food/account/check", {
       method: "POST",
       headers: {
@@ -60,9 +52,6 @@ export async function checkUserExists(address: string): Promise<{
       };
     }
 
-    if (process.env.NODE_ENV === "development") {
-      console.log("User check result:", data);
-    }
     return {
       exists: data.success,
       username: data.username,

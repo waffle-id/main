@@ -20,7 +20,7 @@ const getRatingStyles = (rating: string) => {
       };
     case "neutral":
       return {
-        indicator: "bg-blue-500 shadow-lg shadow-blue-300/60",
+        indicator: "bg-yellow-500 shadow-lg shadow-yellow-300/60",
       };
     default:
       return {
@@ -73,6 +73,8 @@ export function ContentGiven({ listData }: ContentGivenProps) {
   const visibleData = listData.slice(0, visibleCount);
   const hasMore = listData.length > visibleCount;
 
+  console.log(listData, "haha");
+
   const loadMore = () => {
     setVisibleCount((prev) => prev + 10);
   };
@@ -102,7 +104,7 @@ export function ContentGiven({ listData }: ContentGivenProps) {
                 <div className="relative size-20 sm:size-24 flex-shrink-0 mx-auto sm:mx-0">
                   <img
                     src={
-                      val.revieweeAccount?.avatarUrl ||
+                      val.revieweeAccount?.[0].avatarUrl ||
                       val.avatar ||
                       `https://api.dicebear.com/9.x/big-smile/svg?seed=${
                         val.revieweeUsername || "default"
