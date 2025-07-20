@@ -3,6 +3,9 @@ import { LogoAnimation } from "../waffle/logo/logo-animation";
 import { useEffect, useState, type JSX } from "react";
 import { NavLink } from "../waffle/nav-link";
 import { ConnectWalletXellar } from "../waffle/wallet/connect-wallet-xellar";
+import { SearchButton } from "../waffle/search/search-button";
+import { SearchBarWrapper } from "../waffle/search/search-bar-wrapper";
+import { useSearch } from "~/contexts/search-context";
 // import { ConnectWalletRainbow } from "../waffle/wallet/connect-wallet-rainbow";
 
 const LINKS_HEADER: Record<string, string>[] = [
@@ -26,6 +29,7 @@ const LINKS_HEADER: Record<string, string>[] = [
 
 export function Header({ className }: JSX.IntrinsicElements["div"]) {
   const [scrolling, setScrolling] = useState(false);
+  const { isSearchOpen } = useSearch();
 
   useEffect(() => {
     document && document.documentElement.scrollTop > 0 && setScrolling(true);
@@ -53,7 +57,14 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
         className
       )}
     >
-      <div className="flex items-center justify-between w-full mx-auto">
+      <SearchBarWrapper />
+
+      <div
+        className={cn(
+          "flex items-center justify-between w-full mx-auto transition-opacity duration-300",
+          isSearchOpen && "opacity-0 pointer-events-none"
+        )}
+      >
         <div className="flex-shrink-0">
           <NavLink to={"/"} prefetch="intent" className="no-underline">
             <LogoAnimation className="h-12 lg:h-14 w-max aspect-square" />
@@ -71,6 +82,7 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
               {link.text}
             </NavLink>
           ))}
+          <SearchButton />
         </nav>
 
         <div className="md:hidden">
@@ -89,8 +101,10 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
           </button>
         </div>
 
-        <div className="flex-shrink-0">
-          <ConnectWalletXellar />
+        <div className="flex items-center space-x-2">
+          <div className="flex-shrink-0">
+            <ConnectWalletXellar />
+          </div>
         </div>
       </div>
 

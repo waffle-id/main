@@ -21,6 +21,7 @@ import "./assets/styles/index.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { XellarKitProvider } from "@xellar/kit";
 import { WaffleProvider } from "./components/waffle/waffle-provider";
+import { SearchProvider } from "./contexts/search-context";
 import { Toaster } from "sonner";
 
 export const links: Route.LinksFunction = () => [
@@ -107,7 +108,9 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <XellarKitProvider>
           <WaffleProvider>
-            <Outlet />
+            <SearchProvider>
+              <Outlet />
+            </SearchProvider>
           </WaffleProvider>
         </XellarKitProvider>
       </QueryClientProvider>
