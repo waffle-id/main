@@ -77,12 +77,17 @@ function generateRandomUsername(): string {
             }),
 
         () => generateUsername("", 3),
-
-        () => generateUsername("-", 2),
     ];
 
     const selectedPattern = patterns[Math.floor(Math.random() * patterns.length)];
-    return selectedPattern();
+    let username = selectedPattern();
+
+    username = username
+        .replace(/-/g, "_")
+        .replace(/\s/g, "")
+        .replace(/[^a-zA-Z0-9_]/g, "");
+
+    return username;
 }
 
 function getRandomUsername(): string {
