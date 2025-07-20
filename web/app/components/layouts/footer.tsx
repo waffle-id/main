@@ -83,6 +83,7 @@ export function Footer() {
                     className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
                     href="https://www.instagram.com/waffle.idn/"
                     target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     Instagram
@@ -93,6 +94,7 @@ export function Footer() {
                     className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
                     href="https://www.youtube.com/@waffle_idn"
                     target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     YouTube
