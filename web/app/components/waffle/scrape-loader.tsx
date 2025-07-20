@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
-import { Twitter, Search, Database, Sparkles, Zap, Coffee, Heart } from "lucide-react";
+import { Twitter, Search, Database, Sparkles, Zap } from "lucide-react";
 
 interface ScrapingLoaderProps {
   username?: string;
@@ -10,17 +10,14 @@ interface ScrapingLoaderProps {
 
 export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const particlesRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLDivElement>(null);
   const progressFillRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
-  const floatingIconRef = useRef<HTMLDivElement>(null);
   const waveCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [currentMessage, setCurrentMessage] = useState(0);
   const [currentIcon, setCurrentIcon] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [apiCost, setApiCost] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
   const messages = [
@@ -28,14 +25,11 @@ export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
     "🆓 Using our custom scraper - completely free for you!",
     "📸 Extracting profile image and header content...",
     "📝 Gathering username, bio, and verification status...",
-    "👥 Analyzing follower count and social metrics...",
     "✨ Building your comprehensive profile data...",
-    "🧠 Processing account authenticity indicators...",
     "🚀 Almost there! Finalizing your profile information...",
-    "💎 Crafting your premium profile experience...",
   ];
 
-  const icons = [Twitter, Search, Database, Zap, Coffee, Heart, Sparkles];
+  const icons = [Twitter, Search, Database, Sparkles, Zap];
 
   useEffect(() => {
     const canvas = waveCanvasRef.current;
@@ -63,19 +57,15 @@ export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
       const waves = [
         { amplitude: 30, frequency: 0.01, phase: 0, color: "rgba(252, 232, 187, 0.1)" },
         { amplitude: 25, frequency: 0.015, phase: Math.PI / 3, color: "rgba(244, 210, 151, 0.08)" },
-        { amplitude: 35, frequency: 0.008, phase: Math.PI / 2, color: "rgba(207, 105, 81, 0.06)" },
-        { amplitude: 20, frequency: 0.02, phase: Math.PI, color: "rgba(252, 233, 188, 0.05)" },
       ];
 
       waves.forEach((wave) => {
         ctx.beginPath();
         ctx.moveTo(0, canvas.height / 2);
 
-        for (let x = 0; x <= canvas.width; x += 2) {
+        for (let x = 0; x <= canvas.width; x += 4) {
           const y =
-            canvas.height / 2 +
-            Math.sin(x * wave.frequency + time + wave.phase) * wave.amplitude +
-            Math.sin(x * wave.frequency * 0.5 + time * 0.7 + wave.phase) * wave.amplitude * 0.5;
+            canvas.height / 2 + Math.sin(x * wave.frequency + time + wave.phase) * wave.amplitude;
           ctx.lineTo(x, y);
         }
 
@@ -101,40 +91,6 @@ export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    if (particlesRef.current) {
-      const particles = Array.from(particlesRef.current.children);
-      particles.forEach((particle, i) => {
-        gsap.set(particle, {
-          x: gsap.utils.random(0, window.innerWidth),
-          y: gsap.utils.random(0, window.innerHeight),
-          scale: gsap.utils.random(0.3, 0.8),
-          opacity: gsap.utils.random(0.2, 0.5),
-        });
-
-        gsap.to(particle, {
-          y: `+=${gsap.utils.random(-80, 80)}`,
-          x: `+=${gsap.utils.random(-40, 40)}`,
-          rotation: 360,
-          duration: gsap.utils.random(12, 20),
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-          delay: i * 0.3,
-        });
-      });
-    }
-
-    if (floatingIconRef.current) {
-      gsap.to(floatingIconRef.current, {
-        y: -8,
-        rotation: 5,
-        duration: 3,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-    }
-
     if (iconRef.current) {
       gsap.to(iconRef.current, {
         y: -5,
@@ -146,7 +102,7 @@ export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
     }
 
     return () => {
-      gsap.killTweensOf([particlesRef.current, floatingIconRef.current, iconRef.current]);
+      gsap.killTweensOf([iconRef.current]);
     };
   }, []);
 
@@ -226,14 +182,9 @@ export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
       }
     }, 3000);
 
-    const costInterval = setInterval(() => {
-      setApiCost((prev) => prev + Math.random() * 0.001);
-    }, 500);
-
     return () => {
       clearInterval(messageInterval);
       clearInterval(iconInterval);
-      clearInterval(costInterval);
     };
   }, [messages.length, icons.length, isComplete, onComplete]);
 
@@ -275,27 +226,11 @@ export function ScrapingLoader({ username, onComplete }: ScrapingLoaderProps) {
       />
 
       <div
-        ref={particlesRef}
-        className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 2 }}
-      >
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute text-sm opacity-30 text-muted-foreground"
-            style={{
-              fontSize: `${Math.random() * 10 + 12}px`,
-            }}
-          ></div>
-        ))}
-      </div>
-
-      <div
         className="flex flex-col items-center space-y-8 max-w-lg w-full mx-auto relative"
         style={{ zIndex: 3 }}
       >
         <div className="relative flex items-center justify-center">
-          <div ref={floatingIconRef} className="absolute text-4xl opacity-20 text-muted-foreground">
+          <div className="absolute text-4xl opacity-20 text-muted-foreground animate-bounce">
             👤
           </div>
 
