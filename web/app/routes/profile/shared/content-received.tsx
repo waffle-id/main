@@ -2,10 +2,32 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 import { Star } from "lucide-react";
+import { cn } from "~/utils/cn";
 
 type ContentReceivedProps = {
   listData: any[];
 };
+
+function getRatingStyles(rating: string) {
+  switch (rating?.toLowerCase()) {
+    case "positive":
+      return {
+        indicator: "bg-emerald-500 shadow-lg shadow-emerald-300/60",
+      };
+    case "negative":
+      return {
+        indicator: "bg-rose-500 shadow-lg shadow-rose-300/60",
+      };
+    case "neutral":
+      return {
+        indicator: "bg-blue-500 shadow-lg shadow-blue-300/60",
+      };
+    default:
+      return {
+        indicator: "bg-slate-500 shadow-lg shadow-slate-300/60",
+      };
+  }
+}
 
 export function ContentReceived({ listData }: ContentReceivedProps) {
   const [expandedIndexes, setExpandedIndexes] = useState<Record<number, boolean>>({});
@@ -57,15 +79,27 @@ export function ContentReceived({ listData }: ContentReceivedProps) {
 
   return (
     <div className="relative flex flex-col justify-center">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {visibleData.map((val, i) => {
           const isExpanded = expandedIndexes[i];
+          const ratingStyles = getRatingStyles(val.rating);
 
           return (
-            <div key={i} className="p-8 w-full bg-gray-100 rounded-lg">
-              <div className="flex flex-row gap-8">
-                <div className="relative size-24 flex-shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full"></div>
+            <div
+              key={i}
+              className={cn(
+                "p-6 sm:p-8 w-full rounded-xl relative transition-all duration-300 ease-out bg-gray-100"
+              )}
+            >
+              <div
+                className={cn(
+                  "absolute top-4 right-4 w-3 h-3 rounded-full transition-all duration-300 sm:top-6 sm:right-6 sm:w-4 sm:h-4",
+                  ratingStyles.indicator
+                )}
+              />
+
+              <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                <div className="relative size-20 sm:size-24 flex-shrink-0 mx-auto sm:mx-0">
                   <img
                     src={
                       val.avatar ||
@@ -75,13 +109,15 @@ export function ContentReceived({ listData }: ContentReceivedProps) {
                       }`
                     }
                     alt=""
-                    className="relative z-10 size-24 aspect-square rounded-full p-2"
+                    className="relative z-10 size-20 sm:size-24 aspect-square rounded-full object-cover ring-2 ring-white shadow-lg"
                   />
                 </div>
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3 sm:gap-4 flex-1 min-w-0">
                   <Link
                     to={`/profile/x/${val.reviewerUsername || "unknown"}`}
-                    className="text-xl leading-snug hover:text-blue-600 hover:underline transition-colors cursor-pointer"
+                    className={cn(
+                      "text-lg sm:text-xl leading-snug hover:underline transition-colors cursor-pointer font-medium text-center sm:text-left"
+                    )}
                   >
                     {val.reviewerUsername || "Unknown"}
                   </Link>
@@ -89,13 +125,18 @@ export function ContentReceived({ listData }: ContentReceivedProps) {
                     ref={(el) => {
                       refs.current[i] = el;
                     }}
-                    className={`leading-snug ${isExpanded ? "" : "line-clamp-3"}`}
+                    className={cn(
+                      "leading-relaxed text-slate-700 text-sm sm:text-base",
+                      isExpanded ? "" : "line-clamp-3"
+                    )}
                   >
                     {val.desc || val.comment}
                   </p>
                   {shouldShowReadMore[i] && (
                     <p
-                      className="text-sm font-semibold mt-4 cursor-pointer"
+                      className={cn(
+                        "text-sm font-semibold mt-2 cursor-pointer transition-colors text-center sm:text-left"
+                      )}
                       onClick={() => toggleExpand(i)}
                     >
                       {isExpanded ? "show less" : "read more"}
