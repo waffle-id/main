@@ -408,7 +408,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="relative z-[10000] h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
+      <div className="relative z-10 h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
         <p className="text-[5vh] max-w-[40ch] leading-snug">
           {userData.bio || "This user prefers to stay mysterious."}
         </p>

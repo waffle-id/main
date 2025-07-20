@@ -3,9 +3,8 @@ import { LogoAnimation } from "../waffle/logo/logo-animation";
 import { useEffect, useState, type JSX } from "react";
 import { NavLink } from "../waffle/nav-link";
 import { ConnectWalletXellar } from "../waffle/wallet/connect-wallet-xellar";
-import { SearchButton } from "../waffle/search/search-button";
-import { SearchBarWrapper } from "../waffle/search/search-bar-wrapper";
 import { useSearch } from "~/contexts/search-context";
+import { SearchBarWrapper, SearchButton } from "../waffle/search/search-bar";
 // import { ConnectWalletRainbow } from "../waffle/wallet/connect-wallet-rainbow";
 
 const LINKS_HEADER: Record<string, string>[] = [
@@ -53,7 +52,7 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
     <div
       className={cn(
         "absolute lg:fixed left-0 w-full py-4 lg:py-6 px-4 sm:px-6 md:px-8 lg:px-10 z-50 rounded-b-lg transition-all duration-300 overflow-hidden",
-        scrolling && "backdrop-blur-md bg-white/80 border-b border-orange-200/50 shadow-sm",
+        scrolling && "backdrop-blur-md bg-white/80 border-b border-yellow-200/50 shadow-sm",
         className
       )}
     >
@@ -77,7 +76,7 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
               key={link.to}
               to={link.to}
               prefetch="intent"
-              className="relative px-3 lg:px-4 py-2 text-sm lg:text-base font-medium text-gray-700 hover:text-orange-600 transition-colors duration-200 rounded-lg hover:bg-orange-50/50"
+              className="relative px-3 lg:px-4 py-2 text-sm lg:text-base font-medium text-gray-700 hover:text-yellow-600 transition-colors duration-200 rounded-lg hover:bg-yellow-50/50"
             >
               {link.text}
             </NavLink>
@@ -87,7 +86,7 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
 
         <div className="md:hidden">
           <button
-            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors duration-200"
+            className="p-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
             aria-label="Open navigation menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,14 +107,14 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
         </div>
       </div>
 
-      <div className="md:hidden mt-4 pt-4 border-t border-orange-200/50 hidden">
+      <div className="md:hidden mt-4 pt-4 border-t border-yellow-200/50 hidden">
         <nav className="space-y-2">
           {LINKS_HEADER.map((link, i) => (
             <NavLink
               key={link.to}
               to={link.to}
               prefetch="intent"
-              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50/50 rounded-lg transition-colors duration-200"
+              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-yellow-600 hover:bg-yellow-50/50 rounded-lg transition-colors duration-200"
             >
               {link.text}
             </NavLink>
