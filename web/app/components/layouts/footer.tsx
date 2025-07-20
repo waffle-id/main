@@ -3,7 +3,7 @@ import { TextStaticAnimation } from "../waffle/logo/text-static-animation";
 
 export function Footer() {
   return (
-    <div className="px-[20px] lg:px-[50px] relative bg-gradient-to-br from-background via-orange-25 to-orange-50 z-[1000] overflow-hidden">
+    <div className="px-[20px] lg:px-[50px] relative bg-gradient-to-br from-background via-orange-25 to-orange-50 z-10 overflow-hidden">
       <div className="relative">
         <div className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-orange-200 to-transparent blur-sm opacity-40 animate-pulse"></div>
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-300 via-yellow-400 to-orange-300 rounded-full opacity-70 shadow-sm"></div>
@@ -26,10 +26,7 @@ export function Footer() {
               </h3>
               <ul className="space-y-3 relative z-10">
                 <li>
-                  <a
-                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
-                    href="/about"
-                  >
+                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     About Us
                   </a>
@@ -71,27 +68,47 @@ export function Footer() {
               </h3>
               <ul className="space-y-3 relative z-10">
                 <li>
-                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
+                  <a
+                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
+                    href="https://github.com/waffle-id"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     GitHub
                   </a>
                 </li>
                 <li>
-                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
+                  <a
+                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
+                    href="https://www.instagram.com/waffle.idn/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
-                    Discord
+                    Instagram
                   </a>
                 </li>
                 <li>
-                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
+                  <a
+                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
+                    href="https://www.youtube.com/@waffle_idn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
+                    YouTube
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className="flex items-center gap-3 py-1 px-2 rounded-xl group/link"
+                    href="https://x.com/waffleidn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
                     X (Twitter)
-                  </a>
-                </li>
-                <li>
-                  <a className="flex items-center gap-3 py-1 px-2 rounded-xl group/link" href="#">
-                    <span className="w-2 h-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full shadow-sm transition-all duration-300"></span>{" "}
-                    Telegram
                   </a>
                 </li>
               </ul>
@@ -115,19 +132,19 @@ export function Footer() {
               </p>
               <div className="flex gap-6 text-xs">
                 <a
-                  href="/privacy"
+                  href="#"
                   className="hover:text-orange-600 transition-all duration-300 py-1 px-3 rounded-lg hover:bg-orange-100/50"
                 >
                   Privacy
                 </a>
                 <a
-                  href="/terms"
+                  href="#"
                   className="hover:text-orange-600 transition-all duration-300 py-1 px-3 rounded-lg hover:bg-orange-100/50"
                 >
                   Terms
                 </a>
                 <a
-                  href="/support"
+                  href="#"
                   className="hover:text-orange-600 transition-all duration-300 py-1 px-3 rounded-lg hover:bg-orange-100/50"
                 >
                   Support

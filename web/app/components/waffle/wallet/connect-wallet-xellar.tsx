@@ -210,7 +210,6 @@ export function ConnectWalletXellar() {
 
   useEffect(() => {
     if (isConnected && chain) {
-      console.log("Chain detected:", { id: chain.id, name: chain.name, FIXED_CHAIN });
       setIsWrongNetwork(chain.id !== FIXED_CHAIN);
     } else if (isConnected && !chain) {
       setIsWrongNetwork(true);

@@ -1,24 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
-import { useGSAP } from "@gsap/react";
 import { cn } from "~/utils/cn";
-import {
-  ArrowDown,
-  BadgeDollarSign,
-  CircleSlash,
-  MoveDown,
-  Pen,
-  PencilRuler,
-  Share2,
-  Wallet,
-} from "lucide-react";
+import { MoveDown } from "lucide-react";
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
-import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
 import { ActionScore } from "./shared/action-score";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
-import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
 
 import { ContentReceived } from "./shared/content-received";
 import { ContentAll } from "./shared/content-all";
@@ -29,9 +17,31 @@ import Review from "./shared/bottom-sheet/review";
 import Vouch from "./shared/bottom-sheet/vouch";
 import Slash from "./shared/bottom-sheet/slash";
 import { redirect, useParams, useLoaderData } from "react-router";
-import type { Route } from "./+types";
+import { ScrapingLoader } from "~/components/waffle/scrape-loader";
+import { useWaffleProvider } from "~/components/waffle/waffle-provider";
+import { useAccount } from "wagmi";
 
-const hasToken = typeof window !== "undefined" && !!localStorage.getItem("waffle_auth_token");
+const isViewingOwnProfile = (
+  userData: UserProfileData | null,
+  currentUser: any,
+  walletAddress: string | undefined
+): boolean => {
+  if (!userData) return false;
+
+  if (userData.username && currentUser?.screen_name) {
+    const isTwitterMatch =
+      userData.username.toLowerCase() === currentUser.screen_name.toLowerCase();
+    if (isTwitterMatch) return true;
+  }
+
+  if (userData.address && walletAddress) {
+    const isAddressMatch = userData.address.toLowerCase() === walletAddress.toLowerCase();
+    if (isAddressMatch) return true;
+  }
+
+  return false;
+};
+
 export interface UserProfileData {
   address?: string;
   username: string;
@@ -128,14 +138,26 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     return redirect("/");
   }
 
-  // review
-  const urlREVIEW = `https://api.waffle.food/reviews?${
+  const urlREVIEWReceived = `https://api.waffle.food/reviews?${
     variant == "w" ? "revieweeAddress=" : "revieweeUsername="
   }${slug}`;
-  const reviewResult = await fetch(urlREVIEW);
+  const reviewReceivedResult = await fetch(urlREVIEWReceived);
 
-  // if (reviewResult.ok) {
-  const userReview = await reviewResult.json();
+  const urlREVIEWGiven = `https://api.waffle.food/reviews?${
+    variant == "w" ? "reviewerAddress=" : "reviewerUsername="
+  }${slug}`;
+  const reviewGivenResult = await fetch(urlREVIEWGiven);
+
+  const userReviewReceived = await reviewReceivedResult.json();
+  const userReviewGiven = await reviewGivenResult.json();
+
+  const allReviews = [...(userReviewReceived?.reviews || []), ...(userReviewGiven?.reviews || [])];
+
+  const userReview = {
+    received: userReviewReceived?.reviews || [],
+    given: userReviewGiven?.reviews || [],
+    all: allReviews,
+  };
 
   if (variant === "w" && slug.startsWith("0x")) {
     const walletBios = [
@@ -182,9 +204,7 @@ export async function loader({ params }: { params: { variant: string; slug: stri
   const newImagesItems: ImageItems[] = [];
 
   imageItems.map((v, i) => {
-    const item = userReview.reviews[i];
-
-    console.log(item, "ahaha");
+    const item = userReview.received[i];
 
     newImagesItems.push({
       ...v,
@@ -228,6 +248,9 @@ export async function loader({ params }: { params: { variant: string; slug: stri
 export default function Profile() {
   const params = useParams();
   const loaderData = useLoaderData<typeof loader>();
+  const { twitterUser } = useWaffleProvider();
+  const { address } = useAccount();
+
   const {
     userData: initialUserData,
     error: initialError,
@@ -240,15 +263,23 @@ export default function Profile() {
   const [userData, setUserData] = React.useState<UserProfileData | null>(initialUserData);
   const [error, setError] = React.useState<string | null>(initialError);
   const [isLoading, setIsLoading] = React.useState(needsScraping);
+  const [isScraping, setIsScraping] = React.useState(needsScraping);
   const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean | null>(null);
 
-  const TABS = ["received", "given", "all"];
+  const isOwnProfile = isViewingOwnProfile(userData, twitterUser, address);
+
+  const TABS = [
+    { value: "received", label: "Received" },
+    { value: "given", label: "Given" },
+    { value: "all", label: "All" },
+  ];
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setUserData(initialUserData);
     setError(initialError);
     setIsLoading(needsScraping);
+    setIsScraping(needsScraping);
     const token = localStorage.getItem("waffle_auth_token");
     setHasLoggedIn(!!token);
   }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
@@ -259,6 +290,7 @@ export default function Profile() {
     const fetchScrapedData = async () => {
       try {
         setIsLoading(true);
+        setIsScraping(true);
         const scraperResponse = await fetch(
           `https://scraper.waffle.food/profile/${slug}/optimized`
         );
@@ -290,6 +322,7 @@ export default function Profile() {
         setError(err instanceof Error ? err.message : "Failed to load user profile");
       } finally {
         setIsLoading(false);
+        setIsScraping(false);
       }
     };
 
@@ -343,6 +376,10 @@ export default function Profile() {
         );
     });
   }, [userData, isLoading]);
+
+  if (isScraping) {
+    return <ScrapingLoader username={slug} />;
+  }
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -408,7 +445,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="relative z-[10000] h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
+      <div className="relative z-10 h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
         <p className="text-[5vh] max-w-[40ch] leading-snug">
           {userData.bio || "This user prefers to stay mysterious."}
         </p>
@@ -444,36 +481,37 @@ export default function Profile() {
 
       <div className="px-[20px] lg:px-[50px] py-24 relative z-20 bg-background text-black">
         <div className="flex flex-col gap-12">
-          <div
-            className={cn(
-              "flex flex-row items-center gap-4 justify-end",
-              hasLoggedIn ? "" : "pointer-events-none opacity-50"
-            )}
-          >
-            <Review user={userData} />
-            <Vouch />
-            <Slash />
-          </div>
+          {!isOwnProfile && (
+            <div
+              className={cn(
+                "flex flex-row items-center gap-4 justify-end",
+                hasLoggedIn ? "" : "pointer-events-none opacity-50"
+              )}
+            >
+              <Review user={userData} />
+              <Vouch />
+              <Slash />
+            </div>
+          )}
 
           {/* <p>{JSON.stringify(userReview)}</p> */}
-          <Tabs defaultValue={TABS[0]}>
+          <Tabs defaultValue={TABS[0].value}>
             <TabsList className="w-full mb-5 flex flex-wrap gap-2">
               {TABS.map((val, idx) => (
-                <TabsTrigger key={idx} value={val} className="capitalize">
-                  {val}
+                <TabsTrigger key={idx} value={val.value} className="capitalize">
+                  {val.label}
                 </TabsTrigger>
               ))}
             </TabsList>
-            <TabsContent value={TABS[0]} className="flex flex-col gap-10">
-              {/* @ts-ignore */}
-              <ContentGiven listData={userReview ? userReview.reviews : []} />
+            <TabsContent value={TABS[0].value} className="flex flex-col gap-10">
+              <ContentReceived listData={userReview ? userReview.received : []} />
             </TabsContent>
-            <TabsContent value={TABS[1]} className="flex flex-col gap-10">
-              <ContentReceived listData={userReview ? userReview.reviews : []} />
+            <TabsContent value={TABS[1].value} className="flex flex-col gap-10">
+              <ContentGiven listData={userReview ? userReview.given : []} />
             </TabsContent>
-            <TabsContent value={TABS[2]} className="flex flex-col gap-10">
+            <TabsContent value={TABS[2].value} className="flex flex-col gap-10">
               <ContentAll
-                listData={userReview ? userReview.reviews : []}
+                listData={userReview ? userReview.all : []}
                 currentUser={{
                   username: userData.username,
                   avatarUrl: userData.avatarUrl,

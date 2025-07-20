@@ -27,7 +27,7 @@ export function ProfileSkeleton() {
         </div>
       </div>
 
-      <div className="relative z-[10000] h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
+      <div className="relative z-10 h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
         <div className="bg-gray-300 animate-pulse rounded-lg h-[5vh] w-[40ch] max-w-full"></div>
         <div className="absolute bottom-0 px-[20px] lg:px-[50px] mb-20 w-full">
           <div className="flex flex-row items-center justify-between">
