@@ -1,41 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { useSearch } from "~/contexts/search-context";
 
 const isEthereumAddress = (input: string): boolean => {
   return input.startsWith("0x") && input.length === 42 && /^0x[a-fA-F0-9]{40}$/.test(input);
 };
 
-export function SearchButton() {
-  const { openSearch } = useSearch();
-
-  return (
-    <button
-      onClick={openSearch}
-      className="p-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200 group cursor-pointer"
-      aria-label="Search users"
-    >
-      <Search className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-    </button>
-  );
+interface SearchBarProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function SearchBarWrapper() {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
-
-  return <SearchBar />;
-}
-
-export function SearchBar() {
-  const { isSearchOpen, searchQuery, closeSearch, setSearchQuery } = useSearch();
+function SearchBar({ isOpen, onClose }: SearchBarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,24 +20,24 @@ export function SearchBar() {
   }, []);
 
   useEffect(() => {
-    if (isSearchOpen && inputRef.current) {
+    if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isSearchOpen]);
+  }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isSearchOpen) {
-        closeSearch();
+      if (e.key === "Escape" && isOpen) {
+        onClose();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isSearchOpen, closeSearch]);
+  }, [isOpen, onClose]);
 
   const handleSelectUser = (usernameOrAddress: string) => {
-    closeSearch();
+    onClose();
 
     if (!isClient) return;
 
@@ -82,7 +58,7 @@ export function SearchBar() {
     handleSelectUser(query);
   };
 
-  if (!isSearchOpen) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-md border-b border-yellow-200/50">
@@ -94,7 +70,7 @@ export function SearchBar() {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Search by username or wallet address (0x...)..."
+                placeholder="Search by username or wallet address"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-20 py-3 text-lg bg-white border border-yellow-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none placeholder-gray-500 cursor-text transition-all duration-200"
@@ -117,7 +93,7 @@ export function SearchBar() {
           </form>
 
           <button
-            onClick={closeSearch}
+            onClick={onClose}
             className="ml-4 p-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200 cursor-pointer"
             aria-label="Close search"
           >
@@ -127,4 +103,27 @@ export function SearchBar() {
       </div>
     </div>
   );
+}
+
+export function SearchButton() {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setIsSearchOpen(true)}
+        className="p-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200 group cursor-pointer"
+        aria-label="Search users"
+      >
+        <Search className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+      </button>
+
+      <SearchBar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+    </>
+  );
+}
+
+// For backward compatibility
+export function SearchBarWrapper() {
+  return null;
 }

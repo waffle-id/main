@@ -3,8 +3,7 @@ import { LogoAnimation } from "../waffle/logo/logo-animation";
 import { useEffect, useState, type JSX } from "react";
 import { NavLink } from "../waffle/nav-link";
 import { ConnectWalletXellar } from "../waffle/wallet/connect-wallet-xellar";
-import { useSearch } from "~/contexts/search-context";
-import { SearchBarWrapper, SearchButton } from "../waffle/search/search-bar";
+import { SearchButton } from "../waffle/search/search-bar";
 // import { ConnectWalletRainbow } from "../waffle/wallet/connect-wallet-rainbow";
 
 const LINKS_HEADER: Record<string, string>[] = [
@@ -28,7 +27,6 @@ const LINKS_HEADER: Record<string, string>[] = [
 
 export function Header({ className }: JSX.IntrinsicElements["div"]) {
   const [scrolling, setScrolling] = useState(false);
-  const { isSearchOpen } = useSearch();
 
   useEffect(() => {
     document && document.documentElement.scrollTop > 0 && setScrolling(true);
@@ -56,12 +54,9 @@ export function Header({ className }: JSX.IntrinsicElements["div"]) {
         className
       )}
     >
-      <SearchBarWrapper />
-
       <div
         className={cn(
-          "flex items-center justify-between w-full mx-auto transition-opacity duration-300",
-          isSearchOpen && "opacity-0 pointer-events-none"
+          "flex items-center justify-between w-full mx-auto transition-opacity duration-300"
         )}
       >
         <div className="flex-shrink-0">
