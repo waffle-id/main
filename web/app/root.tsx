@@ -54,6 +54,28 @@ if (typeof document !== "undefined") {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Waffle",
+    description:
+      "Decentralized reputation and review platform building trust in the Web3 ecosystem",
+    url: "https://waffle.food",
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    sameAs: ["https://x.com/waffleidn", "https://github.com/waffle-id"],
+    author: {
+      "@type": "Organization",
+      name: "Waffle",
+      url: "https://waffle.food",
+    },
+  };
+
   return (
     <html lang="en">
       <head>
@@ -61,6 +83,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
       </head>
       <body className="font-sans">
         {children}

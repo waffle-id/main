@@ -1,6 +1,5 @@
 import { PencilRuler } from "lucide-react";
 import { useState } from "react";
-import { Button } from "~/components/shadcn/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "~/components/shadcn/drawer";
 import { Input } from "~/components/shadcn/input";
 import { Textarea } from "~/components/shadcn/textarea";
@@ -16,6 +15,7 @@ import { addReview } from "~/routes/api/review/add-review";
 
 type ReviewProps = {
   user: UserProfileData;
+  disabled?: boolean;
 };
 
 type Sentiment = "negative" | "neutral" | "positive";
@@ -53,7 +53,7 @@ const sentimentScores: Record<Sentiment, number> = {
   positive: 3,
 };
 
-export default function Review({ user }: ReviewProps) {
+export default function Review({ user, disabled = false }: ReviewProps) {
   let client: Client | null = null;
   const { writeContractAsync, isPending } = useWriteContract();
   const [isOpen, setIsOpen] = useState(false);
@@ -62,7 +62,6 @@ export default function Review({ user }: ReviewProps) {
   const [description, setDescription] = useState("");
   const [qualityLevel, setQualityLevel] = useState<"low" | "medium" | "high" | null>(null);
   const [qualityLoading, setQualityLoading] = useState(false);
-  const [aiFeedback, setAiFeedback] = useState("");
   const [checking, setChecking] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [shouldAnalyze, setShouldAnalyze] = useState(false);
@@ -115,7 +114,6 @@ export default function Review({ user }: ReviewProps) {
       setSentiment(null);
       setQualityLoading(false);
       setQualityLevel(null);
-      setAiFeedback("");
       setIsOpen(false);
     } catch (err) {
       console.error("❌ Contract error:", err);
@@ -128,7 +126,6 @@ export default function Review({ user }: ReviewProps) {
 
     if (trimmedTitle.length === 0 || trimmedDesc.length === 0) {
       setQualityLevel(null);
-      setAiFeedback("");
       setQualityLoading(false);
       setChecking(false);
       return;
@@ -153,11 +150,9 @@ export default function Review({ user }: ReviewProps) {
 
         console.log("AI Analysis Result:", result);
         setQualityLevel(result.quality.level);
-        setAiFeedback(result.quality.feedback);
       } catch (err) {
         console.error("AI analysis failed", err);
         setQualityLevel(null);
-        setAiFeedback("Unable to analyze review quality. Please try again.");
       } finally {
         setQualityLoading(false);
         setChecking(false);
@@ -182,10 +177,20 @@ export default function Review({ user }: ReviewProps) {
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
-      <ButtonMagnet className="px-8 py-2" onClick={() => setIsOpen(true)}>
+      <ButtonMagnet
+        className={`px-8 py-2 transition-all duration-300 ${
+          disabled ? "opacity-95 cursor-not-allowed" : ""
+        }`}
+        onClick={() => {
+          if (!disabled) {
+            setIsOpen(true);
+          }
+        }}
+        disabled={disabled}
+      >
         <div className="flex flex-row items-center gap-2">
           <PencilRuler className="size-5" />
-          Review
+          {disabled ? "Already Reviewed" : "Review"}
         </div>
       </ButtonMagnet>
 
@@ -278,11 +283,6 @@ export default function Review({ user }: ReviewProps) {
                 <span className="text-sm text-black/80 capitalize font-medium">
                   Quality: {qualityLevel ?? "Not analyzed"}
                 </span>
-                {aiFeedback && (
-                  <p className="text-xs text-black/60 animate-fade-in leading-relaxed">
-                    💡 {aiFeedback}
-                  </p>
-                )}
                 {qualityLevel === "low" && (
                   <p className="text-xs text-red-600 font-medium animate-fade-in">
                     ❌ Quality too low - Please add more detail and constructive feedback

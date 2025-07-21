@@ -2,6 +2,7 @@ import { TextAnimation } from "~/components/waffle/logo/text-animation";
 import { ArrowLink } from "~/components/waffle/button/arrow-button";
 import { GradientBG } from "~/components/waffle/gradient-bg";
 import { cn } from "~/utils/cn";
+import { generateSEO, SEO_CONFIGS } from "~/utils/seo";
 
 import { FeaturesBanner, FeaturesText } from "./shared/features";
 import { LogoAnimationNoRepeat } from "~/components/waffle/logo/logo-animation-no-repeat";
@@ -12,8 +13,8 @@ import { CommandLineTypo } from "~/components/waffle/typography/command-line-typ
 import { BadgeCheck } from "lucide-react";
 // import { PodiumLeaderboards } from "~/components/waffle/podium";
 
-export function meta({}: Route.MetaArgs) {
-  return [{ title: "Waffle" }, { name: "description", content: "Welcome to Waffle!" }];
+export function meta({}: Route.MetaArgs): Route.MetaDescriptors {
+  return generateSEO(SEO_CONFIGS.home);
 }
 
 export default function Landing() {

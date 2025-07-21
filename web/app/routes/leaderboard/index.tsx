@@ -7,11 +7,13 @@ import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animat
 import { Separator } from "~/components/waffle/separator";
 import type { Route } from "./+types";
 import { capitalizeEachWord } from "~/utils/formatter";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "~/components/shadcn/tooltip";
+import { getLeaderboardSEO } from "~/utils/seo";
+
+export function meta({ params }: Route.MetaArgs): Route.MetaDescriptors {
+  const category = params.categories || "most-credible";
+  return getLeaderboardSEO(category);
+}
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/shadcn/tooltip";
 import { useState } from "react";
 import { useEffect } from "react";
 import { BASE_URL } from "~/constants/constant";
@@ -42,9 +44,7 @@ export default function LeaderboardPage() {
 
   const fetchLeaderboard = async (page = 1) => {
     setLoading(true);
-    const res = await fetch(
-      `${BASE_URL}/account/?page=${page}&size=20&sortBy=reputationScore`
-    );
+    const res = await fetch(`${BASE_URL}/account/?page=${page}&size=20&sortBy=reputationScore`);
     const data = await res.json();
 
     if (page === 1) {
@@ -143,9 +143,7 @@ export default function LeaderboardPage() {
                       <img
                         src={
                           user.avatarUrl ||
-                          `https://api.dicebear.com/9.x/big-smile/svg?seed=leaderboard${
-                            idx + 1
-                          }`
+                          `https://api.dicebear.com/9.x/big-smile/svg?seed=leaderboard${idx + 1}`
                         }
                         className="relative z-10 size-36 rounded-full p-4 transition-transform duration-500 group-hover/avatar:scale-110"
                         alt={`Top ${idx + 1} user`}
@@ -163,8 +161,7 @@ export default function LeaderboardPage() {
 
                     <div className="text-center">
                       <p className="text-2xl font-bold text-gray-800 mb-2">
-                        {user.username ||
-                          `user_${String(idx + 1).padStart(3, "0")}`}
+                        {user.username || `user_${String(idx + 1).padStart(3, "0")}`}
                       </p>
                       <div className="flex items-center justify-center gap-3 mt-3 bg-white/50 rounded-full px-4 py-2 backdrop-blur-sm border border-orange-200/50">
                         <Award
@@ -213,18 +210,10 @@ export default function LeaderboardPage() {
         <div className="my-24 flex flex-col gap-8">
           <p className="text-5xl text-black">Most Credible</p>
           <div className="grid grid-cols-6 w-full text-black text-md">
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
-              Rank
-            </p>
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
-              Name
-            </p>
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
-              Score
-            </p>
-            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
-              Review
-            </p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Rank</p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Name</p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Score</p>
+            <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">Review</p>
             <p className="text-black text-sm border-b border-gray-400 border-dashed py-3">
               Vouched for
             </p>
@@ -264,9 +253,7 @@ export default function LeaderboardPage() {
                       <img
                         src={
                           user.avatarUrl ??
-                          `https://api.dicebear.com/9.x/big-smile/svg?seed=rank${
-                            idx + 1
-                          }`
+                          `https://api.dicebear.com/9.x/big-smile/svg?seed=rank${idx + 1}`
                         }
                         className="relative z-10 size-10 aspect-square rounded-full p-1.5 group-hover:scale-110 transition-transform duration-300"
                         alt=""
@@ -282,9 +269,7 @@ export default function LeaderboardPage() {
                       }}
                       className="font-medium hover:text-orange-600 transition-colors duration-300 cursor-pointer"
                     >
-                      {user.username ??
-                        user.address ??
-                        `User${String(idx + 1).padStart(3, "0")}`}
+                      {user.username ?? user.address ?? `User${String(idx + 1).padStart(3, "0")}`}
                     </p>
                   </div>
                 </div>

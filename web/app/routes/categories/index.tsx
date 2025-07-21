@@ -1,7 +1,13 @@
 import axios from "axios";
 import { NavLink, useLoaderData } from "react-router";
 import { cn } from "~/utils/cn";
-import { TextStaticAnimation } from "~/components/waffle/logo/text-static-animation";
+import type { Route } from "./+types";
+import { generateSEO, SEO_CONFIGS } from "~/utils/seo";
+
+export function meta(): Route.MetaDescriptors {
+  return generateSEO(SEO_CONFIGS.categories);
+}
+
 import {
   TrendingUp,
   Users,
@@ -14,9 +20,7 @@ import {
   Code,
   Heart,
   Zap,
-  Shield,
 } from "lucide-react";
-import { useState } from "react";
 
 export async function loader() {
   try {
@@ -29,12 +33,11 @@ export async function loader() {
     };
   } catch (error) {
     return {
-      categories: [], // Fallback for API errors
+      categories: [],
     };
   }
 }
 
-// Fallback categories with enhanced data
 const FALLBACK_CATEGORIES = [
   {
     title: "Development",
@@ -102,7 +105,6 @@ export default function CategoriesPage() {
   const loaderData = useLoaderData<typeof loader>();
   const { categories: apiCategories } = loaderData;
 
-  // Use API data if available, otherwise use fallback
   const categories =
     apiCategories?.length > 0
       ? apiCategories.map((cat, idx) => ({

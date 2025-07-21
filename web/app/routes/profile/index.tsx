@@ -7,6 +7,13 @@ import { MoveDown } from "lucide-react";
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
 import { ActionScore } from "./shared/action-score";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
+import type { Route } from "./+types";
+import { getProfileSEO } from "~/utils/seo";
+
+export function meta({ params, data }: Route.MetaArgs): Route.MetaDescriptors {
+  const { variant, slug } = params;
+  return getProfileSEO(variant as "x" | "w", slug, data?.userData);
+}
 
 import { ContentReceived } from "./shared/content-received";
 import { ContentAll } from "./shared/content-all";
@@ -20,6 +27,7 @@ import { redirect, useParams, useLoaderData } from "react-router";
 import { ScrapingLoader } from "~/components/waffle/scrape-loader";
 import { useWaffleProvider } from "~/components/waffle/waffle-provider";
 import { useAccount } from "wagmi";
+import { useHasReviewed } from "~/hooks/useHasReviewed";
 
 const isViewingOwnProfile = (
   userData: UserProfileData | null,
@@ -159,7 +167,65 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     all: allReviews,
   };
 
+  const newImagesItems: ImageItems[] = [];
+  imageItems.map((v, i) => {
+    const item = userReview.received[i];
+
+    newImagesItems.push({
+      ...v,
+      // @ts-expect-error :p
+      reviews: item ? item.comment : v.review,
+      src: item ? item.reviewerAccount.avatarUrl : v.src,
+    });
+  });
+
   if (variant === "w" && slug.startsWith("0x")) {
+    try {
+      const checkResponse = await fetch(`https://api.waffle.food/account/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ address: slug }),
+        signal: AbortSignal.timeout(3000),
+      });
+
+      if (checkResponse.ok) {
+        const checkData = await checkResponse.json();
+
+        if (checkData.success && checkData.username) {
+          try {
+            const profileResponse = await fetch(
+              `https://api.waffle.food/account/${checkData.username}`,
+              {
+                signal: AbortSignal.timeout(3000),
+              }
+            );
+
+            if (profileResponse.ok) {
+              const profileData: UserProfileData = await profileResponse.json();
+
+              return {
+                userData: {
+                  ...profileData,
+                  address: slug,
+                },
+                error: null,
+                needsScraping: false,
+                slug,
+                imagesItemsLoader: newImagesItems,
+                userReview,
+              };
+            }
+          } catch (profileError) {
+            console.log("Profile fetch failed, falling back to generic wallet profile...");
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Address check failed, falling back to generic wallet profile...");
+    }
+
     const walletBios = [
       "Early adopter exploring the Web3 ecosystem with passion.",
       "Building the future, one transaction at a time.",
@@ -200,20 +266,6 @@ export async function loader({ params }: { params: { variant: string; slug: stri
       userReview,
     };
   }
-
-  const newImagesItems: ImageItems[] = [];
-
-  imageItems.map((v, i) => {
-    const item = userReview.received[i];
-
-    newImagesItems.push({
-      ...v,
-      // @ts-expect-error aokoskoaks
-      reviews: item ? item.comment : v.review,
-      src: item ? item.reviewerAccount.avatarUrl : v.src,
-    });
-  });
-  // }
 
   try {
     const response = await fetch(`https://api.waffle.food/account/${slug}`, {
@@ -267,6 +319,8 @@ export default function Profile() {
   const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean | null>(null);
 
   const isOwnProfile = isViewingOwnProfile(userData, twitterUser, address);
+
+  const { hasReviewed, isLoading: isCheckingReview, canReview } = useHasReviewed(userData);
 
   const TABS = [
     { value: "received", label: "Received" },
@@ -488,7 +542,24 @@ export default function Profile() {
                 hasLoggedIn ? "" : "pointer-events-none opacity-50"
               )}
             >
-              <Review user={userData} />
+              <div
+                className={cn(
+                  "transition-all duration-300",
+                  !canReview && hasLoggedIn && !isCheckingReview
+                    ? "opacity-40 pointer-events-none cursor-not-allowed"
+                    : "",
+                  isCheckingReview ? "opacity-60" : ""
+                )}
+                title={
+                  hasReviewed
+                    ? "You have already reviewed this user"
+                    : !hasLoggedIn
+                    ? "Please connect your wallet to review"
+                    : "Write a review for this user"
+                }
+              >
+                <Review user={userData} disabled={!canReview || !hasLoggedIn || isCheckingReview} />
+              </div>
               <Vouch />
               <Slash />
             </div>

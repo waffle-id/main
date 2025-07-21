@@ -29,6 +29,9 @@ export default [
     /* ------------------------ Debug/Development routes ------------------------ */
     route("/debug/env", "routes/debug/env.tsx"),
 
+    /* ----------------------------- SEO routes ------------------------------ */
+    route("/sitemap.xml", "routes/sitemap[.]xml.ts"),
+
     /* ------------------ UI/Development routes (commented out) ----------------- */
     // route("/ui", "routes/ui/docs.tsx"),
   ]),

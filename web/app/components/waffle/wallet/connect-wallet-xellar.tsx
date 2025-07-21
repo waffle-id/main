@@ -2,18 +2,17 @@ import { ConnectButton, useConnectModal } from "@xellar/kit";
 import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
 import { FIXED_CHAIN } from "~/constants/wagmi";
+import { cn } from "~/utils/cn";
 import { useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
-  Hash,
-  House,
   LogOut,
   RefreshCcw,
   User,
   Twitter,
-  Award,
-  BadgeCheck,
   Wallet,
+  Calendar,
+  Gift,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,15 +30,24 @@ import { ConnectTwitter, type ConnectTwitterRef } from "./shared/connect-twitter
 import { useWaffleProvider } from "../waffle-provider";
 import { useWalletAuth } from "~/hooks/useWalletAuth";
 import { IconX } from "~/routes/profile/shared/action-score";
-import { monadTestnet, bscTestnet } from "viem/chains";
+import { useDailyLogin } from "~/hooks/useDailyLogin";
 
-export function ConnectWalletXellar() {
+export function ConnectWalletXellar({ className }: { className?: string }) {
   const { isConnected, chain, address } = useAccount();
   const { open: openModalXellar } = useConnectModal();
   const { twitterUser, setTwitterUser } = useWaffleProvider();
   const { disconnect } = useDisconnect();
   const { loginWithWallet, checkAuthStatus, isLoading } = useWalletAuth();
   const { switchChain } = useSwitchChain();
+
+  const {
+    currentStreak,
+    canLoginToday,
+    alreadyLoggedToday,
+    isSubmitting: isDailyLoginSubmitting,
+    performDailyLogin,
+    isLoading: isDailyLoginLoading,
+  } = useDailyLogin();
 
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
   const [authStatus, setAuthStatus] = useState<{
@@ -59,21 +67,19 @@ export function ConnectWalletXellar() {
       await fetch("/auth/logout", { method: "POST" });
 
       localStorage.removeItem("waffle_wallet_address");
-
       localStorage.removeItem("waffle_referral_code");
       localStorage.removeItem("waffle_auth_token");
 
       setAuthStatus(null);
       setIsAuthenticated(false);
       setLastCheckedAddress(null);
-
       setTwitterUser(null);
     } catch (error) {
       disconnect();
       localStorage.removeItem("waffle_wallet_address");
-
       localStorage.removeItem("waffle_referral_code");
       localStorage.removeItem("waffle_auth_token");
+
       setAuthStatus(null);
       setIsAuthenticated(false);
       setLastCheckedAddress(null);
@@ -114,6 +120,21 @@ export function ConnectWalletXellar() {
       } else {
       }
     } catch (error) {}
+  };
+
+  const handleDailyLogin = async () => {
+    if (!canLoginToday || isDailyLoginSubmitting) return;
+
+    try {
+      const result = await performDailyLogin();
+      if (result.success) {
+        console.log("Daily login successful!", result.txHash);
+      } else {
+        console.error("Daily login failed:", result.error);
+      }
+    } catch (error) {
+      console.error("Daily login error:", error);
+    }
   };
 
   const refreshAuthStatus = async () => {
@@ -226,7 +247,10 @@ export function ConnectWalletXellar() {
             {(() => {
               if (!isConnected) {
                 return (
-                  <ButtonMagnet onClick={openModalXellar} className="w-full sm:w-auto">
+                  <ButtonMagnet
+                    onClick={openModalXellar}
+                    className={className || "w-full sm:w-auto"}
+                  >
                     Connect Wallet
                   </ButtonMagnet>
                 );
@@ -264,16 +288,20 @@ export function ConnectWalletXellar() {
                     <DropdownMenuTrigger asChild>
                       <div>
                         <ButtonMagnet>
-                          <div className="flex flex-row items-center gap-4">
+                          <div className="flex flex-row items-center gap-4 text-wrap">
                             {isWrongNetwork ? (
                               "Wrong Network"
                             ) : (
                               <>
-                                {chain?.name
-                                  ? `${chain.name} - ${address?.slice(0, 6)}...${address?.slice(
-                                      -4
-                                    )}`
-                                  : `${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                <div className="flex flex-col items-start">
+                                  <span className="text-sm">
+                                    {chain?.name
+                                      ? `${chain.name} - ${address?.slice(0, 6)}...${address?.slice(
+                                          -4
+                                        )}`
+                                      : `${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                                  </span>
+                                </div>
                                 <ChevronDown className="size-4 transition-transform" />
                               </>
                             )}
@@ -323,55 +351,88 @@ export function ConnectWalletXellar() {
                         </DropdownMenuItem>
                       </NavLink> */}
 
+                      {isAuthenticated && !isDailyLoginLoading && (
+                        <DropdownMenuItem
+                          className={cn(
+                            "py-4 cursor-pointer transition-all duration-300",
+                            canLoginToday
+                              ? "text-orange-800"
+                              : alreadyLoggedToday
+                              ? "text-green-800"
+                              : "opacity-50 cursor-not-allowed"
+                          )}
+                          onClick={handleDailyLogin}
+                          disabled={!canLoginToday || isDailyLoginSubmitting}
+                        >
+                          <div className="flex flex-col flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">
+                                {isDailyLoginSubmitting
+                                  ? "Checking in..."
+                                  : canLoginToday
+                                  ? "Daily Check-in"
+                                  : alreadyLoggedToday
+                                  ? "Checked in today!"
+                                  : "Daily Check-in"}
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {canLoginToday
+                                ? "Claim your daily reward"
+                                : alreadyLoggedToday
+                                ? `Streak: ${currentStreak} day${currentStreak !== 1 ? "s" : ""}`
+                                : "Come back tomorrow"}
+                            </span>
+                          </div>
+                          <DropdownMenuShortcut>
+                            {isDailyLoginSubmitting ? (
+                              <div className="animate-spin h-4 w-4 border-2 border-orange-600 border-t-transparent rounded-full"></div>
+                            ) : canLoginToday ? (
+                              <Gift className="size-4 text-orange-600" />
+                            ) : alreadyLoggedToday ? (
+                              <Calendar className="size-4 text-green-600" />
+                            ) : (
+                              <Calendar className="size-4 text-gray-400" />
+                            )}
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      )}
+
                       {twitterUser ? (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="py-4">
-                            My Profile
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-[200px]">
-                              <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  @{twitterUser.screen_name}
-                                  <IconX />
-                                </DropdownMenuItem>
-                              </NavLink>
-                              <NavLink to={`/profile/w/${address}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                                  <Wallet className="size-4" />
-                                </DropdownMenuItem>
-                              </NavLink>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">My Profile</span>
+                            </div>
+                            <IconX className="size-4" />
+                          </DropdownMenuItem>
+                        </NavLink>
                       ) : authStatus?.username ? (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="py-4">
-                            My Profile
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-[200px]">
-                              <NavLink to={`/profile/x/${authStatus.username}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  @{authStatus.username}
-                                  <IconX />
-                                </DropdownMenuItem>
-                              </NavLink>
-                              <NavLink to={`/profile/w/${address}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                                  <Wallet className="size-4" />
-                                </DropdownMenuItem>
-                              </NavLink>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        <NavLink to={`/profile/x/${authStatus.username}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">My Profile</span>
+                            </div>
+                            <IconX className="size-4" />
+                          </DropdownMenuItem>
+                        </NavLink>
+                      ) : address ? (
+                        <NavLink to={`/profile/w/${address}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">My Profile</span>
+                              <span className="text-xs text-muted-foreground">
+                                {`${address.slice(0, 6)}...${address.slice(-4)}`}
+                              </span>
+                            </div>
+                            <Wallet className="size-4" />
+                          </DropdownMenuItem>
+                        </NavLink>
                       ) : null}
 
                       {authStatus?.needsTwitterRegistration && (
                         <DropdownMenuItem
-                          className="py-4 bg-red-50 border border-red-200 hover:bg-red-100 text-red-800 cursor-pointer"
+                          className="py-4 text-red-800 cursor-pointer"
                           onClick={() => {
                             connectXRef.current?.handleConnectTwitterClick();
                           }}
