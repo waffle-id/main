@@ -487,20 +487,20 @@ export default function Profile() {
     <>
       <div className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center pointer-events-none z-10">
         {/* <div className=" flex flex-col gap-4 items-center backdrop-blur-lg rounded-lg p-4"> */}
-        <p className="text-[8vw] font-bold font-sans m-0">
+        <p className="text-[8vw] sm:text-[7vw] md:text-[6vw] lg:text-[5vw] xl:text-[4vw] font-bold font-sans m-0 px-4 text-center">
           {userData.username ||
             (params.slug!!.length > 15
               ? `${params.slug?.slice(0, 6)}...${params.slug?.slice(-4)}`
               : params.slug)}
         </p>
-        <CommandLineTypo className="flex flex-row text-xl font-normal m-0 italic items-center gap-2">
+        <CommandLineTypo className="flex flex-row text-lg sm:text-xl md:text-2xl font-normal m-0 italic items-center gap-2 px-4 text-center">
           scroll down
-          <MoveDown className="size-6" />
+          <MoveDown className="size-5 sm:size-6" />
         </CommandLineTypo>
       </div>
 
       <div className="relative z-0 w-full min-h-screen">
-        <div ref={gridRef} className="grid grid-cols-8 auto-rows-[1fr] gap-2 w-full mt-32">
+        <div ref={gridRef} className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 auto-rows-[1fr] gap-1 sm:gap-2 w-full mt-16 sm:mt-20 md:mt-24 lg:mt-32 px-2 sm:px-4 md:px-6 lg:px-8">
           {imagesItemsLoader.map(({ src, review, r, c }, i) => (
             <ImageHoverRevealText
               key={i}
@@ -530,25 +530,27 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="relative z-10 h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4">
-        <p className="text-[5vh] max-w-[40ch] leading-snug">
-          {userData.bio || "This user prefers to stay mysterious."}
-        </p>
-        <div className="absolute bottom-0 px-[20px] lg:px-[50px] mb-20 w-full">
-          <div className="flex flex-row items-center justify-between">
-            <div className="flex flex-row items-center gap-8">
+      <div className="relative z-10 min-h-screen lg:h-screen bg-gray-200 text-black flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 lg:px-12 pt-16 sm:pt-20 md:pt-24 lg:pt-0">
+        <div className="flex-1 flex flex-col items-center justify-center max-w-full">
+          <p className="text-[4vh] sm:text-[4.5vh] md:text-[5vh] lg:text-[5.5vh] xl:text-[6vh] max-w-[90ch] sm:max-w-[80ch] md:max-w-[60ch] lg:max-w-[50ch] xl:max-w-[40ch] leading-tight sm:leading-snug md:leading-normal text-center">
+            {userData.bio || "This user prefers to stay mysterious."}
+          </p>
+        </div>
+        <div className="w-full mt-8 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 px-0 lg:px-[50px] mb-0 lg:mb-12 xl:mb-20">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 lg:gap-12 pb-8">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 md:gap-8 text-center sm:text-left">
               <img
                 src={userData.avatarUrl || "https://placehold.co/10"}
-                className="size-32 rounded-full aspect-square object-cover"
+                className="size-20 sm:size-24 md:size-28 lg:size-32 rounded-full aspect-square object-cover"
                 alt={`${userData.username}'s avatar`}
               />
-              <div className="flex flex-col gap-2">
-                <CommandLineTypo className="text-3xl font-light">
+              <div className="flex flex-col gap-1 sm:gap-2">
+                <CommandLineTypo className="text-xl sm:text-2xl md:text-3xl lg:text-3xl font-light">
                   {userData.username}
                 </CommandLineTypo>
-                {userData.fullName && <p className="text-lg text-gray-600">{userData.fullName}</p>}
+                {userData.fullName && <p className="text-sm sm:text-base md:text-lg text-gray-600">{userData.fullName}</p>}
                 {userData.address && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     {userData.address.slice(0, 6)}...
                     {userData.address.slice(-4)}
                   </p>
@@ -564,12 +566,12 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="px-[20px] lg:px-[50px] py-24 relative z-20 bg-background text-black">
-        <div className="flex flex-col gap-12">
+      <div className="px-4 sm:px-6 md:px-8 lg:px-[20px] xl:px-[50px] py-12 sm:py-16 md:py-20 lg:py-24 relative z-20 bg-background text-black">
+        <div className="flex flex-col gap-8 sm:gap-10 md:gap-12">
           {!isOwnProfile && (
             <div
               className={cn(
-                "flex flex-row items-center gap-4 justify-end",
+                "flex flex-col sm:flex-row items-center gap-4 justify-center sm:justify-end",
                 hasLoggedIn ? "" : "pointer-events-none opacity-50"
               )}
             >
@@ -608,20 +610,20 @@ export default function Profile() {
 
           {/* <p>{JSON.stringify(userReview)}</p> */}
           <Tabs defaultValue={TABS[0].value}>
-            <TabsList className="w-full mb-5 flex flex-wrap gap-2">
+            <TabsList className="w-full mb-4 sm:mb-5 flex flex-wrap gap-2">
               {TABS.map((val, idx) => (
-                <TabsTrigger key={idx} value={val.value} className="capitalize">
+                <TabsTrigger key={idx} value={val.value} className="capitalize text-sm sm:text-base">
                   {val.label}
                 </TabsTrigger>
               ))}
             </TabsList>
-            <TabsContent value={TABS[0].value} className="flex flex-col gap-10">
+            <TabsContent value={TABS[0].value} className="flex flex-col gap-8 sm:gap-10">
               <ContentReceived listData={userReview ? userReview.received : []} />
             </TabsContent>
-            <TabsContent value={TABS[1].value} className="flex flex-col gap-10">
+            <TabsContent value={TABS[1].value} className="flex flex-col gap-8 sm:gap-10">
               <ContentGiven listData={userReview ? userReview.given : []} />
             </TabsContent>
-            <TabsContent value={TABS[2].value} className="flex flex-col gap-10">
+            <TabsContent value={TABS[2].value} className="flex flex-col gap-8 sm:gap-10">
               <ContentAll
                 listData={userReview ? userReview.all : []}
                 currentUser={{
