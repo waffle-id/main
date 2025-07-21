@@ -2,6 +2,7 @@ import { ConnectButton, useConnectModal } from "@xellar/kit";
 import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 import { ButtonMagnet } from "../button/magnet-button";
 import { FIXED_CHAIN } from "~/constants/wagmi";
+import { cn } from "~/utils/cn";
 import { useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
@@ -33,7 +34,7 @@ import { useWalletAuth } from "~/hooks/useWalletAuth";
 import { IconX } from "~/routes/profile/shared/action-score";
 import { monadTestnet, bscTestnet } from "viem/chains";
 
-export function ConnectWalletXellar() {
+export function ConnectWalletXellar({ className }: { className?: string }) {
   const { isConnected, chain, address } = useAccount();
   const { open: openModalXellar } = useConnectModal();
   const { twitterUser, setTwitterUser } = useWaffleProvider();
@@ -226,7 +227,10 @@ export function ConnectWalletXellar() {
             {(() => {
               if (!isConnected) {
                 return (
-                  <ButtonMagnet onClick={openModalXellar} className="w-full sm:w-auto">
+                  <ButtonMagnet
+                    onClick={openModalXellar}
+                    className={className || "w-full sm:w-auto"}
+                  >
                     Connect Wallet
                   </ButtonMagnet>
                 );
@@ -264,7 +268,7 @@ export function ConnectWalletXellar() {
                     <DropdownMenuTrigger asChild>
                       <div>
                         <ButtonMagnet>
-                          <div className="flex flex-row items-center gap-4">
+                          <div className="flex flex-row items-center gap-4 text-wrap">
                             {isWrongNetwork ? (
                               "Wrong Network"
                             ) : (

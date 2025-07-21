@@ -73,8 +73,6 @@ export function ContentGiven({ listData }: ContentGivenProps) {
   const visibleData = listData.slice(0, visibleCount);
   const hasMore = listData.length > visibleCount;
 
-  console.log(listData, "haha");
-
   const loadMore = () => {
     setVisibleCount((prev) => prev + 10);
   };
