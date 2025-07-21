@@ -50,10 +50,10 @@ export function FeaturesText() {
   return (
     <>
       {FEATURES.map((val, i) => (
-        <div className="feature py-24 flex flex-col text-center gap-4" key={i}>
-          <p className="text-4xl text-black">{val.title}</p>
+        <div className="feature py-12 sm:py-16 md:py-20 lg:py-24 flex flex-col text-center gap-3 sm:gap-4" key={i}>
+          <p className="text-2xl sm:text-3xl md:text-4xl text-black">{val.title}</p>
           <p className="overflow-hidden self-end justify-self-end">
-            <span className="desc block text-2xl text-gray-dark">{val.desc}</span>
+            <span className="desc block text-lg sm:text-xl md:text-2xl text-gray-dark">{val.desc}</span>
           </p>
         </div>
       ))}
@@ -66,7 +66,12 @@ export function FeaturesText() {
 /* -------------------------------------------------------------------------- */
 export function FeaturesBanner() {
   return (
-    <svg width="297" height="535" viewBox="0 0 297 535" fill="none">
+    <svg
+      className="w-full max-w-[200px] sm:max-w-[250px] md:max-w-[297px] h-auto"
+      viewBox="0 0 297 535"
+      fill="none"
+      preserveAspectRatio="xMidYMid meet"
+    >
       <rect
         x="0.5"
         y="0.5"
