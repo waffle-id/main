@@ -167,7 +167,65 @@ export async function loader({ params }: { params: { variant: string; slug: stri
     all: allReviews,
   };
 
+  const newImagesItems: ImageItems[] = [];
+  imageItems.map((v, i) => {
+    const item = userReview.received[i];
+
+    newImagesItems.push({
+      ...v,
+      // @ts-expect-error :p
+      reviews: item ? item.comment : v.review,
+      src: item ? item.reviewerAccount.avatarUrl : v.src,
+    });
+  });
+
   if (variant === "w" && slug.startsWith("0x")) {
+    try {
+      const checkResponse = await fetch(`https://api.waffle.food/account/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ address: slug }),
+        signal: AbortSignal.timeout(3000),
+      });
+
+      if (checkResponse.ok) {
+        const checkData = await checkResponse.json();
+
+        if (checkData.success && checkData.username) {
+          try {
+            const profileResponse = await fetch(
+              `https://api.waffle.food/account/${checkData.username}`,
+              {
+                signal: AbortSignal.timeout(3000),
+              }
+            );
+
+            if (profileResponse.ok) {
+              const profileData: UserProfileData = await profileResponse.json();
+
+              return {
+                userData: {
+                  ...profileData,
+                  address: slug,
+                },
+                error: null,
+                needsScraping: false,
+                slug,
+                imagesItemsLoader: newImagesItems,
+                userReview,
+              };
+            }
+          } catch (profileError) {
+            console.log("Profile fetch failed, falling back to generic wallet profile...");
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Address check failed, falling back to generic wallet profile...");
+    }
+
     const walletBios = [
       "Early adopter exploring the Web3 ecosystem with passion.",
       "Building the future, one transaction at a time.",
@@ -208,19 +266,6 @@ export async function loader({ params }: { params: { variant: string; slug: stri
       userReview,
     };
   }
-
-  const newImagesItems: ImageItems[] = [];
-
-  imageItems.map((v, i) => {
-    const item = userReview.received[i];
-
-    newImagesItems.push({
-      ...v,
-      // @ts-expect-error aokoskoaks
-      reviews: item ? item.comment : v.review,
-      src: item ? item.reviewerAccount.avatarUrl : v.src,
-    });
-  });
 
   try {
     const response = await fetch(`https://api.waffle.food/account/${slug}`, {

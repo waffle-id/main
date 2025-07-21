@@ -358,7 +358,7 @@ export function ConnectWalletXellar({ className }: { className?: string }) {
                             canLoginToday
                               ? "text-orange-800"
                               : alreadyLoggedToday
-                              ? "bg-green-50 border border-green-200 text-green-800"
+                              ? "text-green-800"
                               : "opacity-50 cursor-not-allowed"
                           )}
                           onClick={handleDailyLogin}
@@ -399,49 +399,35 @@ export function ConnectWalletXellar({ className }: { className?: string }) {
                       )}
 
                       {twitterUser ? (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="py-4">
-                            My Profile
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-[200px]">
-                              <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  @{twitterUser.screen_name}
-                                  <IconX />
-                                </DropdownMenuItem>
-                              </NavLink>
-                              <NavLink to={`/profile/w/${address}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                                  <Wallet className="size-4" />
-                                </DropdownMenuItem>
-                              </NavLink>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        <NavLink to={`/profile/x/${twitterUser.screen_name}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">My Profile</span>
+                            </div>
+                            <IconX className="size-4" />
+                          </DropdownMenuItem>
+                        </NavLink>
                       ) : authStatus?.username ? (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="py-4">
-                            My Profile
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-[200px]">
-                              <NavLink to={`/profile/x/${authStatus.username}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  @{authStatus.username}
-                                  <IconX />
-                                </DropdownMenuItem>
-                              </NavLink>
-                              <NavLink to={`/profile/w/${address}`}>
-                                <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
-                                  {`${address?.slice(0, 6)}...${address?.slice(-4)}`}
-                                  <Wallet className="size-4" />
-                                </DropdownMenuItem>
-                              </NavLink>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        <NavLink to={`/profile/x/${authStatus.username}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">My Profile</span>
+                            </div>
+                            <IconX className="size-4" />
+                          </DropdownMenuItem>
+                        </NavLink>
+                      ) : address ? (
+                        <NavLink to={`/profile/w/${address}`}>
+                          <DropdownMenuItem className="py-4 cursor-pointer flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">My Profile</span>
+                              <span className="text-xs text-muted-foreground">
+                                {`${address.slice(0, 6)}...${address.slice(-4)}`}
+                              </span>
+                            </div>
+                            <Wallet className="size-4" />
+                          </DropdownMenuItem>
+                        </NavLink>
                       ) : null}
 
                       {authStatus?.needsTwitterRegistration && (
