@@ -278,11 +278,6 @@ export default function Review({ user }: ReviewProps) {
                 <span className="text-sm text-black/80 capitalize font-medium">
                   Quality: {qualityLevel ?? "Not analyzed"}
                 </span>
-                {aiFeedback && (
-                  <p className="text-xs text-black/60 animate-fade-in leading-relaxed">
-                    💡 {aiFeedback}
-                  </p>
-                )}
                 {qualityLevel === "low" && (
                   <p className="text-xs text-red-600 font-medium animate-fade-in">
                     ❌ Quality too low - Please add more detail and constructive feedback

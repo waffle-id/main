@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "~/utils/cn";
 
 type ContentGivenProps = {
@@ -12,19 +12,27 @@ const getRatingStyles = (rating: string) => {
   switch (rating?.toLowerCase()) {
     case "positive":
       return {
-        indicator: "bg-emerald-500 shadow-lg shadow-emerald-300/60",
+        icon: TrendingUp,
+        containerClass: "bg-emerald-100 text-emerald-600 border border-emerald-200",
+        iconClass: "text-emerald-600",
       };
     case "negative":
       return {
-        indicator: "bg-rose-500 shadow-lg shadow-rose-300/60",
+        icon: TrendingDown,
+        containerClass: "bg-rose-100 text-rose-600 border border-rose-200",
+        iconClass: "text-rose-600",
       };
     case "neutral":
       return {
-        indicator: "bg-yellow-500 shadow-lg shadow-yellow-300/60",
+        icon: Minus,
+        containerClass: "bg-amber-100 text-amber-600 border border-amber-200",
+        iconClass: "text-amber-600",
       };
     default:
       return {
-        indicator: "bg-slate-500 shadow-lg shadow-slate-300/60",
+        icon: Minus,
+        containerClass: "bg-slate-100 text-slate-600 border border-slate-200",
+        iconClass: "text-slate-600",
       };
   }
 };
@@ -83,6 +91,7 @@ export function ContentGiven({ listData }: ContentGivenProps) {
         {visibleData.map((val, i) => {
           const isExpanded = expandedIndexes[i];
           const ratingStyles = getRatingStyles(val.rating);
+          const IconComponent = ratingStyles.icon;
 
           return (
             <div
@@ -93,10 +102,15 @@ export function ContentGiven({ listData }: ContentGivenProps) {
             >
               <div
                 className={cn(
-                  "absolute top-4 right-4 w-3 h-3 rounded-full transition-all duration-300 sm:top-6 sm:right-6 sm:w-4 sm:h-4",
-                  ratingStyles.indicator
+                  "absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 sm:top-6 sm:right-6 sm:w-9 sm:h-9",
+                  ratingStyles.containerClass
                 )}
-              />
+              >
+                <IconComponent
+                  className={cn("w-4 h-4 sm:w-5 sm:h-5", ratingStyles.iconClass)}
+                  strokeWidth={2.5}
+                />
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                 <div className="relative size-20 sm:size-24 flex-shrink-0 mx-auto sm:mx-0">
