@@ -1,8 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useId } from "react";
 import { Search, X } from "lucide-react";
 
 const isEthereumAddress = (input: string): boolean => {
   return input.startsWith("0x") && input.length === 42 && /^0x[a-fA-F0-9]{40}$/.test(input);
+};
+
+const sanitizeInput = (input: string): string => {
+
+  let sanitized = input.toLowerCase();
+
+
+  sanitized = sanitized.replace(/^https?:\/\//, '');
+  sanitized = sanitized.replace(/^ftp:\/\//, '');
+  sanitized = sanitized.replace(/^file:\/\//, '');
+  sanitized = sanitized.replace(/www\./g, '');
+
+
+  sanitized = sanitized.replace(/[^a-z0-9._\-x]/g, '');
+
+
+  sanitized = sanitized.replace(/[.\-_]{2,}/g, '');
+
+
+  sanitized = sanitized.replace(/^[.\-_]+|[.\-_]+$/g, '');
+
+  return sanitized;
 };
 
 interface SearchBarProps {
@@ -14,6 +36,7 @@ function SearchBar({ isOpen, onClose }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchInputId = useId();
 
   useEffect(() => {
     setIsClient(true);
@@ -36,7 +59,7 @@ function SearchBar({ isOpen, onClose }: SearchBarProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleSelectUser = (usernameOrAddress: string) => {
+  const handleSelectUser = useCallback((usernameOrAddress: string) => {
     onClose();
 
     if (!isClient) return;
@@ -47,16 +70,21 @@ function SearchBar({ isOpen, onClose }: SearchBarProps) {
       : `/profile/x/${usernameOrAddress}`;
 
     window.location.href = profilePath;
-  };
+  }, [onClose, isClient]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    const query = searchQuery.trim();
+    const query = sanitizeInput(searchQuery.trim());
 
     if (!query) return;
 
     handleSelectUser(query);
-  };
+  }, [searchQuery, handleSelectUser]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeInput(e.target.value);
+    setSearchQuery(sanitized);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -66,14 +94,20 @@ function SearchBar({ isOpen, onClose }: SearchBarProps) {
         <div className="flex items-center w-full max-w-2xl mx-auto">
           <form onSubmit={handleSubmit} className="flex items-center w-full">
             <div className="relative flex-1">
+              <label htmlFor={searchInputId} className="sr-only">
+                Search by username or wallet address
+              </label>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
+                id={searchInputId}
                 ref={inputRef}
                 type="text"
                 placeholder="Search by username or wallet address"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleInputChange}
                 className="w-full pl-10 pr-20 py-3 text-lg bg-white border border-yellow-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none placeholder-gray-500 cursor-text transition-all duration-200"
+                autoComplete="off"
+                spellCheck="false"
               />
               {searchQuery.trim() && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -123,7 +157,7 @@ export function SearchButton() {
   );
 }
 
-// For backward compatibility
+
 export function SearchBarWrapper() {
   return null;
 }
