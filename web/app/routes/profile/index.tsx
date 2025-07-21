@@ -27,6 +27,7 @@ import { redirect, useParams, useLoaderData } from "react-router";
 import { ScrapingLoader } from "~/components/waffle/scrape-loader";
 import { useWaffleProvider } from "~/components/waffle/waffle-provider";
 import { useAccount } from "wagmi";
+import { useHasReviewed } from "~/hooks/useHasReviewed";
 
 const isViewingOwnProfile = (
   userData: UserProfileData | null,
@@ -220,7 +221,6 @@ export async function loader({ params }: { params: { variant: string; slug: stri
       src: item ? item.reviewerAccount.avatarUrl : v.src,
     });
   });
-  // }
 
   try {
     const response = await fetch(`https://api.waffle.food/account/${slug}`, {
@@ -274,6 +274,8 @@ export default function Profile() {
   const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean | null>(null);
 
   const isOwnProfile = isViewingOwnProfile(userData, twitterUser, address);
+
+  const { hasReviewed, isLoading: isCheckingReview, canReview } = useHasReviewed(userData);
 
   const TABS = [
     { value: "received", label: "Received" },
@@ -495,7 +497,24 @@ export default function Profile() {
                 hasLoggedIn ? "" : "pointer-events-none opacity-50"
               )}
             >
-              <Review user={userData} />
+              <div
+                className={cn(
+                  "transition-all duration-300",
+                  !canReview && hasLoggedIn && !isCheckingReview
+                    ? "opacity-40 pointer-events-none cursor-not-allowed"
+                    : "",
+                  isCheckingReview ? "opacity-60" : ""
+                )}
+                title={
+                  hasReviewed
+                    ? "You have already reviewed this user"
+                    : !hasLoggedIn
+                    ? "Please connect your wallet to review"
+                    : "Write a review for this user"
+                }
+              >
+                <Review user={userData} disabled={!canReview || !hasLoggedIn || isCheckingReview} />
+              </div>
               <Vouch />
               <Slash />
             </div>
