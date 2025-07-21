@@ -7,6 +7,13 @@ import { MoveDown } from "lucide-react";
 import { CommandLineTypo } from "~/components/waffle/typography/command-line-typo";
 import { ActionScore } from "./shared/action-score";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs";
+import type { Route } from "./+types";
+import { getProfileSEO } from "~/utils/seo";
+
+export function meta({ params, data }: Route.MetaArgs): Route.MetaDescriptors {
+  const { variant, slug } = params;
+  return getProfileSEO(variant as "x" | "w", slug, data?.userData);
+}
 
 import { ContentReceived } from "./shared/content-received";
 import { ContentAll } from "./shared/content-all";

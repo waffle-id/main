@@ -6,6 +6,12 @@ import { cn } from "~/utils/cn";
 import { BadgeItem, type BadgeItemProps } from "./badge-item";
 import { BadgeHero } from "./hero";
 import { ClientOnly } from "remix-utils/client-only";
+import type { Route } from "./+types";
+import { generateSEO, SEO_CONFIGS } from "~/utils/seo";
+
+export function meta(): Route.MetaDescriptors {
+  return generateSEO(SEO_CONFIGS.badges);
+}
 
 export async function loader() {
   const badges = await axios
@@ -29,10 +35,8 @@ export default function BadgesPage() {
 
   return (
     <div className="mt-32 px-[20px] lg:px-[50px] min-h-screen mb-32">
-      {/* Hero Section */}
       <BadgeHero badges={badges} />
 
-      {/* Category Filter */}
       <div className="my-24">
         <div className="flex flex-wrap gap-3 justify-center">
           {categories.map((category, idx) => (
@@ -47,7 +51,6 @@ export default function BadgesPage() {
         </div>
       </div>
 
-      {/* Badges Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <ClientOnly>
           {() => filteredBadges.map((badge, idx) => <BadgeItem key={idx} {...badge} />)}
