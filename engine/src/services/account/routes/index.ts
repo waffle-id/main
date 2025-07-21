@@ -39,11 +39,7 @@ router.get("/", async (req, res) => {
     const page = query.page ? query.page : 1;
     const size = query.size ? query.size : 20;
 
-    const validSortFields: UserSort[] = [
-      "username",
-      "reputationScore",
-      "createdAt",
-    ];
+    const validSortFields: UserSort[] = ["username", "reputationScore", "createdAt"];
     const validOrders: SortDirection[] = ["asc", "desc"];
 
     const sortBy = validSortFields.includes(query.sortBy as UserSort)
@@ -61,19 +57,11 @@ router.get("/", async (req, res) => {
     const users = await findAll(shouldSort, sortBy, order, skip, size);
     // Fetch review counts for the listed users
     const usernames = users.map((u) => u.username);
-    const writtenReviewsCount = await getReviewsWrittenByUserCount(
-      usernames as string[]
-    );
-    const receivedReviewsCount = await getReviewsReceivedByUserCount(
-      usernames as string[]
-    );
+    const writtenReviewsCount = await getReviewsWrittenByUserCount(usernames as string[]);
+    const receivedReviewsCount = await getReviewsReceivedByUserCount(usernames as string[]);
     // Create lookup maps
-    const writtenMap = Object.fromEntries(
-      writtenReviewsCount.map((r) => [r._id, r.count])
-    );
-    const receivedMap = Object.fromEntries(
-      receivedReviewsCount.map((r) => [r._id, r.count])
-    );
+    const writtenMap = Object.fromEntries(writtenReviewsCount.map((r) => [r._id, r.count]));
+    const receivedMap = Object.fromEntries(receivedReviewsCount.map((r) => [r._id, r.count]));
 
     // Merge review data into users
     const usersWithReviews = users.map((user) => ({
@@ -211,8 +199,7 @@ router.post("/login", async (req, res, next) => {
 
 router.post("/register", async (req, res, next) => {
   try {
-    const { username, address, referralCode, fullName, bio, avatarUrl } =
-      req.body;
+    const { username, address, referralCode, fullName, bio, avatarUrl } = req.body;
 
     if (!username || !address || !referralCode) {
       const error = Error("Bad request");
@@ -222,7 +209,7 @@ router.post("/register", async (req, res, next) => {
 
     const existingUser = await findByUsernameFullData(username);
 
-    if (existingUser?.address != null) {
+    if (existingUser?.address != null && existingUser?.address != "") {
       const error = Error("User is already registered");
       (error as any).statusCode = 409;
       throw error;
