@@ -16,6 +16,10 @@ import { addReview } from "~/routes/api/review/add-review";
 type ReviewProps = {
   user: UserProfileData;
   disabled?: boolean;
+  hasLoggedIn?: boolean;
+  hasReviewed?: boolean;
+  isCheckingReview?: boolean;
+  authStatus?: any;
 };
 
 type Sentiment = "negative" | "neutral" | "positive";
@@ -53,7 +57,13 @@ const sentimentScores: Record<Sentiment, number> = {
   positive: 3,
 };
 
-export default function Review({ user, disabled = false }: ReviewProps) {
+export default function Review({
+  user,
+  disabled = false,
+  hasLoggedIn = false,
+  hasReviewed = false,
+  isCheckingReview = false,
+}: ReviewProps) {
   let client: Client | null = null;
   const { writeContractAsync, isPending } = useWriteContract();
   const [isOpen, setIsOpen] = useState(false);
@@ -68,6 +78,15 @@ export default function Review({ user, disabled = false }: ReviewProps) {
 
   const triggerAnalysis = () => {
     setShouldAnalyze((prev) => !prev);
+  };
+
+  const getButtonText = () => {
+    if (isCheckingReview) return "Checking...";
+    if (!hasLoggedIn) {
+      return "Register to Review";
+    }
+    if (hasReviewed) return "Already Reviewed";
+    return "Review";
   };
 
   const handleSubmit = async () => {
@@ -190,7 +209,7 @@ export default function Review({ user, disabled = false }: ReviewProps) {
       >
         <div className="flex flex-row items-center gap-2">
           <PencilRuler className="size-5" />
-          {disabled ? "Already Reviewed" : "Review"}
+          {getButtonText()}
         </div>
       </ButtonMagnet>
 

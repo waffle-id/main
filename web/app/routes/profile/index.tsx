@@ -28,6 +28,7 @@ import { ScrapingLoader } from "~/components/waffle/scrape-loader";
 import { useWaffleProvider } from "~/components/waffle/waffle-provider";
 import { useAccount } from "wagmi";
 import { useHasReviewed } from "~/hooks/useHasReviewed";
+import { useWalletAuth } from "~/hooks/useWalletAuth";
 
 const isViewingOwnProfile = (
   userData: UserProfileData | null,
@@ -302,6 +303,7 @@ export default function Profile() {
   const loaderData = useLoaderData<typeof loader>();
   const { twitterUser } = useWaffleProvider();
   const { address } = useAccount();
+  const { checkAuthStatus } = useWalletAuth();
 
   const {
     userData: initialUserData,
@@ -316,7 +318,8 @@ export default function Profile() {
   const [error, setError] = React.useState<string | null>(initialError);
   const [isLoading, setIsLoading] = React.useState(needsScraping);
   const [isScraping, setIsScraping] = React.useState(needsScraping);
-  const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean | null>(null);
+  const [hasLoggedIn, setHasLoggedIn] = React.useState<boolean>(false);
+  const [authStatus, setAuthStatus] = React.useState<any>(null);
 
   const isOwnProfile = isViewingOwnProfile(userData, twitterUser, address);
 
@@ -334,9 +337,37 @@ export default function Profile() {
     setError(initialError);
     setIsLoading(needsScraping);
     setIsScraping(needsScraping);
-    const token = localStorage.getItem("waffle_auth_token");
-    setHasLoggedIn(!!token);
   }, [params.variant, params.slug, initialUserData, initialError, needsScraping]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (address) {
+        try {
+          const status = await checkAuthStatus(address);
+          setAuthStatus(status);
+
+          const existingToken = localStorage.getItem("waffle_auth_token");
+          const isFullyAuthenticated = !!(
+            existingToken &&
+            status.isRegistered &&
+            !status.needsTwitterRegistration
+          );
+
+          setHasLoggedIn(isFullyAuthenticated);
+        } catch (error) {
+          console.error("Auth check failed:", error);
+
+          setAuthStatus(null);
+          setHasLoggedIn(false);
+        }
+      } else {
+        setAuthStatus(null);
+        setHasLoggedIn(false);
+      }
+    };
+
+    checkAuth();
+  }, [address, twitterUser, checkAuthStatus]);
 
   useEffect(() => {
     if (!needsScraping) return;
@@ -551,14 +582,24 @@ export default function Profile() {
                   isCheckingReview ? "opacity-60" : ""
                 )}
                 title={
-                  hasReviewed
-                    ? "You have already reviewed this user"
+                  isCheckingReview
+                    ? "Checking review status..."
                     : !hasLoggedIn
-                    ? "Please connect your wallet to review"
+                    ? authStatus?.needsTwitterRegistration
+                      ? "Please connect Twitter to review"
+                      : "Please connect your wallet and register to review"
+                    : hasReviewed
+                    ? "You have already reviewed this user"
                     : "Write a review for this user"
                 }
               >
-                <Review user={userData} disabled={!canReview || !hasLoggedIn || isCheckingReview} />
+                <Review
+                  user={userData}
+                  disabled={!canReview || !hasLoggedIn || isCheckingReview}
+                  hasLoggedIn={hasLoggedIn}
+                  hasReviewed={hasReviewed}
+                  isCheckingReview={isCheckingReview}
+                />
               </div>
               <Vouch />
               <Slash />
