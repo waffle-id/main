@@ -148,7 +148,7 @@ export default function Landing() {
               <span>Ready to build your reputation? </span>
               <span className="text-foreground">Start earning trust today</span>.
             </CommandLineTypo>
-            <ArrowLink className="mt-8 sm:mt-12 md:mt-16 lg:mt-20" href="/auth/twitter">
+            <ArrowLink className="my-8 sm:my-12 md:my-16 lg:my-20" href="/auth/twitter">
               Get Started
             </ArrowLink>
           </div>

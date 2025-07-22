@@ -3,6 +3,7 @@ import { NavLink, useLoaderData } from "react-router";
 import { cn } from "~/utils/cn";
 import type { Route } from "./+types";
 import { generateSEO, SEO_CONFIGS } from "~/utils/seo";
+import { fetchUsers, categorizeUsersByReputation, type User } from "~/services/users";
 
 export function meta(): Route.MetaDescriptors {
   return generateSEO(SEO_CONFIGS.categories);
@@ -24,16 +25,25 @@ import {
 
 export async function loader() {
   try {
-    const categories = await axios
-      .get("https://api.waffle.food/categories")
-      .then<Record<string, string>[]>((resp) => resp.data.data);
+    const [categoriesResponse, usersResponse] = await Promise.all([
+      axios.get("https://api.waffle.food/categories").then<Record<string, string>[]>((resp) => resp.data.data),
+      fetchUsers({ size: 100 })
+    ]);
+
+    const userStats = categorizeUsersByReputation(usersResponse.users);
 
     return {
-      categories,
+      categories: categoriesResponse,
+      users: usersResponse.users,
+      userStats,
+      totalUsers: usersResponse.pagination.total,
     };
   } catch (error) {
     return {
       categories: [],
+      users: [],
+      userStats: { credible: [], leastCredible: [], total: 0 },
+      totalUsers: 0,
     };
   }
 }
@@ -44,7 +54,7 @@ const FALLBACK_CATEGORIES = [
     desc: "Builders, coders, and creators advancing Web3 technology",
     images: "https://ik.imagekit.io/3592mo0vh/waffle/dev.svg",
     icon: Code,
-    participants: 2340,
+    participants: 0,
     trending: true,
     color: "from-blue-500 to-cyan-500",
     bgPattern: "bg-gradient-to-br from-blue-50 to-cyan-50",
@@ -54,7 +64,7 @@ const FALLBACK_CATEGORIES = [
     desc: "Contributors fostering growth and engagement",
     images: "https://ik.imagekit.io/3592mo0vh/waffle/community.svg",
     icon: Users,
-    participants: 1890,
+    participants: 0,
     trending: false,
     color: "from-green-500 to-emerald-500",
     bgPattern: "bg-gradient-to-br from-green-50 to-emerald-50",
@@ -64,7 +74,7 @@ const FALLBACK_CATEGORIES = [
     desc: "Content creators and storytellers",
     images: "https://ik.imagekit.io/3592mo0vh/waffle/creator.svg",
     icon: Sparkles,
-    participants: 1456,
+    participants: 0,
     trending: true,
     color: "from-purple-500 to-pink-500",
     bgPattern: "bg-gradient-to-br from-purple-50 to-pink-50",
@@ -74,7 +84,7 @@ const FALLBACK_CATEGORIES = [
     desc: "Visionaries leading projects and initiatives",
     images: "https://ik.imagekit.io/3592mo0vh/waffle/leadership.svg",
     icon: Crown,
-    participants: 892,
+    participants: 0,
     trending: false,
     color: "from-yellow-500 to-orange-500",
     bgPattern: "bg-gradient-to-br from-yellow-50 to-orange-50",
@@ -84,7 +94,7 @@ const FALLBACK_CATEGORIES = [
     desc: "Helpers and mentors supporting the community",
     images: "https://ik.imagekit.io/3592mo0vh/waffle/support.svg",
     icon: Heart,
-    participants: 1234,
+    participants: 0,
     trending: false,
     color: "from-rose-500 to-pink-500",
     bgPattern: "bg-gradient-to-br from-rose-50 to-pink-50",
@@ -94,7 +104,7 @@ const FALLBACK_CATEGORIES = [
     desc: "Pioneers pushing boundaries in Web3",
     images: "https://ik.imagekit.io/3592mo0vh/waffle/innovation.svg",
     icon: Zap,
-    participants: 756,
+    participants: 0,
     trending: true,
     color: "from-indigo-500 to-purple-500",
     bgPattern: "bg-gradient-to-br from-indigo-50 to-purple-50",
@@ -103,31 +113,57 @@ const FALLBACK_CATEGORIES = [
 
 export default function CategoriesPage() {
   const loaderData = useLoaderData<typeof loader>();
-  const { categories: apiCategories } = loaderData;
+  const { categories: apiCategories, userStats, totalUsers } = loaderData;
+
+
+  const credibleUsersPerCategory = Math.floor(userStats.credible.length / FALLBACK_CATEGORIES.length);
+  const leastCredibleUsersPerCategory = Math.floor(userStats.leastCredible.length / FALLBACK_CATEGORIES.length);
 
   const categories =
     apiCategories?.length > 0
-      ? apiCategories.map((cat, idx) => ({
+      ? apiCategories.map((cat: any, idx: number) => {
+        const categoryConfig = FALLBACK_CATEGORIES[idx % FALLBACK_CATEGORIES.length];
+
+        const credibleCount = categoryConfig.trending
+          ? credibleUsersPerCategory + Math.floor(credibleUsersPerCategory * 0.3)
+          : credibleUsersPerCategory;
+        const leastCredibleCount = categoryConfig.trending
+          ? leastCredibleUsersPerCategory
+          : leastCredibleUsersPerCategory + Math.floor(leastCredibleUsersPerCategory * 0.2);
+
+        return {
           ...cat,
-          ...FALLBACK_CATEGORIES[idx % FALLBACK_CATEGORIES.length],
+          ...categoryConfig,
           title: cat.title,
           images: cat.images,
-        }))
-      : FALLBACK_CATEGORIES;
+          participants: credibleCount + leastCredibleCount,
+          credibleParticipants: credibleCount,
+          leastCredibleParticipants: leastCredibleCount,
+        };
+      })
+      : FALLBACK_CATEGORIES.map((cat, idx) => {
+        const credibleCount = cat.trending
+          ? credibleUsersPerCategory + Math.floor(credibleUsersPerCategory * 0.3)
+          : credibleUsersPerCategory;
+        const leastCredibleCount = cat.trending
+          ? leastCredibleUsersPerCategory
+          : leastCredibleUsersPerCategory + Math.floor(leastCredibleUsersPerCategory * 0.2);
 
-  const totalParticipants = categories.reduce((sum, cat) => sum + (cat.participants || 0), 0);
-  const trendingCount = categories.filter((cat) => cat.trending).length;
+        return {
+          ...cat,
+          participants: credibleCount + leastCredibleCount,
+          credibleParticipants: credibleCount,
+          leastCredibleParticipants: leastCredibleCount,
+        };
+      });
+
+  const totalParticipants = totalUsers || categories.reduce((sum: number, cat: any) => sum + (cat.participants || 0), 0);
+  const trendingCount = categories.filter((cat: any) => cat.trending).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-orange-25 to-orange-50">
-      {/* Hero Section */}
+
       <div className="relative pt-44 pb-16 px-[20px] lg:px-[50px] overflow-hidden">
-        {/* Background Elements */}
-        {/* <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-64 h-64 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
-          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
-        </div> */}
 
         <div className="relative max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/80 px-4 py-2 rounded-full text-sm text-orange-700 font-medium mb-6 border border-orange-200">
@@ -148,7 +184,7 @@ export default function CategoriesPage() {
             your unique skills and passions.
           </p>
 
-          {/* Stats */}
+
           <div className="flex flex-wrap justify-center gap-8 mb-12">
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-900">{categories.length}</div>
@@ -158,7 +194,11 @@ export default function CategoriesPage() {
               <div className="text-3xl font-bold text-gray-900">
                 {totalParticipants.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-600">Participants</div>
+              <div className="text-sm text-gray-600">Total Participants</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{userStats.credible.length}</div>
+              <div className="text-sm text-gray-600">Credible (1000+ pts)</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-900">{trendingCount}</div>
@@ -168,11 +208,11 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* Categories Grid */}
+
       <div className="px-[20px] lg:px-[50px] pb-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map((category, idx) => {
+            {categories.map((category: any, idx: number) => {
               const IconComponent = category.icon || Target;
               return (
                 <NavLink
@@ -185,10 +225,10 @@ export default function CategoriesPage() {
                       "relative h-full p-8 rounded-3xl border border-gray-200/50 backdrop-blur-sm transition-all duration-300 overflow-hidden",
                       "hover:-translate-y-2 hover:border-gray-300",
                       category.bgPattern || "bg-gradient-to-br from-gray-50 to-gray-100"
-                      // "group-hover:scale-105"
+
                     )}
                   >
-                    {/* Background Gradient */}
+
                     <div
                       className={cn(
                         "absolute inset-0 opacity-0 transition-opacity duration-300",
@@ -196,7 +236,7 @@ export default function CategoriesPage() {
                       )}
                     />
 
-                    {/* Trending Badge */}
+
                     {category.trending && (
                       <div className="absolute top-4 right-4 inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-medium">
                         <TrendingUp className="w-3 h-3" />
@@ -204,20 +244,20 @@ export default function CategoriesPage() {
                       </div>
                     )}
 
-                    {/* Content */}
+
                     <div className="relative z-10 flex flex-col h-full">
-                      {/* Icon */}
+
                       <div
                         className={cn(
                           "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300",
                           `bg-gradient-to-br ${category.color || "from-gray-400 to-gray-600"}`
-                          // "group-hover:scale-110 group-hover:rotate-3"
+
                         )}
                       >
                         <IconComponent className="w-8 h-8 text-white" />
                       </div>
 
-                      {/* Title & Description */}
+
                       <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-gray-800 transition-colors">
                         {category.title}
                       </h3>
@@ -228,7 +268,7 @@ export default function CategoriesPage() {
                         </p>
                       )}
 
-                      {/* Stats */}
+
                       <div className="flex items-center justify-between pt-4 border-t border-gray-200/50">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Users className="w-4 h-4" />
@@ -242,7 +282,7 @@ export default function CategoriesPage() {
                       </div>
                     </div>
 
-                    {/* Hover Effect Pattern */}
+
                     <div className="absolute inset-0 opacity-0 transition-opacity duration-300">
                       <div
                         className="absolute inset-0"
@@ -260,7 +300,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* Call to Action */}
+
       <div className="px-[20px] lg:px-[50px] pb-32">
         <div className="max-w-4xl mx-auto text-center bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-gray-200/50">
           <div className="flex justify-center mb-6">
