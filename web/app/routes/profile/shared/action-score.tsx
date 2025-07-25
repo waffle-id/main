@@ -39,10 +39,10 @@ export function ActionScore({
   const isTwitterProfile = params.variant === "x";
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-row items-center justify-end gap-8">
+    <div className="flex flex-col gap-6 sm:gap-8">
+      <div className="flex flex-row items-center justify-center lg:justify-end gap-6 sm:gap-8">
         <IconX
-          className={`size-6 ${
+          className={`size-5 sm:size-6 ${
             isTwitterProfile
               ? "cursor-pointer hover:opacity-70 transition-opacity"
               : "cursor-default opacity-50"
@@ -58,9 +58,9 @@ export function ActionScore({
                 onClick={handleAddressClick}
               >
                 {copied ? (
-                  <Check className="size-6 text-green-600" />
+                  <Check className="size-5 sm:size-6 text-green-600" />
                 ) : (
-                  <Wallet className="size-6" />
+                  <Wallet className="size-5 sm:size-6" />
                 )}
               </div>
             </TooltipTrigger>
@@ -73,20 +73,20 @@ export function ActionScore({
             </TooltipContent>
           </Tooltip>
         ) : (
-          <Wallet className="size-6 cursor-default opacity-50" />
+          <Wallet className="size-5 sm:size-6 cursor-default opacity-50" />
         )}
 
-        <Share2 className="size-6 cursor-pointer" />
+        <Share2 className="size-5 sm:size-6 cursor-pointer" />
       </div>
-      <div className="flex flex-row gap-8 items-center">
-        <div className="flex flex-col items-end">
-          <p className="font-alt text-5xl">{reputationScore}</p>
-          <p className="text-sm text-gray-600">Reputation Score</p>
+      <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center">
+        <div className="flex flex-col items-center lg:items-end text-center lg:text-right order-2 sm:order-1">
+          <p className="font-alt text-4xl sm:text-5xl md:text-5xl lg:text-5xl">{reputationScore}</p>
+          <p className="text-sm sm:text-sm text-gray-600">Reputation Score</p>
           {hasInvitationAuthority && (
             <p className="text-xs text-green-600 mt-1">Invitation Authority</p>
           )}
         </div>
-        <LogoAnimationNoRepeat className="size-32" />
+        <LogoAnimationNoRepeat className="size-24 sm:size-28 md:size-32 lg:size-32 order-1 sm:order-2" />
       </div>
     </div>
   );

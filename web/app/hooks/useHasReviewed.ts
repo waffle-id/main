@@ -1,13 +1,14 @@
 import { useReadContract, useAccount } from "wagmi";
 import { ABI } from "~/constants/ABI";
 import { CA } from "~/constants/CA";
-import type { UserProfileData } from "~/routes/profile";
+import type { UserProfile } from "~/services/users";
+
 
 /**
  * Hook to check if the current user has already reviewed a specific user
  * Following Context7 patterns for clean, professional state management
  */
-export function useHasReviewed(userData: UserProfileData | null) {
+export function useHasReviewed(userData: UserProfile | null) {
     const { address: currentUserAddress } = useAccount();
 
     const {

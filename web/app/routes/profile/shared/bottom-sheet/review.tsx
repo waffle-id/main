@@ -10,12 +10,12 @@ import { useWriteContract } from "wagmi";
 import { ABI } from "~/constants/ABI";
 import { CA } from "~/constants/CA";
 import { publicClient } from "~/constants/wagmi";
-import type { UserProfileData } from "../..";
+import type { UserProfile } from "~/services/users";
 import { addReview } from "~/routes/api/review/add-review";
 import { useNavigate } from "react-router";
 
 type ReviewProps = {
-  user: UserProfileData;
+  user: UserProfile;
   disabled?: boolean;
   hasLoggedIn?: boolean;
   hasReviewed?: boolean;
@@ -192,20 +192,19 @@ export default function Review({
   useEffect(() => {
     setIsFormValid(
       sentiment !== null &&
-        title.trim().length > 0 &&
-        description.trim().length > 0 &&
-        qualityLevel === "high" &&
-        !checking &&
-        !qualityLoading
+      title.trim().length > 0 &&
+      description.trim().length > 0 &&
+      qualityLevel === "high" &&
+      !checking &&
+      !qualityLoading
     );
   }, [sentiment, title, description, qualityLevel, checking, qualityLoading]);
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <ButtonMagnet
-        className={`px-8 py-2 transition-all duration-300 ${
-          disabled ? "opacity-95 cursor-not-allowed" : ""
-        }`}
+        className={`px-8 py-2 transition-all duration-300 ${disabled ? "opacity-95 cursor-not-allowed" : ""
+          }`}
         onClick={() => {
           if (!disabled) {
             setIsOpen(true);
@@ -219,137 +218,146 @@ export default function Review({
         </div>
       </ButtonMagnet>
 
-      <DrawerContent className="pb-10 text-black h-full max-h-3/4">
-        <div className="mx-auto w-full max-w-sm flex flex-col gap-6">
-          <DrawerHeader>
+      <DrawerContent className="pb-10 text-black flex flex-col max-h-[85vh]">
+        <div className="mx-auto w-full max-w-sm flex flex-col h-full">
+          <DrawerHeader className="flex-shrink-0">
             <DrawerTitle className="text-center font-bold text-black text-2xl">
               Write review
             </DrawerTitle>
           </DrawerHeader>
 
-          <div className="flex flex-row items-center gap-4 w-full">
-            <ButtonMagnet
-              color="red"
-              className={`w-full ${sentiment === "negative" ? "bg-red-500 text-white" : ""}`}
-              onClick={() => setSentiment("negative")}
-            >
-              Negative
-            </ButtonMagnet>
+          <div className="flex-1 overflow-y-auto px-1 space-y-6">
+            <div className="flex flex-row items-center gap-4 w-full">
+              <ButtonMagnet
+                color="red"
+                className={`w-full ${sentiment === "negative" ? "bg-red-500 text-white" : ""}`}
+                onClick={() => setSentiment("negative")}
+              >
+                Negative
+              </ButtonMagnet>
 
-            <ButtonMagnet
-              className={`w-full ${sentiment === "neutral" ? "bg-yellow-500 text-white" : ""}`}
-              onClick={() => setSentiment("neutral")}
-            >
-              Neutral
-            </ButtonMagnet>
+              <ButtonMagnet
+                className={`w-full ${sentiment === "neutral" ? "bg-yellow-500 text-white" : ""}`}
+                onClick={() => setSentiment("neutral")}
+              >
+                Neutral
+              </ButtonMagnet>
 
-            <ButtonMagnet
-              color="green"
-              className={`w-full ${sentiment === "positive" ? "bg-green-500 text-white" : ""}`}
-              onClick={() => setSentiment("positive")}
-            >
-              Positive
-            </ButtonMagnet>
-          </div>
+              <ButtonMagnet
+                color="green"
+                className={`w-full ${sentiment === "positive" ? "bg-green-500 text-white" : ""}`}
+                onClick={() => setSentiment("positive")}
+              >
+                Positive
+              </ButtonMagnet>
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <p>Title</p>
-            <Input
-              placeholder="Review title..."
-              className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
-              type="text"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                triggerAnalysis();
-              }}
-              onBlur={triggerAnalysis}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p>Description</p>
-            <div className="overflow-y-auto max-h-[10vh]">
+            <div className="flex flex-col gap-2">
+              <p>Title</p>
+              <Input
+                placeholder="Review title..."
+                className="bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-max"
+                type="text"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  triggerAnalysis();
+                }}
+                onBlur={triggerAnalysis}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p>Description</p>
               <Textarea
                 placeholder="Write your detailed review. AI will analyze as you type or when you finish."
-                className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg"
+                className="resize-none dark:bg-transparent focus-visible:ring-0 placeholder:text-black/50 border-black/50 focus-visible:border-black md:text-lg h-[120px] overflow-y-auto"
                 value={description}
                 onChange={(e) => {
                   setDescription(e.target.value);
                   triggerAnalysis();
                 }}
                 onBlur={triggerAnalysis}
+                onWheel={(e) => {
+
+                  e.stopPropagation();
+                }}
+                onTouchMove={(e) => {
+
+                  e.stopPropagation();
+                }}
               />
+            </div>
+
+            <div className="flex items-center gap-3 p-3 border border-black/20 rounded-lg bg-gray-50/50">
+              <div
+                className={`w-4 h-4 rounded-full transition-all duration-300 flex-shrink-0 ${qualityLoading
+                    ? "bg-blue-500 animate-pulse shadow-lg shadow-blue-500/50"
+                    : qualityLevel === "low"
+                      ? "bg-red-500"
+                      : qualityLevel === "medium"
+                        ? "bg-yellow-400"
+                        : qualityLevel === "high"
+                          ? "bg-green-500"
+                          : "bg-gray-300"
+                  }`}
+              />
+              {qualityLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                  <span className="text-sm text-black/70 animate-pulse font-medium">
+                    AI analyzing your review...
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 min-w-0">
+                  <span className="text-sm text-black/80 capitalize font-medium">
+                    Quality: {qualityLevel ?? "Not analyzed"}
+                  </span>
+                  {qualityLevel === "low" && (
+                    <p className="text-xs text-red-600 font-medium animate-fade-in break-words">
+                      ❌ Quality too low - Please add more detail and constructive feedback
+                    </p>
+                  )}
+                  {qualityLevel === "medium" && (
+                    <p className="text-xs text-orange-600 font-medium animate-fade-in break-words">
+                      ⚠️ Good quality but needs improvement - Add more specific details
+                    </p>
+                  )}
+                  {qualityLevel === "high" && (
+                    <p className="text-xs text-green-600 font-medium animate-fade-in break-words">
+                      ✅ Excellent quality - Ready to submit!
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 border border-black/20 rounded-lg bg-gray-50/50">
-            <div
-              className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                qualityLoading
-                  ? "bg-blue-500 animate-pulse shadow-lg shadow-blue-500/50"
-                  : qualityLevel === "low"
-                  ? "bg-red-500"
-                  : qualityLevel === "medium"
-                  ? "bg-yellow-400"
-                  : qualityLevel === "high"
-                  ? "bg-green-500"
-                  : "bg-gray-300"
-              }`}
-            />
-            {qualityLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-                <span className="text-sm text-black/70 animate-pulse font-medium">
-                  AI analyzing your review...
-                </span>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <span className="text-sm text-black/80 capitalize font-medium">
-                  Quality: {qualityLevel ?? "Not analyzed"}
-                </span>
-                {qualityLevel === "low" && (
-                  <p className="text-xs text-red-600 font-medium animate-fade-in">
-                    ❌ Quality too low - Please add more detail and constructive feedback
-                  </p>
-                )}
-                {qualityLevel === "medium" && (
-                  <p className="text-xs text-orange-600 font-medium animate-fade-in">
-                    ⚠️ Good quality but needs improvement - Add more specific details
-                  </p>
-                )}
-                {qualityLevel === "high" && (
-                  <p className="text-xs text-green-600 font-medium animate-fade-in">
-                    ✅ Excellent quality - Ready to submit!
-                  </p>
-                )}
-              </div>
-            )}
+          <div className="flex-shrink-0 pt-4 border-t border-black/10 mt-4">
+            <ButtonMagnet
+              disabled={!isFormValid || isPending}
+              className={`self-center w-max px-16 transition-all duration-300 mx-auto block ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              onClick={() => {
+                console.log("disabled", !isFormValid);
+                if (isFormValid) {
+                  handleSubmit();
+                }
+              }}
+            >
+              {isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  Submitting...
+                </div>
+              ) : qualityLevel !== "high" && qualityLevel !== null ? (
+                "Improve Quality to Submit"
+              ) : (
+                "Submit"
+              )}
+            </ButtonMagnet>
           </div>
-
-          <ButtonMagnet
-            disabled={!isFormValid || isPending}
-            className={`self-center w-max px-16 transition-all duration-300 ${
-              !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={() => {
-              console.log("disabled", !isFormValid);
-              if (isFormValid) {
-                handleSubmit();
-              }
-            }}
-          >
-            {isPending ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                Submitting...
-              </div>
-            ) : qualityLevel !== "high" && qualityLevel !== null ? (
-              "Improve Quality to Submit"
-            ) : (
-              "Submit"
-            )}
-          </ButtonMagnet>
         </div>
       </DrawerContent>
     </Drawer>
