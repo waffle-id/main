@@ -12,6 +12,7 @@ import { CA } from "~/constants/CA";
 import { publicClient } from "~/constants/wagmi";
 import type { UserProfileData } from "../..";
 import { addReview } from "~/routes/api/review/add-review";
+import { useNavigate } from "react-router";
 
 type ReviewProps = {
   user: UserProfileData;
@@ -64,6 +65,8 @@ export default function Review({
   hasReviewed = false,
   isCheckingReview = false,
 }: ReviewProps) {
+  const navigate = useNavigate();
+
   let client: Client | null = null;
   const { writeContractAsync, isPending } = useWriteContract();
   const [isOpen, setIsOpen] = useState(false);
@@ -134,6 +137,9 @@ export default function Review({
       setQualityLoading(false);
       setQualityLevel(null);
       setIsOpen(false);
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      navigate(0);
     } catch (err) {
       console.error("❌ Contract error:", err);
     }
