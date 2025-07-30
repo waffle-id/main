@@ -568,7 +568,7 @@ export async function scrapeTwitterBioAndAvatar(
       console.log("Basic elements not found, proceeding anyway");
     }
 
-    await page.waitForNetworkIdle({ idleTime: 1000, timeout: 8000 });
+    // await page.waitForNetworkIdle({ idleTime: 1000, timeout: 8000 });
 
     const data = await page.evaluate((username) => {
       console.log("=== BIO + AVATAR + FULLNAME SCRAPER ===");
@@ -608,6 +608,8 @@ export async function scrapeTwitterBioAndAvatar(
           console.log("Detected tweet content instead of bio, skipping:", bio.substring(0, 100));
           bio = null;
         }
+      } else {
+        bio = null;
       }
 
       let avatarUrl: string | null = null;
