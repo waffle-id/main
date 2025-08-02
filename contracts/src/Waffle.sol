@@ -445,23 +445,28 @@ contract Waffle is ERC721, Ownable, ReentrancyGuard, Pausable, IReviewSystem, IB
         profile.ownedBadges.push(badgeId);
         badgeHolders[badgeId].push(msg.sender);
 
-
         // Mint soulbound NFT
         _tokenIds++;
         uint256 tokenId = _tokenIds;
 
-        string memory json = string(abi.encodePacked(
-            '{',
-                '"name":"', badge.name, '",',
-                '"description":"', badge.description,'",',
-                '"image":"', badge.imageURI, '"',
-            '}'
-        ));
+        string memory json = string(
+            abi.encodePacked(
+                "{",
+                '"name":"',
+                badge.name,
+                '",',
+                '"description":"',
+                badge.description,
+                '",',
+                '"image":"',
+                badge.imageURI,
+                '"',
+                "}"
+            )
+        );
 
-        string memory encodedTokenURI = string(abi.encodePacked(
-            "data:application/json;base64,",
-            Base64.encode(bytes(json))
-        ));
+        string memory encodedTokenURI =
+            string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
 
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, encodedTokenURI);
