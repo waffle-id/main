@@ -2,7 +2,7 @@ import { Award, Trophy, type LucideProps } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createPublicClient, http } from "viem";
-import { monadTestnet, bscTestnet } from "viem/chains";
+import { monadTestnet, liskSepolia } from "viem/chains";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { Badge } from "~/components/shadcn/badge";
 import { ButtonMagnet } from "~/components/waffle/button/magnet-button";
@@ -71,7 +71,7 @@ export function BadgeItem({
     if (!address) return;
 
     setLoading(true);
-    const client = createPublicClient({ chain: bscTestnet, transport: http() });
+    const client = createPublicClient({ chain: liskSepolia, transport: http() });
 
     try {
       const ownsTheBadge = await client
